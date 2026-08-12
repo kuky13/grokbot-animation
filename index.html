@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A source-aligned recreation and editor for all 39 Grok Bot states." />
+    <title>Grok Bot · Original State Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="wordmark" href="#stage" aria-label="回到 Grok Bot 表情舞台">
+          <span class="wordmark-dot" aria-hidden="true"></span>
+          <span>Grok Bot</span>
+          <span class="wordmark-sub">Original state lab</span>
+        </a>
+        <a class="source-link" href="https://x.ai/bot" target="_blank" rel="noreferrer">
+          原始页面 <span aria-hidden="true">↗</span>
+        </a>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <div class="eyebrow"><span class="eyebrow-pulse" aria-hidden="true"></span>Source aligned · 39 states</div>
+          <h1 id="page-title">Every mood.<br />The original shape.</h1>
+          <p>
+            精确使用原版公开组件的头部环、25 组眼形、状态表情池、弹簧参数和任务形变。
+            编辑器默认值即原版，只有主动调整后才会产生偏移。
+          </p>
+        </section>
+
+        <section id="stage" class="lab" aria-label="Grok Bot 原版状态实验台">
+          <div class="stage-column">
+            <div class="state-readout" aria-live="polite">
+              <div>
+                <span class="readout-kicker">Current expression</span>
+                <strong id="state-title">Idle · 待机</strong>
+              </div>
+              <code id="state-code">data-state="idle"</code>
+            </div>
+
+            <figure id="bot-stage" class="bot-stage" tabindex="0" aria-label="互动 Grok Bot，移动鼠标可以让它看向你">
+              <div class="stage-grid" aria-hidden="true"></div>
+              <svg
+                id="grok-bot"
+                class="grok-bot-mark"
+                data-state="idle"
+                viewBox="-15 -15 259 259"
+                xmlns="http://www.w3.org/2000/svg"
+                role="img"
+                aria-labelledby="bot-svg-title bot-svg-desc"
+              >
+                <title id="bot-svg-title">Grok Bot idle expression</title>
+                <desc id="bot-svg-desc">The source-aligned animated Grok Bot mark.</desc>
+                <defs>
+                  <clipPath id="head-clip"><path id="head-clip-path" /></clipPath>
+                </defs>
+                <g id="particles-back" aria-hidden="true"></g>
+                <path class="grok-bot-mark__head morph-head" hidden />
+                <path class="grok-bot-mark__head morph-head" hidden />
+                <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+                <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+                <path class="morph-glyph" hidden />
+                <path class="morph-glyph" hidden />
+                <path class="morph-glyph" hidden />
+                <g id="bot-transform">
+                  <path id="head-path" class="grok-bot-mark__head" />
+                  <g clip-path="url(#head-clip)">
+                    <path class="grok-bot-mark__eye eye-path" />
+                    <path class="grok-bot-mark__eye eye-path" />
+                  </g>
+                  <circle id="notify-badge" cx="114.2705" cy="114.2705" r="0" hidden />
+                </g>
+                <g id="particles-front" aria-hidden="true"></g>
+              </svg>
+              <figcaption>
+                <span>Move your pointer</span><span class="figcaption-rule" aria-hidden="true"></span><span>← → 切换状态</span>
+              </figcaption>
+            </figure>
+
+            <div class="stage-toolbar" aria-label="舞台设置">
+              <div class="stage-toolbar-left">
+                <span class="fidelity-badge"><span></span>Original geometry</span>
+                <button id="autoplay-button" class="autoplay-button" type="button" aria-pressed="false">
+                  <span class="play-icon" aria-hidden="true">▶</span>自动巡演
+                </button>
+              </div>
+              <div class="swatches" role="group" aria-label="Bot 颜色">
+                <button class="swatch is-selected" data-color="#0b0b0b" aria-label="Ink black" type="button"></button>
+                <button class="swatch" data-color="#705cff" aria-label="Electric violet" type="button"></button>
+                <button class="swatch" data-color="#3c82f6" aria-label="Signal blue" type="button"></button>
+                <button class="swatch" data-color="#f9705c" aria-label="Warm coral" type="button"></button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="controls" aria-labelledby="state-picker-title">
+            <div class="controls-heading">
+              <div><span class="controls-kicker">State index</span><h2 id="state-picker-title">Choose a mood</h2></div>
+              <span id="state-count" class="state-count">03 / 39</span>
+            </div>
+            <div class="panel-tabs" role="tablist" aria-label="状态工具">
+              <button id="states-tab" class="panel-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="states-panel">状态库</button>
+              <button id="shapes-tab" class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="shapes-panel">形状库</button>
+              <button id="editor-tab" class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="editor-panel">原版编辑器</button>
+            </div>
+
+            <div id="states-panel" role="tabpanel" aria-labelledby="states-tab">
+              <div id="state-groups" class="state-groups"></div>
+            </div>
+
+            <div id="shapes-panel" role="tabpanel" aria-labelledby="shapes-tab" hidden>
+              <div class="shape-library-heading">
+                <div><span>Current shape</span><strong id="shape-current-name">圆形 · Blob</strong></div>
+                <code>18 source shapes</code>
+              </div>
+              <p class="editor-hint">形状是独立于状态的原版参数。选择后会应用到全部 39 个状态，并以原版弹簧在轮廓、眼位和透视参数之间过渡。</p>
+              <div id="shape-library" class="shape-library" role="group" aria-label="Grok Bot 原版形状"></div>
+            </div>
+
+            <div id="editor-panel" role="tabpanel" aria-labelledby="editor-tab" hidden>
+              <div class="editor-status">
+                <div><span>Editing</span><strong id="editor-state-name">idle</strong></div>
+                <span id="save-status" class="save-status">原版参数</span>
+              </div>
+              <p class="editor-hint">修改值以原版为基线叠加；点击重置即可恢复该状态的精确默认值。</p>
+              <div id="editor-fields" class="editor-fields"></div>
+              <div class="editor-history" aria-label="编辑历史">
+                <button id="undo-button" type="button" disabled>撤销</button>
+                <button id="redo-button" type="button" disabled>重做</button>
+                <button id="reset-state-button" type="button">恢复本状态原版</button>
+              </div>
+              <div class="editor-io">
+                <button id="copy-json-button" type="button">复制 JSON</button>
+                <button id="export-json-button" type="button">导出文件</button>
+                <label class="import-button" for="import-json-input">导入 JSON</label>
+                <input id="import-json-input" type="file" accept="application/json,.json" />
+                <button id="reset-all-button" class="danger-button" type="button">恢复全部原版</button>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="notes" aria-labelledby="notes-title">
+          <p class="notes-index">01 — Fidelity</p>
+          <div>
+            <h2 id="notes-title">Not an imitation layer. The original geometry model.</h2>
+            <p>每只眼睛由 48 点闭合环插值，头部由 96 点形状环驱动；39 个状态使用各自的表情池、眨眼区间、身体运动公式和任务 morph。</p>
+          </div>
+          <dl class="notes-facts">
+            <div><dt>States</dt><dd>39</dd></div>
+            <div><dt>Eye poses</dt><dd>25</dd></div>
+            <div><dt>Runtime</dt><dd>SVG + JS</dd></div>
+          </dl>
+        </section>
+      </main>
+
+      <footer><span>Source-aligned motion study, 2026</span><a href="./ANALYSIS.md">Read the DOM analysis ↗</a></footer>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
