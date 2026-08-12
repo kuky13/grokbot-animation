@@ -1340,8 +1340,9 @@ export class GrokBotEngine {
       const pulse = 1 + 0.07 * Math.sin(amount * Math.PI);
       let driftX = 1.4 * Math.sin(0.00042 * now + index) + 0.5 * Math.sin(0.001 * now + 2 * index);
       let driftY = 0.9 * Math.sin(0.00058 * now + index);
-      driftX += this.pointer.x + this.aimX.x;
-      driftY += this.pointer.y + this.aimY.x;
+      const autonomousGazeWeight = config.pointer && this.pointer.active ? 0.2 : 1;
+      driftX += this.pointer.x + this.aimX.x * autonomousGazeWeight;
+      driftY += this.pointer.y + this.aimY.x * autonomousGazeWeight;
       const notification = clamp(this.notify.x, 0, 1);
       driftX -= 10 * notification;
       driftY += 7 * notification;

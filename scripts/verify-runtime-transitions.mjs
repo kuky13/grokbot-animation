@@ -111,6 +111,11 @@ const allStates = [
   "alerting", "dragging", "bouncing", "powering-down",
 ];
 for (const state of allStates) configs[state] ||= baseConfig;
+configs.drowsy = {
+  ...baseConfig,
+  expressionPool: [4, 22, 13],
+  expressionCadence: [4000, 8000],
+};
 
 const engine = new GrokBotEngine(svg, () => configs[activeState]);
 const advance = (milliseconds) => {
@@ -145,6 +150,59 @@ const parseEyeTransform = (value) => {
   assert.ok(match, `eye transform should use the expected source transform: ${value}`);
   return match.slice(1).map(Number);
 };
+
+const near = (actual, expected, tolerance, message) => {
+  assert.ok(Math.abs(actual - expected) <= tolerance, `${message}; expected ${expected}, received ${actual}`);
+};
+
+activeState = "drowsy";
+engine.setState("drowsy", true);
+engine.gesture = null;
+engine.spinSpring = null;
+engine.listenNodNext = Number.POSITIVE_INFINITY;
+engine.drowsyStartedAt = clock || 1;
+const drowsyStart = engine.drowsyStartedAt;
+const sampleDrowsy = (seconds) => {
+  engine.updateStateTargets(drowsyStart + seconds * 1000, configs.drowsy, 1 / 60);
+  return {
+    y: engine.headY.target,
+    rotation: engine.rotation.target * 180 / Math.PI,
+    eyeOpen: engine.eyeOpen.target,
+  };
+};
+
+const nodBottom = sampleDrowsy(1.7);
+near(nodBottom.y, 25, 0.0001, "drowsy should sink to the source nod depth");
+near(nodBottom.rotation, 10, 0.0001, "drowsy should reach the source nod angle");
+near(nodBottom.eyeOpen, 0.04, 0.0001, "drowsy eyes should nearly close at the nod bottom");
+
+const reboundPeak = sampleDrowsy(1.85);
+near(reboundPeak.y, 18, 0.0001, "drowsy should rebound by the source amount");
+near(reboundPeak.rotation, 6, 0.0001, "drowsy should rebound to the source angle");
+near(reboundPeak.eyeOpen, 0.46, 0.0001, "drowsy eyes should reopen during the rebound");
+
+const sleepyBlink = sampleDrowsy(2.55);
+near(sleepyBlink.eyeOpen, 0.05, 0.0001, "drowsy should keep the source recovery blink");
+
+engine.pointer.active = false;
+engine.pointer.x = 0;
+engine.pointer.y = 0;
+engine.aimX.x = 10;
+engine.aimY.x = 8;
+engine.morph.x = 0;
+engine.turn.x = 0;
+engine.renderEyes(drowsyStart + 900, configs.drowsy, SHAPES.blob, SHAPES.blob.ring, 0, 0);
+const autonomousEye = parseEyeTransform(nodes.eyes[0].getAttribute("transform"));
+engine.pointer.active = true;
+engine.pointer.clientX = 195;
+engine.pointer.clientY = 195;
+engine.pointer.x = 0;
+engine.pointer.y = 0;
+engine.renderEyes(drowsyStart + 900, { ...configs.drowsy, pointer: true }, SHAPES.blob, SHAPES.blob.ring, 0, 0);
+const pointerEye = parseEyeTransform(nodes.eyes[0].getAttribute("transform"));
+near(autonomousEye[0] - pointerEye[0], 8, 0.02, "pointer tracking should reduce autonomous horizontal drowsy gaze to 20%");
+near(autonomousEye[1] - pointerEye[1], 6.4, 0.02, "pointer tracking should reduce autonomous vertical drowsy gaze to 20%");
+engine.pointer.active = false;
 
 const eyeReturnTimes = [];
 for (const [state, effect] of Object.entries(morphStates)) {
