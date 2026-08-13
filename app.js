@@ -168,6 +168,14 @@ const transitionLoop = document.querySelector("#transition-loop");
 const transitionStatus = document.querySelector("#transition-status");
 const playbackRate = document.querySelector("#playback-rate");
 const transitionPause = document.querySelector("#transition-pause");
+const morphPhase = document.querySelector("#morph-phase");
+const morphCurrentEffect = document.querySelector("#morph-current-effect");
+const morphLogicBadge = document.querySelector("#morph-logic-badge");
+const morphLogicDescription = document.querySelector("#morph-logic-description");
+const morphPreviewDuration = document.querySelector("#morph-preview-duration");
+const morphTriggerOnce = document.querySelector("#morph-trigger-once");
+const morphRestoreDefault = document.querySelector("#morph-restore-default");
+let morphDurationKey = null;
 
 function activeEngineConfig() {
   const state = project.states[activeState];
@@ -205,7 +213,7 @@ const editorSections = [
   {
     title: "State morph · 任务形变",
     controls: [
-      { path: "morph", label: "几何形变", type: "select", options: ["none", "dots", "orbit", "radar", "progress", "gather", "wave", "send", "receive", "dock", "ball", "whirl", "pencil", "bang", "standby"] },
+      { path: "morph", label: "状态默认形变", type: "select", options: ["none", "dots", "orbit", "radar", "progress", "gather", "wave", "send", "receive", "dock", "ball", "whirl", "pencil", "bang", "standby"] },
       { path: "badgeColor", label: "通知颜色", type: "color", scope: "character" },
       { path: "badgeScale", label: "通知尺寸", min: 0.5, max: 1.8, step: 0.01, scope: "character" },
     ],
@@ -364,6 +372,7 @@ function createControl(control) {
   input.dataset.scope = control.scope || "state";
   input.addEventListener("input", () => {
     stopPlaybackSequences();
+    if (control.path === "morph") engine.clearMorphPreview();
     const value = input.type === "checkbox" ? input.checked : input.type === "range" ? Number(input.value) : input.value;
     setAtPath(controlTarget(control), control.path, value);
     if (input.type === "range") output.textContent = formatValue(value, control.unit);
@@ -544,6 +553,35 @@ function updateFidelityStatus() {
   saveStatus.classList.toggle("is-modified", !exact);
 }
 
+function updateMorphConsole(snapshot = engine.getSnapshot()) {
+  const effect = project.states[activeState].morph;
+  const sourceEffect = morphByState[activeState] || "none";
+  const customized = effect !== sourceEffect;
+  const durationKey = `${activeState}:${effect}`;
+  if (morphDurationKey !== durationKey) {
+    morphPreviewDuration.value = String(activeState === "spawning" ? 2000 : 2500);
+    morphDurationKey = durationKey;
+  }
+  morphCurrentEffect.textContent = effect;
+  morphPhase.textContent = snapshot.morphPhase;
+  morphPhase.dataset.phase = snapshot.morphPhase;
+  morphTriggerOnce.disabled = effect === "none";
+  morphRestoreDefault.disabled = !engine.morphPreview;
+  if (effect === "none") {
+    morphLogicBadge.textContent = sourceEffect === "none" ? "无默认形变" : "已关闭状态形变";
+    morphLogicDescription.textContent = sourceEffect === "none"
+      ? "当前状态不会自动请求几何形变。请先在下方选择形变，再使用单次触发。"
+      : `该状态的原版 ${sourceEffect} 已被关闭，可从下方恢复或改选其他形变。`;
+  } else if (activeState === "progress" || activeState === "spawning") {
+    const shot = activeState === "progress" ? "2.5 秒" : "2 秒";
+    morphLogicBadge.textContent = customized ? "自定义循环" : "原版循环";
+    morphLogicDescription.textContent = `${shot}展示 → 1.5 秒 REST → 自动再次触发。单次触发会在退出后停留于 bot。`;
+  } else {
+    morphLogicBadge.textContent = customized ? "自定义持续" : "原版持续";
+    morphLogicDescription.textContent = "状态驻留期间持续保持，离开状态才退出。单次触发会完整播放并停留于 bot。";
+  }
+}
+
 function applyActiveState(restart = false) {
   const index = stateIds.indexOf(activeState);
   const label = stateLabels[activeState];
@@ -555,6 +593,7 @@ function applyActiveState(restart = false) {
   document.querySelectorAll(".swatch").forEach((button) => button.classList.toggle("is-selected", button.dataset.color.toLowerCase() === project.character.color.toLowerCase()));
   updateEditorValues();
   updateShapeValues();
+  updateMorphConsole();
   if (restart) engine.setState(activeState, true);
 }
 
@@ -807,7 +846,8 @@ function updateRuntimeReadout(realNow) {
     const snapshot = engine.getSnapshot();
     const expression = `E${String(snapshot.expressionIndex).padStart(2, "0")}`;
     const morph = snapshot.morphEffect ? `${snapshot.morphEffect} ${snapshot.morphAmount.toFixed(2)}` : "none 0.00";
-    runtimeReadout.textContent = `${expression} · eye ${snapshot.eyeOpen.toFixed(2)} · morph ${morph} · ${snapshot.elapsed.toFixed(1)}s${snapshot.paused ? " · paused" : ""}`;
+    runtimeReadout.textContent = `${expression} · eye ${snapshot.eyeOpen.toFixed(2)} · morph ${morph} · ${snapshot.morphPhase} · ${snapshot.elapsed.toFixed(1)}s${snapshot.paused ? " · paused" : ""}`;
+    updateMorphConsole(snapshot);
     lastRuntimeReadout = realNow;
   }
   requestAnimationFrame(updateRuntimeReadout);
@@ -841,6 +881,22 @@ playbackRate.addEventListener("change", () => {
   updateTransitionStatus(transitionPhase);
 });
 [transitionHoldA, transitionHoldB].forEach((input) => input.addEventListener("change", () => transitionDuration(input)));
+morphPreviewDuration.addEventListener("change", () => {
+  const duration = Math.min(20000, Math.max(100, Number(morphPreviewDuration.value) || 2500));
+  morphPreviewDuration.value = String(duration);
+});
+morphTriggerOnce.addEventListener("click", () => {
+  const effect = project.states[activeState].morph;
+  if (effect === "none") return;
+  stopPlaybackSequences();
+  engine.triggerMorphPreview(effect, Number(morphPreviewDuration.value));
+  updateMorphConsole();
+});
+morphRestoreDefault.addEventListener("click", () => {
+  stopPlaybackSequences();
+  engine.clearMorphPreview();
+  updateMorphConsole();
+});
 document.querySelector("#undo-button").addEventListener("click", () => stepHistory(-1));
 document.querySelector("#redo-button").addEventListener("click", () => stepHistory(1));
 document.querySelector("#reset-state-button").addEventListener("click", resetCurrentState);

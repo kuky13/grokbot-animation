@@ -377,6 +377,28 @@ engine.setState("idle");
 advance(1000);
 assert.ok(nodes.eyes.every((eye) => eye.style.display !== "none"), "eyes should remain visible after a full 39-state switch run");
 
+activeState = "thinking";
+engine.setState("thinking", true);
+advance(700);
+assert.ok(engine.morph.x > 0.996, "thinking should begin from its persistent source morph");
+assert.equal(engine.triggerMorphPreview("dots", 500), true, "a valid morph should start a single-shot preview");
+const previewPhases = new Set([engine.getSnapshot().morphPhase]);
+for (let frame = 0; frame < 240 && engine.getSnapshot().morphPhase !== "DONE"; frame += 1) {
+  advance(1000 / 60);
+  previewPhases.add(engine.getSnapshot().morphPhase);
+}
+for (const phase of ["RESET", "ENTER", "HOLD", "EXIT", "DONE"]) {
+  assert.ok(previewPhases.has(phase), `single-shot morph should pass through ${phase}`);
+}
+assert.ok(engine.morph.x < 0.004, "single-shot morph should settle back on the bot");
+assert.equal(engine.morphEffect, null, "single-shot morph should release its effect after exit");
+advance(1000);
+assert.equal(engine.getSnapshot().morphPhase, "DONE", "single-shot morph should remain on the bot instead of silently retriggering");
+engine.clearMorphPreview();
+advance(700);
+assert.ok(engine.morph.x > 0.996, "restoring the state default should re-enter thinking's persistent morph");
+assert.equal(engine.getSnapshot().morphPhase, "HOLD", "restored persistent morph should report HOLD");
+
 for (const from of allStates) {
   activeState = from;
   engine.setState(from, true);
@@ -452,4 +474,4 @@ for (const [shapeId, shape] of Object.entries(SHAPES)) {
 
 engine.destroy();
 const slowestEyeReturn = Math.max(...eyeReturnTimes);
-console.log(`Runtime transitions verified: all ${allStates.length ** 2} ordered state pairs switch cleanly; all ${Object.keys(SHAPES).length * EXPRESSIONS.length * 4} shape/expression/open combinations fit; ${Object.keys(morphStates).length} morph states restore both eyes in <=${slowestEyeReturn.toFixed(1)}ms; source timing, pause, step and replay paths pass.`);
+console.log(`Runtime transitions verified: all ${allStates.length ** 2} ordered state pairs switch cleanly; all ${Object.keys(SHAPES).length * EXPRESSIONS.length * 4} shape/expression/open combinations fit; ${Object.keys(morphStates).length} morph states restore both eyes in <=${slowestEyeReturn.toFixed(1)}ms; source loops plus RESET/ENTER/HOLD/EXIT/DONE single shots pass.`);

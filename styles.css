@@ -1821,6 +1821,150 @@ footer a:hover {
   font-size: 13px;
 }
 
+.morph-trigger-console {
+  margin: -10px 0 26px;
+  padding: 13px;
+  border: 1px solid var(--soft-line);
+  border-radius: 13px;
+  background: var(--paper);
+}
+
+.morph-trigger-heading,
+.morph-logic-row,
+.morph-trigger-controls {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+}
+
+.morph-trigger-heading {
+  grid-template-columns: 1fr auto;
+  margin-bottom: 10px;
+}
+
+.morph-trigger-heading span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.morph-trigger-heading h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.morph-trigger-heading output {
+  min-width: 50px;
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--green);
+  background: var(--surface);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 7px;
+  text-align: center;
+}
+
+.morph-trigger-heading output[data-phase="EXIT"],
+.morph-trigger-heading output[data-phase="RESET"] {
+  color: var(--coral);
+}
+
+.morph-trigger-heading output[data-phase="REST"],
+.morph-trigger-heading output[data-phase="DONE"] {
+  color: var(--muted);
+}
+
+.morph-logic-row {
+  grid-template-columns: auto 1fr;
+}
+
+.morph-logic-row code {
+  padding: 5px 7px;
+  border-radius: 6px;
+  color: var(--surface);
+  background: var(--ink);
+  font-size: 8px;
+}
+
+.morph-logic-row span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.morph-trigger-console > p {
+  min-height: 32px;
+  margin: 8px 0 11px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.morph-trigger-controls {
+  grid-template-columns: minmax(86px, 0.75fr) minmax(110px, 1.25fr) minmax(90px, 1fr);
+}
+
+.morph-trigger-controls label {
+  position: relative;
+  min-width: 0;
+}
+
+.morph-trigger-controls label > span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.morph-trigger-controls input,
+.morph-trigger-controls button {
+  min-width: 0;
+  width: 100%;
+  height: 31px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 8px;
+}
+
+.morph-trigger-controls input {
+  padding: 0 25px 0 7px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.morph-trigger-controls label small {
+  position: absolute;
+  right: 6px;
+  bottom: 10px;
+  color: var(--muted);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 6px;
+  pointer-events: none;
+}
+
+.morph-trigger-controls button {
+  align-self: end;
+  padding: 0 6px;
+  font-weight: 680;
+  cursor: pointer;
+}
+
+.morph-trigger-controls button:nth-of-type(1) {
+  color: var(--surface);
+  background: var(--ink);
+}
+
+.morph-trigger-controls button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 @media (max-width: 640px) {
   .grok-bot-mark {
     width: min(76%, var(--bot-size));
@@ -1851,6 +1995,14 @@ footer a:hover {
   }
 
   .transition-transport button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .morph-trigger-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .morph-trigger-controls label {
     grid-column: 1 / -1;
   }
 }

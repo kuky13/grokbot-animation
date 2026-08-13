@@ -160,6 +160,22 @@
                   <button id="transition-stop" type="button">■ 停止</button>
                 </div>
               </section>
+              <section class="morph-trigger-console" aria-labelledby="morph-trigger-title">
+                <div class="morph-trigger-heading">
+                  <div><span>Morph playback</span><h3 id="morph-trigger-title">形变触发逻辑</h3></div>
+                  <output id="morph-phase">IDLE</output>
+                </div>
+                <div class="morph-logic-row">
+                  <code id="morph-current-effect">none</code>
+                  <span id="morph-logic-badge">无默认形变</span>
+                </div>
+                <p id="morph-logic-description">当前状态不会自动请求几何形变。</p>
+                <div class="morph-trigger-controls">
+                  <label><span>单次保持</span><input id="morph-preview-duration" type="number" min="100" max="20000" step="100" value="2500" /><small>ms</small></label>
+                  <button id="morph-trigger-once" type="button">触发一次并退出</button>
+                  <button id="morph-restore-default" type="button">恢复状态默认</button>
+                </div>
+              </section>
               <div id="editor-fields" class="editor-fields"></div>
               <div class="editor-history" aria-label="编辑历史">
                 <button id="undo-button" type="button" disabled>撤销</button>

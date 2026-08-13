@@ -625,6 +625,7 @@ export class GrokBotEngine {
     this.morphShotStartedAt = this.startedAt;
     this.morphRestStartedAt = 0;
     this.oneShotResting = false;
+    this.morphPreview = null;
     this.turnDirection = 1;
     this.spinAngle = 0;
     this.expressionCursor = 0;
@@ -716,6 +717,7 @@ export class GrokBotEngine {
     this.receiveCycle = -1;
     this.writingTrail = [];
     this.oneShotResting = false;
+    this.morphPreview = null;
     this.celebrateWildActive = false;
     this.morphShotStartedAt = now;
     if (state === "celebrate") {
@@ -846,21 +848,76 @@ export class GrokBotEngine {
       eyeOpenTarget: this.eyeOpen.target,
       morphEffect: this.morphEffect,
       morphAmount: this.morph.x,
+      morphPhase: this.getMorphPhase(),
       elapsed: Math.max(0, (this.clockTime - this.stateStartedAt) / 1000),
       playbackRate: this.playbackRate,
       paused: this.paused,
     };
   }
 
+  getMorphPhase() {
+    if (this.morphPreview) return this.morphPreview.phase.toUpperCase();
+    if (this.oneShotResting) return "REST";
+    if (this.morph.target > 0.5) return this.morph.x < 0.996 ? "ENTER" : "HOLD";
+    if (this.morph.x > 0.004) return "EXIT";
+    return "IDLE";
+  }
+
+  triggerMorphPreview(effect, duration = 2500) {
+    if (!MORPH_EFFECTS.includes(effect)) return false;
+    this.morphPreview = {
+      effect,
+      duration: clamp(Number(duration) || 2500, 100, 20000),
+      phase: "reset",
+      phaseStartedAt: this.clockTime,
+    };
+    this.oneShotResting = false;
+    return true;
+  }
+
+  clearMorphPreview() {
+    this.morphPreview = null;
+  }
+
   updateMorph(now, config) {
-    const requestedEffect = config.morph === "none" ? null : config.morph;
+    let requestedEffect = config.morph === "none" ? null : config.morph;
+    if (this.morphPreview) {
+      const preview = this.morphPreview;
+      if (preview.phase === "reset") {
+        requestedEffect = null;
+        if (this.morph.x < 0.004) {
+          preview.phase = "enter";
+          preview.phaseStartedAt = now;
+          requestedEffect = preview.effect;
+        }
+      } else if (preview.phase === "enter") {
+        requestedEffect = preview.effect;
+        if (this.morph.x > 0.996) {
+          preview.phase = "hold";
+          preview.phaseStartedAt = now;
+        }
+      } else if (preview.phase === "hold") {
+        requestedEffect = preview.effect;
+        if (now - preview.phaseStartedAt >= preview.duration) {
+          preview.phase = "exit";
+          preview.phaseStartedAt = now;
+          requestedEffect = null;
+        }
+      } else if (preview.phase === "exit") {
+        requestedEffect = null;
+        if (this.morph.x < 0.004) {
+          preview.phase = "done";
+          preview.phaseStartedAt = now;
+        }
+      } else requestedEffect = null;
+    }
     if (requestedEffect !== this.requestedMorphEffect) {
       this.requestedMorphEffect = requestedEffect;
       this.morphShotStartedAt = now;
       this.oneShotResting = false;
     }
     let visible = Boolean(requestedEffect);
-    if ((this.state === "progress" || this.state === "spawning") && requestedEffect) {
+    if (!this.morphPreview && (this.state === "progress" || this.state === "spawning") && requestedEffect) {
       const shot = this.state === "progress" ? 2500 : 2000;
       if (!this.oneShotResting && now - this.morphShotStartedAt > shot) {
         this.oneShotResting = true;
