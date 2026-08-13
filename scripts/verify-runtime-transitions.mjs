@@ -2,6 +2,12 @@ import assert from "node:assert/strict";
 
 let clock = 0;
 globalThis.performance = { now: () => clock };
+let randomSeed = 0x5f3759df;
+const seededRandom = () => {
+  randomSeed = (1664525 * randomSeed + 1013904223) >>> 0;
+  return randomSeed / 0x100000000;
+};
+Math.random = seededRandom;
 
 class FakeStyle {
   setProperty(name, value) { this[name] = value; }
@@ -155,6 +161,38 @@ const near = (actual, expected, tolerance, message) => {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${message}; expected ${expected}, received ${actual}`);
 };
 
+activeState = "waking";
+engine.setState("waking", true);
+engine.wakeBurst = true;
+engine.blinkQueue = [];
+engine.blinkTarget = null;
+engine.updateStateTargets(engine.stateStartedAt + 1250, configs.waking, 1 / 60);
+assert.ok(engine.blinkQueue.length > 0, "waking should schedule the source recovery blink between 1.2s and 1.4s");
+
+activeState = "celebrate";
+engine.setState("celebrate", true);
+const particlesBeforeCelebrate = engine.particles.particles.length;
+const celebratePose = engine.celebratePose(4.25);
+assert.notEqual(celebratePose.gazeX, 0, "celebrate should include the source horizontal eye shake");
+assert.notEqual(celebratePose.gazeY, 0, "celebrate should include the source vertical eye shake");
+assert.equal(engine.particles.particles.length, particlesBeforeCelebrate, "celebrate should not inject an extra non-source particle burst");
+assert.equal(engine.celebrateWildActive, true, "celebrate wide particles should only be active during the wild phase");
+engine.celebratePose(5.9);
+assert.equal(engine.celebrateWildActive, false, "celebrate should leave wide particle styling during its source rest phase");
+
+activeState = "idle";
+engine.setState("idle", true);
+engine.expressionCursor = 0;
+engine.expressionNext = engine.clockTime;
+Math.random = () => 0.5;
+engine.updateExpressionAndBlink(engine.clockTime, {
+  ...configs.idle,
+  expressionPool: [0, 1, 2],
+  expressionWeights: { 1: 20, 2: 0.1 },
+});
+assert.equal(engine.expressionIndex, 1, "custom expression weights should select from the ordered pool without repeating the current pose");
+Math.random = seededRandom;
+
 activeState = "drowsy";
 engine.setState("drowsy", true);
 engine.gesture = null;
@@ -185,6 +223,29 @@ const sleepyBlink = sampleDrowsy(2.55);
 near(sleepyBlink.eyeOpen, 0.05, 0.0001, "drowsy should keep the source recovery blink");
 
 engine.pointer.active = false;
+
+engine.pointer.active = true;
+engine.pointer.clientX = 390;
+engine.pointer.clientY = 195;
+engine.pointer.x = 0;
+engine.pointer.y = 0;
+engine.aimX.x = 0;
+engine.aimY.x = 0;
+engine.directGazeX = 0;
+engine.directGazeY = 0;
+engine.delta = 1 / 60;
+engine.renderEyes(drowsyStart + 900, { ...configs.drowsy, pointer: true }, SHAPES.blob, SHAPES.blob.ring, 0, 0);
+near(engine.pointer.x, 11 * (1 - 0.91 ** 2), 0.0001, "pointer smoothing should advance once per eye like the source loop");
+engine.pointer.active = false;
+engine.pointer.x = 0;
+engine.pointer.y = 0;
+
+engine.morphEffect = "bang";
+engine.previousMorphEffect = null;
+engine.stateStartedAt = clock;
+const halfBangPose = engine.renderMorphEffects(0.5, 1, null, 1, clock);
+near(halfBangPose.y, 14.5, 0.0001, "morph pose displacement should apply the source quadratic morph amount");
+engine.morphEffect = null;
 engine.pointer.x = 0;
 engine.pointer.y = 0;
 engine.aimX.x = 10;
@@ -316,6 +377,35 @@ engine.setState("idle");
 advance(1000);
 assert.ok(nodes.eyes.every((eye) => eye.style.display !== "none"), "eyes should remain visible after a full 39-state switch run");
 
+for (const from of allStates) {
+  activeState = from;
+  engine.setState(from, true);
+  advance(50);
+  for (const to of allStates) {
+    activeState = to;
+    engine.setState(to, true);
+    advance(80);
+    const transform = nodes.transform.getAttribute("transform") || "";
+    assert.ok(transform && !transform.includes("NaN"), `${from} -> ${to} should keep a finite transform`);
+    assert.ok((nodes.head.getAttribute("d") || "").startsWith("M"), `${from} -> ${to} should preserve the head geometry`);
+  }
+}
+
+activeState = "idle";
+engine.setState("idle", true);
+engine.setPaused(true);
+const pausedClock = engine.clockTime;
+advance(200);
+near(engine.clockTime, pausedClock, 0.0001, "pause should freeze the simulation clock");
+engine.stepFrame();
+advance(1000 / 60);
+near(engine.clockTime, pausedClock + 1000 / 60, 0.0001, "step should advance exactly one source frame");
+engine.setPlaybackRate(2);
+engine.setPaused(false);
+advance(1000 / 60);
+near(engine.clockTime, pausedClock + 3 * 1000 / 60, 0.0001, "2x playback should advance the simulation clock at double speed");
+engine.setPlaybackRate(1);
+
 assert.equal(Object.keys(SHAPES).length, 18, "the complete source shape catalog should contain 18 shapes");
 for (const [shapeId, shape] of Object.entries(SHAPES)) {
   configs.idle = { ...baseConfig, shape: shapeId };
@@ -336,19 +426,30 @@ for (const [shapeId, shape] of Object.entries(SHAPES)) {
   assert.equal(nodes.head.getAttribute("d"), shape.path, `${shapeId} should finish on its exact source path`);
   assert.ok(nodes.eyes.every((eye) => eye.style.display !== "none"), `${shapeId} should keep both eyes visible after settling`);
 
-  for (let eyeIndex = 0; eyeIndex < nodes.eyes.length; eyeIndex += 1) {
-    const [translateX, translateY, scaleX, scaleY] = parseEyeTransform(nodes.eyes[eyeIndex].getAttribute("transform"));
-    const ring = EXPRESSIONS[0][eyeIndex];
-    const [centerX, centerY] = centroid(ring);
-    for (const [x, y] of ring) {
-      const transformedX = translateX + (x - centerX) * scaleX;
-      const transformedY = translateY + (y - centerY) * scaleY;
-      const [left, right] = spanAt(shape.ring, transformedY);
-      assert.ok(transformedX >= left - 2 && transformedX <= right + 2, `${shapeId} eye ${eyeIndex} should stay inside the source silhouette`);
+  for (let expressionIndex = 0; expressionIndex < EXPRESSIONS.length; expressionIndex += 1) {
+    engine.expressionFrom = EXPRESSIONS[expressionIndex];
+    engine.expressionTo = EXPRESSIONS[expressionIndex];
+    engine.expressionIndex = expressionIndex;
+    engine.expressionSpring.x = 1;
+    for (const eyeOpen of [0.08, 0.34, 1, 1.14]) {
+      engine.eyeOpen.x = eyeOpen;
+      engine.eyeScale.x = 1;
+      engine.renderEyes(clock, configs.idle, shape, shape.ring, 0, 0);
+      for (let eyeIndex = 0; eyeIndex < nodes.eyes.length; eyeIndex += 1) {
+        const [translateX, translateY, scaleX, scaleY] = parseEyeTransform(nodes.eyes[eyeIndex].getAttribute("transform"));
+        const ring = EXPRESSIONS[expressionIndex][eyeIndex];
+        const [centerX, centerY] = centroid(ring);
+        for (const [x, y] of ring) {
+          const transformedX = translateX + (x - centerX) * scaleX;
+          const transformedY = translateY + (y - centerY) * scaleY;
+          const [left, right] = spanAt(shape.ring, transformedY);
+          assert.ok(transformedX >= left - 2 && transformedX <= right + 2, `${shapeId} E${expressionIndex} eye ${eyeIndex} should stay inside the source silhouette at ${eyeOpen} open`);
+        }
+      }
     }
   }
 }
 
 engine.destroy();
 const slowestEyeReturn = Math.max(...eyeReturnTimes);
-console.log(`Runtime transitions verified: all ${allStates.length} states and ${Object.keys(SHAPES).length} source shapes switch cleanly; eyes fit every silhouette; ${Object.keys(morphStates).length} morph states restore both eyes in <=${slowestEyeReturn.toFixed(1)}ms; direct morphs use independent layers; task cycles and orbit trails replay correctly.`);
+console.log(`Runtime transitions verified: all ${allStates.length ** 2} ordered state pairs switch cleanly; all ${Object.keys(SHAPES).length * EXPRESSIONS.length * 4} shape/expression/open combinations fit; ${Object.keys(morphStates).length} morph states restore both eyes in <=${slowestEyeReturn.toFixed(1)}ms; source timing, pause, step and replay paths pass.`);

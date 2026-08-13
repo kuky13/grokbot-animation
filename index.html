@@ -37,7 +37,10 @@
                 <span class="readout-kicker">Current expression</span>
                 <strong id="state-title">Idle · 待机</strong>
               </div>
-              <code id="state-code">data-state="idle"</code>
+              <div class="runtime-readout">
+                <code id="state-code">data-state="idle"</code>
+                <span id="runtime-readout">E00 · eye 1.00 · morph 0.00</span>
+              </div>
             </div>
 
             <figure id="bot-stage" class="bot-stage" tabindex="0" aria-label="互动 Grok Bot，移动鼠标可以让它看向你">
@@ -133,11 +136,36 @@
                 <span id="save-status" class="save-status">原版参数</span>
               </div>
               <p class="editor-hint">修改值以原版为基线叠加；点击重置即可恢复该状态的精确默认值。</p>
+              <section class="transition-console" aria-labelledby="transition-console-title">
+                <div class="transition-console-heading">
+                  <div><span>Transition console</span><h3 id="transition-console-title">A → B 状态切换台</h3></div>
+                  <output id="transition-status">READY</output>
+                </div>
+                <div class="transition-route">
+                  <label><span>FROM</span><select id="transition-from"></select></label>
+                  <b aria-hidden="true">→</b>
+                  <label><span>TO</span><select id="transition-to"></select></label>
+                </div>
+                <div class="transition-timing">
+                  <label><span>停留 A</span><input id="transition-hold-a" type="number" min="100" max="20000" step="100" value="1800" /><small>ms</small></label>
+                  <label><span>停留 B</span><input id="transition-hold-b" type="number" min="100" max="20000" step="100" value="3300" /><small>ms</small></label>
+                  <label><span>速度</span><select id="playback-rate"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+                  <label class="transition-loop"><input id="transition-loop" type="checkbox" /><span>循环 A ↔ B</span></label>
+                </div>
+                <div class="transition-transport" role="group" aria-label="状态切换播放控制">
+                  <button id="transition-play" type="button">▶ 播放 A→B</button>
+                  <button id="transition-pause" type="button">Ⅱ 暂停</button>
+                  <button id="transition-step" type="button">+1 帧</button>
+                  <button id="transition-replay" type="button">↺ 重播当前</button>
+                  <button id="transition-stop" type="button">■ 停止</button>
+                </div>
+              </section>
               <div id="editor-fields" class="editor-fields"></div>
               <div class="editor-history" aria-label="编辑历史">
                 <button id="undo-button" type="button" disabled>撤销</button>
                 <button id="redo-button" type="button" disabled>重做</button>
                 <button id="reset-state-button" type="button">恢复本状态原版</button>
+                <button id="reset-character-button" type="button">恢复角色外观</button>
               </div>
               <div class="editor-io">
                 <button id="copy-json-button" type="button">复制 JSON</button>

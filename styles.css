@@ -826,7 +826,7 @@ figcaption {
 }
 
 .editor-history {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .editor-io {
@@ -1530,6 +1530,297 @@ footer a:hover {
   opacity: 1;
 }
 
+.runtime-readout {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+}
+
+.runtime-readout span {
+  color: var(--muted);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 8px;
+  letter-spacing: -0.01em;
+}
+
+.editor-control-label {
+  color: #5f6166;
+  font-size: 11px;
+}
+
+.transition-console {
+  margin: 0 0 26px;
+  padding: 15px;
+  border: 1px solid #111;
+  border-radius: 15px;
+  color: #f7f7f4;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 4%), transparent 38%),
+    #101110;
+  box-shadow: 0 10px 28px rgb(10 10 10 / 12%);
+}
+
+.transition-console-heading,
+.transition-route,
+.transition-timing,
+.transition-transport {
+  display: grid;
+  gap: 8px;
+}
+
+.transition-console-heading {
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.transition-console-heading span,
+.transition-route label > span,
+.transition-timing label > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #898b88;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.transition-console-heading h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: -0.02em;
+}
+
+.transition-console-heading output {
+  max-width: 150px;
+  padding: 5px 7px;
+  overflow: hidden;
+  border: 1px solid #313330;
+  border-radius: 999px;
+  color: #9ce6be;
+  background: #181a18;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transition-route {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  margin-bottom: 11px;
+}
+
+.transition-route b {
+  padding-bottom: 8px;
+  color: #72746f;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.transition-console select,
+.transition-console input[type="number"] {
+  min-width: 0;
+  width: 100%;
+  height: 31px;
+  padding: 0 8px;
+  border: 1px solid #343633;
+  border-radius: 7px;
+  color: #f7f7f4;
+  background: #1a1c1a;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 9px;
+}
+
+.transition-timing {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+}
+
+.transition-timing label {
+  position: relative;
+  min-width: 0;
+}
+
+.transition-timing label small {
+  position: absolute;
+  right: 7px;
+  bottom: 9px;
+  color: #737571;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 7px;
+  pointer-events: none;
+}
+
+.transition-timing input[type="number"] {
+  padding-right: 27px;
+}
+
+.transition-timing .transition-loop {
+  grid-column: 1 / -1;
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #b6b8b4;
+  font-size: 9px;
+}
+
+.transition-loop input {
+  accent-color: #72d49f;
+}
+
+.transition-timing .transition-loop > span {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.transition-transport {
+  grid-template-columns: 1.5fr repeat(4, 1fr);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #292b28;
+}
+
+.transition-transport button {
+  min-width: 0;
+  min-height: 31px;
+  padding: 0 5px;
+  overflow: hidden;
+  border: 1px solid #363835;
+  border-radius: 7px;
+  color: #bfc1bd;
+  background: #191b19;
+  font-size: 8px;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.transition-transport button:first-child {
+  border-color: #d9dcd6;
+  color: #111;
+  background: #f1f3ee;
+}
+
+.transition-transport button:hover {
+  border-color: #7a7d77;
+}
+
+.expression-option.is-previewing {
+  outline: 2px solid var(--coral);
+  outline-offset: 1px;
+}
+
+.expression-pool-order {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--soft-line);
+}
+
+.expression-pool-heading,
+.expression-pool-item {
+  display: grid;
+  align-items: center;
+}
+
+.expression-pool-heading {
+  grid-template-columns: 1fr auto;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.expression-pool-heading small {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 7px;
+}
+
+.expression-pool-item {
+  grid-template-columns: 31px 42px 46px minmax(74px, 1fr) 25px;
+  gap: 5px;
+  min-height: 35px;
+  padding: 3px 4px 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.expression-pool-item + .expression-pool-item {
+  margin-top: 3px;
+}
+
+.expression-pool-item.is-previewing {
+  border-color: #f4a190;
+  background: #fff8f6;
+}
+
+.expression-pool-item code {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.expression-pool-item button {
+  height: 25px;
+  padding: 0 5px;
+  border: 1px solid var(--soft-line);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--paper);
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.expression-pool-item button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.expression-order-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+.expression-order-buttons button {
+  padding: 0;
+}
+
+.expression-weight {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 7px;
+}
+
+.expression-weight input {
+  min-width: 0;
+  width: 100%;
+  height: 25px;
+  padding: 0 4px;
+  border: 1px solid var(--soft-line);
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--surface);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 8px;
+}
+
+.expression-pool-item .expression-remove-button {
+  padding: 0;
+  color: var(--coral);
+  font-size: 13px;
+}
+
 @media (max-width: 640px) {
   .grok-bot-mark {
     width: min(76%, var(--bot-size));
@@ -1541,5 +1832,25 @@ footer a:hover {
 
   .shape-library {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .runtime-readout {
+    justify-items: start;
+  }
+
+  .transition-console {
+    padding: 12px;
+  }
+
+  .transition-timing {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .transition-transport {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .transition-transport button:first-child {
+    grid-column: 1 / -1;
   }
 }

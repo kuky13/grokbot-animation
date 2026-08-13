@@ -593,6 +593,10 @@ export class GrokBotEngine {
     this.startedAt = performance.now();
     this.stateStartedAt = this.startedAt;
     this.lastTime = this.startedAt;
+    this.clockTime = this.startedAt;
+    this.playbackRate = 1;
+    this.paused = false;
+    this.pendingStep = 0;
     this.expressionFrom = [EXPRESSIONS[0][0], EXPRESSIONS[0][1]];
     this.expressionTo = this.expressionFrom;
     this.expressionIndex = 0;
@@ -656,10 +660,13 @@ export class GrokBotEngine {
     this.bounceStartedAt = -1;
     this.ambientNext = this.startedAt + random(2500, 5000);
     this.celebrateCycle = -1;
+    this.celebrateWildActive = false;
     this.directTurn = 0;
     this.directRotation = 0;
     this.directX = 0;
     this.directY = 0;
+    this.directGazeX = 0;
+    this.directGazeY = 0;
     this.boundFrame = (time) => this.frame(time);
     this.pointerMove = (event) => {
       this.pointer.active = true;
@@ -682,7 +689,7 @@ export class GrokBotEngine {
 
   setState(state, immediate = false) {
     if (!immediate && state === this.state) return;
-    const now = performance.now();
+    const now = this.clockTime;
     this.state = state;
     this.stateStartedAt = now;
     this.stateVersion += 1;
@@ -709,6 +716,7 @@ export class GrokBotEngine {
     this.receiveCycle = -1;
     this.writingTrail = [];
     this.oneShotResting = false;
+    this.celebrateWildActive = false;
     this.morphShotStartedAt = now;
     if (state === "celebrate") {
       this.turnDirection = Math.random() < 0.5 ? 1 : -1;
@@ -747,9 +755,16 @@ export class GrokBotEngine {
     if (Math.random() < 0.14) this.blinkQueue.push({ at: now + 370, value: 0.05 }, { at: now + 480, value: 1 });
   }
 
-  frame(now) {
-    const delta = Math.min((now - this.lastTime) / 1000, 0.1);
-    this.lastTime = now;
+  frame(realNow) {
+    const realDelta = Math.min(Math.max((realNow - this.lastTime) / 1000, 0), 0.1);
+    this.lastTime = realNow;
+    let delta = this.paused ? 0 : realDelta * this.playbackRate;
+    if (this.pendingStep > 0) {
+      delta = this.pendingStep;
+      this.pendingStep = 0;
+    }
+    this.clockTime += delta * 1000;
+    const now = this.clockTime;
     this.delta = delta;
     const config = this.getConfig();
     this.svg.dataset.state = this.state;
@@ -799,9 +814,42 @@ export class GrokBotEngine {
     this.particles.update(now, delta, {
       spinAngle: this.particleSpinAngle,
       sizeScale,
-      wideStyle: this.state === "humming" || this.state === "celebrate" || this.shapeChangeWide,
+      wideStyle: this.state === "humming" || this.celebrateWildActive || this.shapeChangeWide,
     });
     this.frameId = requestAnimationFrame(this.boundFrame);
+  }
+
+  setPlaybackRate(rate) {
+    const numeric = Number(rate);
+    this.playbackRate = Number.isFinite(numeric) ? clamp(numeric, 0.1, 4) : 1;
+  }
+
+  setPaused(paused) {
+    this.paused = Boolean(paused);
+    return this.paused;
+  }
+
+  togglePaused() {
+    return this.setPaused(!this.paused);
+  }
+
+  stepFrame(seconds = 1 / 60) {
+    this.paused = true;
+    this.pendingStep += Math.max(0, Number(seconds) || 1 / 60);
+  }
+
+  getSnapshot() {
+    return {
+      state: this.state,
+      expressionIndex: this.expressionIndex,
+      eyeOpen: this.eyeOpen.x,
+      eyeOpenTarget: this.eyeOpen.target,
+      morphEffect: this.morphEffect,
+      morphAmount: this.morph.x,
+      elapsed: Math.max(0, (this.clockTime - this.stateStartedAt) / 1000),
+      playbackRate: this.playbackRate,
+      paused: this.paused,
+    };
   }
 
   updateMorph(now, config) {
@@ -893,7 +941,10 @@ export class GrokBotEngine {
           else if (elapsed < 1.2) {
             eyeOpen = 1; eyeScale = 1.12; y = -5; scaleY = 1.04;
             if (!this.wakeBurst) { this.particles.burst(Math.round(random(9, 13)), 0.8); this.wakeBurst = true; }
-          } else if (elapsed < 2.2) { this.setExpression(0); }
+          } else if (elapsed < 2.2) {
+            if (!this.blinkQueue.length && elapsed < 1.4) this.scheduleBlink(now);
+            this.setExpression(0);
+          }
           else { const settle = Math.min((elapsed - 2.2) / 0.8, 1); rotation = 6 * Math.sin(settle * Math.PI * 3) * (1 - settle); y = 2 * Math.sin(0.9 * runtime); }
           break;
         case "idle":
@@ -971,6 +1022,8 @@ export class GrokBotEngine {
     this.directRotation = gesture.rotation;
     this.directX = gesture.x;
     this.directY = gesture.y + gesture.bounceY;
+    this.directGazeX = gesture.gazeX;
+    this.directGazeY = gesture.gazeY;
 
     this.rotation.target = (rotation * motion + config.headRotation) * Math.PI / 180;
     this.headX.target = x * motion + config.headX;
@@ -991,7 +1044,21 @@ export class GrokBotEngine {
     if (this.state !== "waking" && this.state !== "sleeping" && now >= this.expressionNext) {
       const pool = config.expressionPool;
       if (pool.length) {
-        this.expressionCursor = (this.expressionCursor + 1 + Math.floor(random(0, Math.max(pool.length - 1, 1)))) % pool.length;
+        const weights = config.expressionWeights || {};
+        const customWeights = pool.some((index) => Math.abs((Number(weights[index]) || 1) - 1) > 0.0001);
+        if (customWeights && pool.length > 1) {
+          const candidates = pool.map((index, position) => ({ position, weight: Math.max(0.01, Number(weights[index]) || 1) }))
+            .filter((candidate) => candidate.position !== this.expressionCursor);
+          const total = candidates.reduce((sum, candidate) => sum + candidate.weight, 0);
+          let pick = Math.random() * total;
+          this.expressionCursor = candidates[candidates.length - 1].position;
+          for (const candidate of candidates) {
+            pick -= candidate.weight;
+            if (pick <= 0) { this.expressionCursor = candidate.position; break; }
+          }
+        } else {
+          this.expressionCursor = (this.expressionCursor + 1 + Math.floor(random(0, Math.max(pool.length - 1, 1)))) % pool.length;
+        }
         this.setExpression(pool[this.expressionCursor], this.state === "searching" || this.state === "excited" ? 10 : 6);
       }
       this.expressionNext = now + random(config.expressionCadence[0], config.expressionCadence[1]) * config.tempo;
@@ -1047,7 +1114,7 @@ export class GrokBotEngine {
   }
 
   emptyGesture() {
-    return { turn: 0, rotation: 0, x: 0, y: 0, bounceY: 0, eyeOpen: null, eyeScale: null };
+    return { turn: 0, rotation: 0, x: 0, y: 0, bounceY: 0, gazeX: 0, gazeY: 0, eyeOpen: null, eyeScale: null };
   }
 
   startSpin(turns = 1, direction = Math.random() < 0.5 ? 1 : -1) {
@@ -1059,7 +1126,7 @@ export class GrokBotEngine {
   startGesture(kind) {
     if (this.gesture || this.spinSpring) return;
     const turns = kind === "spinDizzy" ? Math.round(random(3, 4)) : 1;
-    this.gesture = { kind, startedAt: performance.now(), direction: Math.random() < 0.5 ? 1 : -1, turns };
+    this.gesture = { kind, startedAt: this.clockTime, direction: Math.random() < 0.5 ? 1 : -1, turns };
   }
 
   startBounce(now) {
@@ -1125,16 +1192,17 @@ export class GrokBotEngine {
 
   celebratePose(elapsed) {
     const output = this.emptyGesture();
+    this.celebrateWildActive = false;
     const activeElapsed = elapsed - 0.14;
     if (activeElapsed < 0) return output;
     const cycleIndex = Math.floor(activeElapsed / 6.2);
     if (cycleIndex !== this.celebrateCycle) {
       this.celebrateCycle = cycleIndex;
       this.turnDirection = Math.random() < 0.5 ? 1 : -1;
-      this.particles.burst(24, 1.05);
     }
     const cycle = activeElapsed % 6.2;
     if (cycle > 5.49 || REDUCE_MOTION.matches) return output;
+    this.celebrateWildActive = true;
     const turns = 9;
     const direction = this.turnDirection;
     const speed = (turns * Math.PI * 2 + 0.5) / (0.15 + 2 + 0.3125);
@@ -1155,6 +1223,8 @@ export class GrokBotEngine {
     output.rotation = angle / (turns * Math.PI * 2) * 1080 * direction + 11 * Math.sin(9.2 * shakeTime) * direction * envelope;
     output.x = (Math.cos(9.2 * shakeTime) - 1) * 6 * direction * envelope;
     output.y = 2.6 * Math.sin(18.4 * shakeTime) * envelope;
+    output.gazeX = 13 * Math.sin(11.5 * shakeTime) * direction * envelope;
+    output.gazeY = (Math.cos(9 * shakeTime) - 1) * 3.5 * envelope;
     output.eyeOpen = 1.14 - 0.44 * envelope + 0.1 * Math.sin(16 * shakeTime) * envelope;
     output.eyeScale = 1.12 - 0.09 * envelope;
     return output;
@@ -1311,10 +1381,10 @@ export class GrokBotEngine {
       this.pointer.targetY = 14 * clamp((this.pointer.clientY - (bounds.top + bounds.height / 2)) / bounds.height, -0.6, 0.6);
     } else { this.pointer.targetX = 0; this.pointer.targetY = 0; }
     const smoothing = 1 - Math.exp(60 * Math.log(0.91) * (this.delta || 1 / 60));
-    this.pointer.x += (this.pointer.targetX - this.pointer.x) * smoothing;
-    this.pointer.y += (this.pointer.targetY - this.pointer.y) * smoothing;
 
     for (let index = 0; index < 2; index += 1) {
+      this.pointer.x += (this.pointer.targetX - this.pointer.x) * smoothing;
+      this.pointer.y += (this.pointer.targetY - this.pointer.y) * smoothing;
       const element = this.eyes[index];
       const ring = eyeRings[index];
       const [centerX, centerY] = centers[index];
@@ -1341,8 +1411,8 @@ export class GrokBotEngine {
       let driftX = 1.4 * Math.sin(0.00042 * now + index) + 0.5 * Math.sin(0.001 * now + 2 * index);
       let driftY = 0.9 * Math.sin(0.00058 * now + index);
       const autonomousGazeWeight = config.pointer && this.pointer.active ? 0.2 : 1;
-      driftX += this.pointer.x + this.aimX.x * autonomousGazeWeight;
-      driftY += this.pointer.y + this.aimY.x * autonomousGazeWeight;
+      driftX += this.pointer.x + this.aimX.x * autonomousGazeWeight + this.directGazeX;
+      driftY += this.pointer.y + this.aimY.x * autonomousGazeWeight + this.directGazeY;
       const notification = clamp(this.notify.x, 0, 1);
       driftX -= 10 * notification;
       driftY += 7 * notification;
@@ -1472,7 +1542,7 @@ export class GrokBotEngine {
           const pulse = REDUCE_MOTION.matches ? 1 : Math.exp(-(pulseDistance ** 2) / 0.045);
           const pop = REDUCE_MOTION.matches ? 1 : 0.84 + 0.22 * pulse;
           pose.scale *= 1 + (pop - 1) * (amount / Math.max(morphAmount, 0.001));
-          pose.y -= REDUCE_MOTION.matches ? 0 : 9 * pulse * amount;
+          pose.y -= REDUCE_MOTION.matches ? 0 : 9 * pulse * amount * morphAmount;
           pose.opacity *= 1 - (REDUCE_MOTION.matches ? 0 : 0.5 * (1 - pulse)) * amount;
           break;
         }
@@ -1496,14 +1566,14 @@ export class GrokBotEngine {
         case "dock": this.renderDock(amount, now); break;
         case "pencil": {
           const pencil = this.renderPencil(amount, now);
-          pose.x += pencil.x * amount;
-          pose.y += pencil.y * amount;
-          pose.rotation += pencil.rotation * amount;
+          pose.x += pencil.x * amount * morphAmount;
+          pose.y += pencil.y * amount * morphAmount;
+          pose.rotation += pencil.rotation * amount * morphAmount;
           break;
         }
         case "bang":
           this.renderBang(amount, now);
-          pose.y += 58 * amount;
+          pose.y += 58 * amount * morphAmount;
           pose.scale *= 1 + 0.04 * Math.exp(-((elapsed / 1000 % 2.2) * 5.5)) * amount;
           break;
         case "standby":
@@ -1511,8 +1581,8 @@ export class GrokBotEngine {
           pose.opacity *= 1 - (0.28 + 0.2 * Math.sin(0.0016 * now)) * amount;
           break;
         case "whirl":
-          pose.x += (2 * Math.sin(0.0009 * now) + 0.8 * Math.sin(0.0017 * now)) * amount;
-          pose.y += (2.4 * Math.sin(0.0013 * now) + 1.2 * Math.sin(0.0006 * now)) * amount;
+          pose.x += (2 * Math.sin(0.0009 * now) + 0.8 * Math.sin(0.0017 * now)) * amount * morphAmount;
+          pose.y += (2.4 * Math.sin(0.0013 * now) + 1.2 * Math.sin(0.0006 * now)) * amount * morphAmount;
           break;
         case "ball": {
           const seconds = elapsed / 1000;
@@ -1520,7 +1590,7 @@ export class GrokBotEngine {
           const fall = Math.sqrt(80 / gravity);
           const cycle = ((((seconds - fall) / 0.62) % 1 + 1) % 1);
           const height = seconds < fall ? 40 - 0.5 * gravity * seconds ** 2 : 208 * cycle * (1 - cycle);
-          pose.y += (40 - height) * amount;
+          pose.y += (40 - height) * amount * morphAmount;
           break;
         }
         default: break;

@@ -34,8 +34,7 @@ const morphByState = {
   alerting: "bang",
 };
 
-function defaultState(id) {
-  const blink = ORIGINAL_STATE_DATA.BLINK_CADENCE[id];
+function defaultCharacter() {
   return {
     color: "#0b0b0b",
     eyeColor: "#ffffff",
@@ -44,7 +43,14 @@ function defaultState(id) {
     pointer: true,
     badgeColor: "#1d9bf0",
     badgeScale: 1,
+  };
+}
+
+function defaultState(id) {
+  const blink = ORIGINAL_STATE_DATA.BLINK_CADENCE[id];
+  return {
     expressionPool: [...ORIGINAL_STATE_DATA.EXPRESSION_POOLS[id]],
+    expressionWeights: {},
     expressionCadence: [...ORIGINAL_STATE_DATA.EXPRESSION_CADENCE[id]],
     blinkEnabled: Boolean(blink),
     blinkMin: blink?.[0] ?? 3000,
@@ -64,27 +70,43 @@ function defaultState(id) {
 }
 
 function createDefaultProject() {
-  return { version: 4, shape: "blob", states: Object.fromEntries(stateIds.map((id) => [id, defaultState(id)])) };
+  return {
+    version: 5,
+    shape: "blob",
+    character: defaultCharacter(),
+    states: Object.fromEntries(stateIds.map((id) => [id, defaultState(id)])),
+  };
 }
 
 const defaultProject = createDefaultProject();
-const storageKey = "grokbot-original-state-lab-v4";
-const legacyStorageKey = "grokbot-original-state-lab-v3";
+const storageKey = "grokbot-original-state-lab-v5";
+const legacyStorageKeys = ["grokbot-original-state-lab-v4", "grokbot-original-state-lab-v3"];
+const characterKeys = Object.keys(defaultCharacter());
 
 function normalizeProject(candidate) {
   const normalized = createDefaultProject();
   if (!candidate?.states) return normalized;
   const requestedShape = candidate.shape ?? candidate.states.idle?.shape;
   if (SHAPES[requestedShape]) normalized.shape = requestedShape;
+  const incomingCharacter = candidate.character || candidate.states.idle || {};
+  for (const key of characterKeys) {
+    if (incomingCharacter[key] !== undefined) normalized.character[key] = incomingCharacter[key];
+  }
   for (const id of stateIds) {
     const incoming = candidate.states[id];
     if (!incoming) continue;
-    const { shape: _legacyStateShape, ...incomingState } = incoming;
+    const incomingState = { ...incoming };
+    delete incomingState.shape;
+    for (const key of characterKeys) delete incomingState[key];
     normalized.states[id] = { ...normalized.states[id], ...incomingState };
     normalized.states[id].expressionPool = Array.isArray(incoming.expressionPool)
       ? incoming.expressionPool.filter((value) => Number.isInteger(value) && value >= 0 && value < EXPRESSIONS.length)
       : normalized.states[id].expressionPool;
     if (!normalized.states[id].expressionPool.length) normalized.states[id].expressionPool = [...defaultProject.states[id].expressionPool];
+    normalized.states[id].expressionWeights = Object.fromEntries(normalized.states[id].expressionPool.flatMap((index) => {
+      const weight = Number(incoming.expressionWeights?.[index]);
+      return Number.isFinite(weight) && weight > 0 && Math.abs(weight - 1) > 0.0001 ? [[index, Math.min(weight, 20)]] : [];
+    }));
     normalized.states[id].expressionCadence = Array.isArray(incoming.expressionCadence)
       ? incoming.expressionCadence.slice(0, 2).map(Number)
       : normalized.states[id].expressionCadence;
@@ -94,7 +116,7 @@ function normalizeProject(candidate) {
 
 function loadProject() {
   try {
-    const stored = localStorage.getItem(storageKey) ?? localStorage.getItem(legacyStorageKey);
+    const stored = localStorage.getItem(storageKey) ?? legacyStorageKeys.map((key) => localStorage.getItem(key)).find(Boolean);
     return normalizeProject(JSON.parse(stored));
   }
   catch { return createDefaultProject(); }
@@ -105,10 +127,24 @@ let activeState = location.hash.slice(1);
 if (!stateIds.includes(activeState)) activeState = "idle";
 let autoplayTimer = null;
 let autoplayIndex = 0;
+let previewExpressionIndex = null;
+let transitionTimer = null;
+let transitionRunning = false;
+let transitionPhase = "ready";
+let transitionPending = null;
 let editHistory = [JSON.stringify(project)];
 let historyIndex = 0;
 
 const autoplaySequence = ["idle", "curious", "listening", "thinking", "searching", "working", "happy", "playful", "surprised", "celebrate", "orbit", "radar", "progress", "dictating", "writing", "sending", "receiving", "uploading", "notifying", "alerting", "bouncing", "drowsy", "sleeping", "waking"];
+const stateDwell = {
+  drowsy: 6000,
+  celebrate: 6800,
+  progress: 4600,
+  spawning: 4100,
+  waking: 3300,
+  sleeping: 4000,
+  dragging: 3800,
+};
 
 const svg = document.querySelector("#grok-bot");
 const stage = document.querySelector("#bot-stage");
@@ -123,11 +159,23 @@ const editorStateName = document.querySelector("#editor-state-name");
 const saveStatus = document.querySelector("#save-status");
 const autoplayButton = document.querySelector("#autoplay-button");
 const titleElement = document.querySelector("#bot-svg-title");
+const runtimeReadout = document.querySelector("#runtime-readout");
+const transitionFrom = document.querySelector("#transition-from");
+const transitionTo = document.querySelector("#transition-to");
+const transitionHoldA = document.querySelector("#transition-hold-a");
+const transitionHoldB = document.querySelector("#transition-hold-b");
+const transitionLoop = document.querySelector("#transition-loop");
+const transitionStatus = document.querySelector("#transition-status");
+const playbackRate = document.querySelector("#playback-rate");
+const transitionPause = document.querySelector("#transition-pause");
 
 function activeEngineConfig() {
   const state = project.states[activeState];
   return {
+    ...project.character,
     ...state,
+    expressionPool: previewExpressionIndex === null ? state.expressionPool : [previewExpressionIndex],
+    expressionCadence: previewExpressionIndex === null ? state.expressionCadence : [3600000, 3600000],
     shape: project.shape,
     blinkCadence: state.blinkEnabled ? [Math.min(state.blinkMin, state.blinkMax), Math.max(state.blinkMin, state.blinkMax)] : null,
   };
@@ -147,19 +195,19 @@ const editorSections = [
   {
     title: "Character · 角色",
     controls: [
-      { path: "color", label: "头部颜色", type: "color" },
-      { path: "eyeColor", label: "眼睛颜色", type: "color" },
-      { path: "size", label: "尺寸", min: 240, max: 460, step: 1, unit: "px" },
-      { path: "flipX", label: "水平翻转", type: "checkbox" },
-      { path: "pointer", label: "指针视线", type: "checkbox" },
+      { path: "color", label: "头部颜色", type: "color", scope: "character" },
+      { path: "eyeColor", label: "眼睛颜色", type: "color", scope: "character" },
+      { path: "size", label: "尺寸", min: 240, max: 460, step: 1, unit: "px", scope: "character" },
+      { path: "flipX", label: "水平翻转", type: "checkbox", scope: "character" },
+      { path: "pointer", label: "指针视线", type: "checkbox", scope: "character" },
     ],
   },
   {
     title: "State morph · 任务形变",
     controls: [
       { path: "morph", label: "几何形变", type: "select", options: ["none", "dots", "orbit", "radar", "progress", "gather", "wave", "send", "receive", "dock", "ball", "whirl", "pencil", "bang", "standby"] },
-      { path: "badgeColor", label: "通知颜色", type: "color" },
-      { path: "badgeScale", label: "通知尺寸", min: 0.5, max: 1.8, step: 0.01 },
+      { path: "badgeColor", label: "通知颜色", type: "color", scope: "character" },
+      { path: "badgeScale", label: "通知尺寸", min: 0.5, max: 1.8, step: 0.01, scope: "character" },
     ],
   },
   {
@@ -198,6 +246,12 @@ function setAtPath(object, path, value) {
   target[final] = value;
 }
 
+function controlTarget(controlOrElement) {
+  return controlOrElement.scope === "character" || controlOrElement.dataset?.scope === "character"
+    ? project.character
+    : project.states[activeState];
+}
+
 function eyePath(ring) {
   return `M${ring.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join("L")}Z`;
 }
@@ -229,7 +283,7 @@ function renderShapeControls() {
     const eyes = previewEyes.map((eye, index) => `<path class="shape-option-eye" d="${eye.path}" transform="${shapeEyeTransform(shape, index)}" />`).join("");
     button.innerHTML = `<svg viewBox="-15 -15 259 259" aria-hidden="true"><path class="shape-option-head" d="${shape.path}" />${eyes}</svg><span>${shapeLabels[id]}</span><code>${id}</code>`;
     button.addEventListener("click", () => {
-      stopAutoplay();
+      stopPlaybackSequences();
       if (project.shape === id) return;
       project.shape = id;
       updateShapeValues();
@@ -307,10 +361,11 @@ function createControl(control) {
     }
   }
   input.dataset.path = control.path;
+  input.dataset.scope = control.scope || "state";
   input.addEventListener("input", () => {
-    stopAutoplay();
+    stopPlaybackSequences();
     const value = input.type === "checkbox" ? input.checked : input.type === "range" ? Number(input.value) : input.value;
-    setAtPath(project.states[activeState], control.path, value);
+    setAtPath(controlTarget(control), control.path, value);
     if (input.type === "range") output.textContent = formatValue(value, control.unit);
     applyActiveState();
     persistProject();
@@ -321,6 +376,7 @@ function createControl(control) {
   if (!control.type || control.type === "range") {
     output = document.createElement("output");
     output.dataset.outputFor = control.path;
+    output.dataset.scope = control.scope || "state";
     row.append(output);
   }
   return row;
@@ -343,10 +399,14 @@ function createExpressionGrid(control) {
     button.setAttribute("aria-label", `眼形 ${String(index).padStart(2, "0")}`);
     button.innerHTML = `<svg viewBox="45 20 180 190" aria-hidden="true"><path d="${eyePath(expression[0])}"/><path d="${eyePath(expression[1])}"/></svg><span>${String(index).padStart(2, "0")}</span>`;
     button.addEventListener("click", () => {
-      stopAutoplay();
+      stopPlaybackSequences();
       const pool = project.states[activeState].expressionPool;
       const position = pool.indexOf(index);
-      if (position >= 0 && pool.length > 1) pool.splice(position, 1);
+      if (position >= 0 && pool.length > 1) {
+        pool.splice(position, 1);
+        delete project.states[activeState].expressionWeights[index];
+        if (previewExpressionIndex === index) previewExpressionIndex = null;
+      }
       else if (position < 0) pool.push(index);
       updateEditorValues();
       engine.setState(activeState, true);
@@ -356,7 +416,94 @@ function createExpressionGrid(control) {
     grid.append(button);
   });
   fieldset.append(grid);
+  const order = document.createElement("div");
+  order.className = "expression-pool-order";
+  fieldset.append(order);
   return fieldset;
+}
+
+function renderExpressionPoolOrder(fieldset, config) {
+  const root = fieldset.querySelector(".expression-pool-order");
+  root.replaceChildren();
+  const heading = document.createElement("div");
+  heading.className = "expression-pool-heading";
+  heading.innerHTML = `<span>播放顺序</span><small>${config.expressionPool.length} poses</small>`;
+  root.append(heading);
+  config.expressionPool.forEach((expressionIndex, position) => {
+    const row = document.createElement("div");
+    row.className = "expression-pool-item";
+    row.dataset.expression = String(expressionIndex);
+    if (previewExpressionIndex === expressionIndex) row.classList.add("is-previewing");
+    const code = document.createElement("code");
+    code.textContent = `E${String(expressionIndex).padStart(2, "0")}`;
+    const preview = document.createElement("button");
+    preview.type = "button";
+    preview.className = "expression-preview-button";
+    preview.textContent = previewExpressionIndex === expressionIndex ? "退出" : "预览";
+    preview.addEventListener("click", () => {
+      stopPlaybackSequences();
+      previewExpressionIndex = previewExpressionIndex === expressionIndex ? null : expressionIndex;
+      updateEditorValues();
+      engine.setState(activeState, true);
+    });
+    const move = document.createElement("span");
+    move.className = "expression-order-buttons";
+    for (const [label, offset] of [["↑", -1], ["↓", 1]]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.disabled = position + offset < 0 || position + offset >= config.expressionPool.length;
+      button.setAttribute("aria-label", `${label === "↑" ? "前移" : "后移"} E${String(expressionIndex).padStart(2, "0")}`);
+      button.addEventListener("click", () => {
+        stopPlaybackSequences();
+        const target = position + offset;
+        [config.expressionPool[position], config.expressionPool[target]] = [config.expressionPool[target], config.expressionPool[position]];
+        updateEditorValues();
+        engine.setState(activeState, true);
+        persistProject();
+        commitHistory();
+      });
+      move.append(button);
+    }
+    const weightLabel = document.createElement("label");
+    weightLabel.className = "expression-weight";
+    weightLabel.innerHTML = "<span>权重</span>";
+    const weight = document.createElement("input");
+    weight.type = "number";
+    weight.min = "0.1";
+    weight.max = "20";
+    weight.step = "0.1";
+    weight.value = String(config.expressionWeights?.[expressionIndex] ?? 1);
+    weight.addEventListener("change", () => {
+      stopPlaybackSequences();
+      const next = Math.min(20, Math.max(0.1, Number(weight.value) || 1));
+      if (Math.abs(next - 1) < 0.0001) delete config.expressionWeights[expressionIndex];
+      else config.expressionWeights[expressionIndex] = next;
+      weight.value = String(next);
+      persistProject();
+      commitHistory();
+    });
+    weightLabel.append(weight);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "expression-remove-button";
+    remove.textContent = "×";
+    remove.disabled = config.expressionPool.length <= 1;
+    remove.setAttribute("aria-label", `移除 E${String(expressionIndex).padStart(2, "0")}`);
+    remove.addEventListener("click", () => {
+      if (config.expressionPool.length <= 1) return;
+      stopPlaybackSequences();
+      config.expressionPool.splice(position, 1);
+      delete config.expressionWeights[expressionIndex];
+      if (previewExpressionIndex === expressionIndex) previewExpressionIndex = null;
+      updateEditorValues();
+      engine.setState(activeState, true);
+      persistProject();
+      commitHistory();
+    });
+    row.append(code, preview, move, weightLabel, remove);
+    root.append(row);
+  });
 }
 
 function formatValue(value, unit = "") {
@@ -369,22 +516,30 @@ function updateEditorValues() {
   editorStateName.textContent = activeState;
   editorRoot.querySelectorAll("[data-path]").forEach((element) => {
     if (element.classList.contains("expression-picker")) {
-      element.querySelectorAll(".expression-option").forEach((button) => button.classList.toggle("is-selected", config.expressionPool.includes(Number(button.dataset.expression))));
+      element.querySelectorAll(".expression-option").forEach((button) => {
+        const index = Number(button.dataset.expression);
+        button.classList.toggle("is-selected", config.expressionPool.includes(index));
+        button.classList.toggle("is-previewing", previewExpressionIndex === index);
+      });
+      renderExpressionPoolOrder(element, config);
       return;
     }
-    const value = getAtPath(config, element.dataset.path);
+    const value = getAtPath(controlTarget(element), element.dataset.path);
     if (element.type === "checkbox") element.checked = Boolean(value);
     else element.value = value;
   });
   editorRoot.querySelectorAll("[data-output-for]").forEach((output) => {
-    const control = editorSections.flatMap((section) => section.controls).find((item) => item.path === output.dataset.outputFor);
-    output.textContent = formatValue(getAtPath(config, output.dataset.outputFor), control?.unit);
+    const control = editorSections.flatMap((section) => section.controls)
+      .find((item) => item.path === output.dataset.outputFor && (item.scope || "state") === output.dataset.scope);
+    output.textContent = formatValue(getAtPath(controlTarget(output), output.dataset.outputFor), control?.unit);
   });
   updateFidelityStatus();
 }
 
 function updateFidelityStatus() {
-  const exact = project.shape === defaultProject.shape && JSON.stringify(project.states[activeState]) === JSON.stringify(defaultProject.states[activeState]);
+  const exact = project.shape === defaultProject.shape
+    && JSON.stringify(project.character) === JSON.stringify(defaultProject.character)
+    && JSON.stringify(project.states[activeState]) === JSON.stringify(defaultProject.states[activeState]);
   saveStatus.textContent = exact ? "原版参数" : "已自定义";
   saveStatus.classList.toggle("is-modified", !exact);
 }
@@ -397,19 +552,28 @@ function applyActiveState(restart = false) {
   stateCount.textContent = `${String(index + 1).padStart(2, "0")} / ${stateIds.length}`;
   titleElement.textContent = `Grok Bot ${activeState} expression`;
   document.querySelectorAll(".state-button").forEach((button) => button.classList.toggle("is-active", button.dataset.state === activeState));
-  document.querySelectorAll(".swatch").forEach((button) => button.classList.toggle("is-selected", button.dataset.color.toLowerCase() === project.states[activeState].color.toLowerCase()));
+  document.querySelectorAll(".swatch").forEach((button) => button.classList.toggle("is-selected", button.dataset.color.toLowerCase() === project.character.color.toLowerCase()));
   updateEditorValues();
   updateShapeValues();
   if (restart) engine.setState(activeState, true);
 }
 
+function activateState(id, restart = false) {
+  if (!stateIds.includes(id)) return;
+  const replay = restart || id === activeState;
+  activeState = id;
+  previewExpressionIndex = null;
+  window.history.replaceState(null, "", `#${id}`);
+  engine.setState(id, replay);
+  applyActiveState();
+}
+
 function selectState(id) {
   if (!stateIds.includes(id)) return;
-  stopAutoplay();
-  activeState = id;
-  window.history.replaceState(null, "", `#${id}`);
-  engine.setState(id);
-  applyActiveState();
+  stopPlaybackSequences();
+  activateState(id, id === activeState);
+  transitionFrom.value = id;
+  if (transitionTo.value === id) transitionTo.value = stateIds[(stateIds.indexOf(id) + 1) % stateIds.length];
 }
 
 function selectPanel(panel) {
@@ -422,25 +586,116 @@ function selectPanel(panel) {
 }
 
 function startAutoplay() {
+  stopTransition();
+  engine.setPaused(false);
   autoplayIndex = Math.max(0, autoplaySequence.indexOf(activeState));
   autoplayButton.classList.add("is-playing");
   autoplayButton.setAttribute("aria-pressed", "true");
   autoplayButton.querySelector(".play-icon").textContent = "■";
-  autoplayTimer = window.setInterval(() => {
+  const advanceAutoplay = () => {
     autoplayIndex = (autoplayIndex + 1) % autoplaySequence.length;
-    activeState = autoplaySequence[autoplayIndex];
-    window.history.replaceState(null, "", `#${activeState}`);
-    engine.setState(activeState);
-    applyActiveState();
-  }, 3300);
+    activateState(autoplaySequence[autoplayIndex]);
+    const dwell = stateDwell[activeState] || 3300;
+    autoplayTimer = window.setTimeout(advanceAutoplay, dwell / engine.playbackRate);
+  };
+  autoplayTimer = window.setTimeout(advanceAutoplay, (stateDwell[activeState] || 3300) / engine.playbackRate);
 }
 
 function stopAutoplay() {
-  if (autoplayTimer) clearInterval(autoplayTimer);
+  if (autoplayTimer) clearTimeout(autoplayTimer);
   autoplayTimer = null;
   autoplayButton.classList.remove("is-playing");
   autoplayButton.setAttribute("aria-pressed", "false");
   autoplayButton.querySelector(".play-icon").textContent = "▶";
+}
+
+function updateTransitionStatus(label = transitionPhase) {
+  transitionStatus.textContent = `${engine.paused ? "PAUSED" : transitionRunning ? "RUN" : "READY"} · ${label}`.toUpperCase();
+  transitionPause.textContent = engine.paused ? "▶ 继续" : "Ⅱ 暂停";
+}
+
+function scheduleTransition(milliseconds, callback) {
+  const remainingSimMs = Math.max(0, Number(milliseconds) || 0);
+  const rate = engine.playbackRate;
+  transitionPending = { callback, remainingSimMs, rate, startedAt: performance.now() };
+  transitionTimer = window.setTimeout(() => {
+    transitionTimer = null;
+    transitionPending = null;
+    callback();
+  }, remainingSimMs / rate);
+}
+
+function freezeTransitionSchedule() {
+  if (!transitionPending) return;
+  const elapsedSimMs = Math.max(0, performance.now() - transitionPending.startedAt) * transitionPending.rate;
+  transitionPending.remainingSimMs = Math.max(0, transitionPending.remainingSimMs - elapsedSimMs);
+  if (transitionTimer) clearTimeout(transitionTimer);
+  transitionTimer = null;
+}
+
+function resumeTransitionSchedule() {
+  if (!transitionPending || transitionTimer) return;
+  scheduleTransition(transitionPending.remainingSimMs, transitionPending.callback);
+}
+
+function stopTransition({ resumeEngine = true, label = "ready" } = {}) {
+  if (transitionTimer) clearTimeout(transitionTimer);
+  transitionTimer = null;
+  transitionPending = null;
+  transitionRunning = false;
+  transitionPhase = label;
+  if (resumeEngine) engine.setPaused(false);
+  updateTransitionStatus(label);
+}
+
+function stopPlaybackSequences() {
+  stopAutoplay();
+  stopTransition();
+}
+
+function transitionDuration(input) {
+  const value = Math.min(20000, Math.max(100, Number(input.value) || 100));
+  input.value = String(value);
+  return value;
+}
+
+function playTransition() {
+  stopAutoplay();
+  stopTransition();
+  const from = transitionFrom.value;
+  const to = transitionTo.value;
+  const runA = () => {
+    if (!transitionRunning) return;
+    transitionPhase = `A · ${from}`;
+    activateState(from, true);
+    updateTransitionStatus(transitionPhase);
+    scheduleTransition(transitionDuration(transitionHoldA), runB);
+  };
+  const runB = () => {
+    if (!transitionRunning) return;
+    transitionPhase = `B · ${to}`;
+    activateState(to, true);
+    updateTransitionStatus(transitionPhase);
+    scheduleTransition(transitionDuration(transitionHoldB), () => {
+      if (transitionLoop.checked) runA();
+      else stopTransition({ label: `${from} → ${to} done` });
+    });
+  };
+  transitionRunning = true;
+  engine.setPlaybackRate(Number(playbackRate.value));
+  engine.setPaused(false);
+  runA();
+}
+
+function toggleTransitionPause() {
+  if (engine.paused) {
+    engine.setPaused(false);
+    if (transitionRunning) resumeTransitionSchedule();
+  } else {
+    if (transitionRunning) freezeTransitionSchedule();
+    engine.setPaused(true);
+  }
+  updateTransitionStatus(transitionPhase);
 }
 
 function persistProject() {
@@ -461,8 +716,10 @@ function commitHistory() {
 function stepHistory(direction) {
   const next = historyIndex + direction;
   if (next < 0 || next >= editHistory.length) return;
+  stopPlaybackSequences();
   historyIndex = next;
   project = normalizeProject(JSON.parse(editHistory[historyIndex]));
+  previewExpressionIndex = null;
   persistProject();
   applyActiveState(true);
   updateHistoryButtons();
@@ -474,15 +731,27 @@ function updateHistoryButtons() {
 }
 
 function resetCurrentState() {
+  stopPlaybackSequences();
+  previewExpressionIndex = null;
   project.states[activeState] = structuredClone(defaultProject.states[activeState]);
   persistProject();
   commitHistory();
   applyActiveState(true);
 }
 
+function resetCharacter() {
+  stopPlaybackSequences();
+  project.character = defaultCharacter();
+  persistProject();
+  commitHistory();
+  applyActiveState();
+}
+
 function resetAll() {
   if (!window.confirm("恢复 39 个状态的全部原版参数？当前编辑仍可通过撤销找回。")) return;
+  stopPlaybackSequences();
   project = createDefaultProject();
+  previewExpressionIndex = null;
   persistProject();
   commitHistory();
   applyActiveState(true);
@@ -499,14 +768,16 @@ function exportProject() {
   const blob = new Blob([JSON.stringify(project, null, 2)], { type: "application/json" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "grok-bot-original-states.json";
+  link.download = "grok-bot-original-states-v5.json";
   link.click();
   URL.revokeObjectURL(link.href);
 }
 
 async function importProject(file) {
   try {
+    stopPlaybackSequences();
     project = normalizeProject(JSON.parse(await file.text()));
+    previewExpressionIndex = null;
     persistProject();
     commitHistory();
     applyActiveState(true);
@@ -515,28 +786,73 @@ async function importProject(file) {
 
 function capitalize(value) { return value.charAt(0).toUpperCase() + value.slice(1); }
 
+for (const [id, label] of states) {
+  transitionFrom.add(new Option(`${label} · ${id}`, id));
+  transitionTo.add(new Option(`${label} · ${id}`, id));
+}
+transitionFrom.value = activeState;
+transitionTo.value = activeState === "thinking" ? "idle" : "thinking";
+
 renderStateControls();
 renderShapeControls();
 renderEditor();
 engine.setState(activeState, true);
 applyActiveState();
 updateHistoryButtons();
+updateTransitionStatus();
+
+let lastRuntimeReadout = -Infinity;
+function updateRuntimeReadout(realNow) {
+  if (realNow - lastRuntimeReadout > 100) {
+    const snapshot = engine.getSnapshot();
+    const expression = `E${String(snapshot.expressionIndex).padStart(2, "0")}`;
+    const morph = snapshot.morphEffect ? `${snapshot.morphEffect} ${snapshot.morphAmount.toFixed(2)}` : "none 0.00";
+    runtimeReadout.textContent = `${expression} · eye ${snapshot.eyeOpen.toFixed(2)} · morph ${morph} · ${snapshot.elapsed.toFixed(1)}s${snapshot.paused ? " · paused" : ""}`;
+    lastRuntimeReadout = realNow;
+  }
+  requestAnimationFrame(updateRuntimeReadout);
+}
+requestAnimationFrame(updateRuntimeReadout);
 
 document.querySelector("#states-tab").addEventListener("click", () => selectPanel("states"));
 document.querySelector("#shapes-tab").addEventListener("click", () => selectPanel("shapes"));
 document.querySelector("#editor-tab").addEventListener("click", () => selectPanel("editor"));
 autoplayButton.addEventListener("click", () => autoplayTimer ? stopAutoplay() : startAutoplay());
+document.querySelector("#transition-play").addEventListener("click", playTransition);
+document.querySelector("#transition-stop").addEventListener("click", () => { stopAutoplay(); stopTransition(); });
+transitionPause.addEventListener("click", toggleTransitionPause);
+document.querySelector("#transition-step").addEventListener("click", () => {
+  stopAutoplay();
+  if (transitionRunning && !engine.paused) freezeTransitionSchedule();
+  engine.stepFrame();
+  updateTransitionStatus(`${transitionPhase} · +1 frame`);
+});
+document.querySelector("#transition-replay").addEventListener("click", () => {
+  stopPlaybackSequences();
+  engine.setState(activeState, true);
+  updateTransitionStatus(`replay · ${activeState}`);
+});
+playbackRate.addEventListener("change", () => {
+  stopAutoplay();
+  const wasScheduled = transitionRunning && !engine.paused;
+  if (wasScheduled) freezeTransitionSchedule();
+  engine.setPlaybackRate(Number(playbackRate.value));
+  if (wasScheduled) resumeTransitionSchedule();
+  updateTransitionStatus(transitionPhase);
+});
+[transitionHoldA, transitionHoldB].forEach((input) => input.addEventListener("change", () => transitionDuration(input)));
 document.querySelector("#undo-button").addEventListener("click", () => stepHistory(-1));
 document.querySelector("#redo-button").addEventListener("click", () => stepHistory(1));
 document.querySelector("#reset-state-button").addEventListener("click", resetCurrentState);
+document.querySelector("#reset-character-button").addEventListener("click", resetCharacter);
 document.querySelector("#reset-all-button").addEventListener("click", resetAll);
 document.querySelector("#export-json-button").addEventListener("click", exportProject);
 document.querySelector("#copy-json-button").addEventListener("click", (event) => copyProject(event.currentTarget).catch(() => window.alert("无法访问剪贴板，请使用“导出文件”。")));
 document.querySelector("#import-json-input").addEventListener("change", (event) => { const file = event.target.files[0]; if (file) importProject(file); event.target.value = ""; });
 
 document.querySelectorAll(".swatch").forEach((button) => button.addEventListener("click", () => {
-  stopAutoplay();
-  project.states[activeState].color = button.dataset.color;
+  stopPlaybackSequences();
+  project.character.color = button.dataset.color;
   persistProject();
   commitHistory();
   applyActiveState();
@@ -555,7 +871,11 @@ window.addEventListener("keydown", (event) => {
 
 window.addEventListener("hashchange", () => {
   const state = location.hash.slice(1);
-  if (stateIds.includes(state) && state !== activeState) { activeState = state; engine.setState(state); applyActiveState(); }
+  if (stateIds.includes(state) && state !== activeState) {
+    stopPlaybackSequences();
+    activateState(state);
+    transitionFrom.value = state;
+  }
 });
 
 stage.addEventListener("focus", () => stage.classList.add("is-focused"));
