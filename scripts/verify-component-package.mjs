@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -33,7 +34,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.2.0");
+assert.equal(manifest.version, "0.3.0");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -110,7 +111,7 @@ assert.ok(demo.includes('id="add-sequence-step"'), "component workbench should a
 assert.ok(demo.includes('id="sequence-loop"'), "component workbench should expose timeline looping");
 assert.ok(demo.includes('id="preview-sequence"') && demo.includes('id="stop-sequence"'), "component workbench should expose timeline playback controls");
 assert.doesNotMatch(demo, /常用状态|常用形状/, "component workbench must not hide choices behind a common subset");
-assert.match(demoRuntime, /const orderedStates = \["idle",/, "idle should be the first visual state option");
+assert.match(demoRuntime, /STATE_IDS as orderedStates/, "the visual state options should use the idle-first shared catalog");
 assert.match(demoRuntime, /botThumbnail\(\{ state, shape/, "state and shape catalogs should render real component thumbnails");
 assert.match(demoRuntime, /setAttribute\("thumbnail"/, "catalog previews should suppress incidental particle trails");
 assert.doesNotMatch(demoRuntime, /preview\.shape = shapeInput|preview\.state = stateInput/, "catalog previews must not trigger bulk shape or state transitions");
@@ -128,10 +129,21 @@ for (const section of ["attributes", "properties", "methods", "events", "states"
   assert.ok(docs.includes(`id="${section}"`), `API site should include the ${section} section`);
 }
 assert.match(docs, /id="docs-bot"/, "API site should include an interactive live component");
-assert.match(docsRuntime, /MORPH_BOT_STATES/, "API site should render the full exported state reference");
+assert.match(docsRuntime, /STATE_IDS as orderedStates/, "API site should render the full shared state reference");
 assert.match(docsRuntime, /MORPH_BOT_SHAPES/, "API site should render the full exported shape reference");
 assert.match(docsRuntime, /MORPH_BOT_EFFECTS/, "API site should render the full exported morph reference");
 assert.match(docs, /playSequence\(steps, options\?\)/, "API site should document sequence playback");
 assert.ok(existsSync(downloadPath), "downloadable component ZIP should exist");
+const bundledFiles = execFileSync("unzip", ["-Z1", downloadPath], { encoding: "utf8" });
+for (const file of [
+  "morph-bot/catalog.js",
+  "morph-bot/runtime/math.js",
+  "morph-bot/runtime/morph-system.js",
+  "morph-bot/runtime/particle-system.js",
+  "morph-bot/runtime/physics-system.js",
+  "morph-bot/runtime/simulation-clock.js",
+  "morph-bot/runtime/state-behavior-system.js",
+  "morph-bot/runtime/svg-renderer.js",
+]) assert.match(bundledFiles, new RegExp(`^${file}$`, "m"), `download bundle should include ${file}`);
 
 console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and a downloadable WYSIWYG workbench.`);

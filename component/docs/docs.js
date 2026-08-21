@@ -1,35 +1,16 @@
 import {
   MORPH_BOT_EFFECTS,
   MORPH_BOT_SHAPES,
-  MORPH_BOT_STATES,
 } from "../morph-bot.js";
+import {
+  MORPH_LABELS_ZH as effectDescriptions,
+  SHAPE_LABELS_ZH as shapeLabels,
+  STATE_GROUPS,
+  STATE_IDS as orderedStates,
+  STATE_LABELS_ZH as stateLabels,
+} from "../catalog.js";
 
-const stateGroups = [
-  { label: "基础状态", states: ["idle", "sleeping", "waking", "listening", "thinking", "searching", "working"] },
-  { label: "情绪反应", states: ["excited", "surprised", "suspicious", "angry", "drowsy", "happy", "curious", "confused", "bored", "proud", "shy", "sad", "laughing", "scared", "playful", "celebrate"] },
-  { label: "Agent 形变", states: ["orbit", "radar", "progress"] },
-  { label: "任务状态", states: ["spawning", "humming", "loading", "dictating", "writing", "sending", "receiving", "uploading", "notifying", "alerting", "dragging", "bouncing", "powering-down"] },
-];
-
-const stateLabels = {
-  sleeping: "睡眠", waking: "醒来", idle: "待机", listening: "倾听", thinking: "思考", searching: "搜索", working: "工作",
-  excited: "兴奋", surprised: "惊讶", suspicious: "怀疑", angry: "生气", drowsy: "困倦", happy: "开心", curious: "好奇",
-  confused: "困惑", bored: "无聊", proud: "得意", shy: "害羞", sad: "难过", laughing: "大笑", scared: "害怕", playful: "调皮",
-  celebrate: "庆祝", orbit: "轨道", radar: "雷达", progress: "进度", spawning: "生成", humming: "运转", loading: "加载",
-  dictating: "听写", writing: "书写", sending: "发送", receiving: "接收", uploading: "上传", notifying: "通知", alerting: "警报",
-  dragging: "拖拽", bouncing: "弹跳", "powering-down": "关机",
-};
-
-const shapeLabels = {
-  blob: "圆形", pebble: "卵石", bean: "豆形", egg: "蛋形", squircle: "圆角方形", tablet: "圆角矩形", capsule: "胶囊",
-  cylinder: "圆柱", hex: "六边形", gem: "宝石", crystal: "水晶", wedge: "三角楔形", shield: "盾牌", dome: "拱顶",
-  arch: "拱门", cloud: "云朵", teardrop: "水滴", leaf: "叶片",
-};
-
-const effectDescriptions = {
-  dots: "思考点阵", orbit: "彩色轨道", radar: "雷达扫描", progress: "循环进度", gather: "聚合生成", wave: "声音波形", send: "向外发送",
-  receive: "接收进入", dock: "上传停靠", ball: "弹跳球体", whirl: "旋转加载", pencil: "书写铅笔", bang: "警报符号", standby: "待机关机",
-};
+const stateGroups = STATE_GROUPS.map((group) => ({ label: group.label.zh, states: group.states }));
 
 const bot = document.querySelector("#docs-bot");
 const stateSelect = document.querySelector("#docs-state");
@@ -38,7 +19,6 @@ const effectSelect = document.querySelector("#docs-effect");
 const snapshotOutput = document.querySelector("#live-snapshot");
 const pauseButton = document.querySelector("#toggle-pause");
 
-const orderedStates = ["idle", ...MORPH_BOT_STATES.filter((state) => state !== "idle")];
 for (const state of orderedStates) stateSelect.add(new Option(`${stateLabels[state]} · ${state}`, state));
 for (const shape of MORPH_BOT_SHAPES) shapeSelect.add(new Option(`${shapeLabels[shape]} · ${shape}`, shape));
 for (const effect of MORPH_BOT_EFFECTS) effectSelect.add(new Option(`${effectDescriptions[effect]} · ${effect}`, effect));

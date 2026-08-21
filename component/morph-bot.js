@@ -1,26 +1,11 @@
-import { GrokBotEngine, MORPH_SIZES } from "./grok-bot-engine.js";
-import { ORIGINAL_STATE_DATA, SHAPES } from "./original-data.js";
+import { GrokBotEngine } from "./grok-bot-engine.js";
+import { ORIGINAL_STATE_DATA } from "./original-data.js";
+import { MORPH_BY_STATE, MORPH_IDS, SHAPE_IDS, STATE_IDS } from "./catalog.js";
 
-export const MORPH_BOT_STATES = Object.freeze(Object.keys(ORIGINAL_STATE_DATA.EXPRESSION_POOLS));
-export const MORPH_BOT_SHAPES = Object.freeze(Object.keys(SHAPES));
-export const MORPH_BOT_EFFECTS = Object.freeze(Object.keys(MORPH_SIZES));
-
-export const MORPH_BY_STATE = Object.freeze({
-  thinking: "dots",
-  orbit: "orbit",
-  radar: "radar",
-  progress: "progress",
-  spawning: "gather",
-  dictating: "wave",
-  sending: "send",
-  receiving: "receive",
-  uploading: "dock",
-  bouncing: "ball",
-  loading: "whirl",
-  "powering-down": "standby",
-  writing: "pencil",
-  alerting: "bang",
-});
+export const MORPH_BOT_STATES = STATE_IDS;
+export const MORPH_BOT_SHAPES = SHAPE_IDS;
+export const MORPH_BOT_EFFECTS = MORPH_IDS;
+export { MORPH_BY_STATE };
 
 const DEFAULT_CHARACTER = Object.freeze({
   color: "#0b0b0b",

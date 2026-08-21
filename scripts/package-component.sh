@@ -19,10 +19,12 @@ cp \
   "$repo_dir/component/morph-bot.js" \
   "$repo_dir/component/grok-bot-engine.js" \
   "$repo_dir/component/original-data.js" \
+  "$repo_dir/component/catalog.js" \
   "$repo_dir/component/morph-bot.d.ts" \
   "$repo_dir/component/README.md" \
   "$repo_dir/component/package.json" \
   "$bundle_dir/"
+cp -R "$repo_dir/component/runtime" "$bundle_dir/runtime"
 
 cd "$stage_dir"
 zip -q -r "$output_file" morph-bot

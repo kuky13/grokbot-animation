@@ -140,12 +140,16 @@ See [component/README.md](./component/README.md) for the offline component guide
 │   ├── docs/                   Interactive API documentation
 │   ├── morph-bot.js            Web Component entry
 │   ├── morph-bot.d.ts          TypeScript declarations
-│   ├── grok-bot-engine.js      SVG animation engine
+│   ├── catalog.js              Shared bilingual state/shape/Morph catalog
+│   ├── grok-bot-engine.js      Stable engine facade and coordinator
 │   ├── original-data.js        States, expressions, and geometry
+│   ├── runtime/                Clock, physics, behavior, Morph, particle, and SVG systems
 │   └── downloads/              Versioned component bundles
 ├── scripts/                    Extraction, packaging, and regression checks
 └── ANALYSIS.md                 Reference investigation notes
 ```
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for module boundaries, data flow, and behavioral contracts.
 
 ### Verification
 
@@ -164,8 +168,8 @@ The regression suite covers:
 
 Current releases:
 
-- Animation lab: `v1.4.0`
-- Standalone component: `v0.2.0`
+- Animation lab: `v1.5.0`
+- Standalone component: `v0.3.0`
 
 ### Status and disclaimer
 
@@ -304,12 +308,16 @@ bot.stopSequence();
 │   ├── docs/                   交互式 API 文档
 │   ├── morph-bot.js            Web Component 入口
 │   ├── morph-bot.d.ts          TypeScript 类型声明
-│   ├── grok-bot-engine.js      SVG 动画引擎
+│   ├── catalog.js              状态、形状与 Morph 双语目录
+│   ├── grok-bot-engine.js      稳定引擎门面与系统编排
 │   ├── original-data.js        状态、表情与几何数据
+│   ├── runtime/                时钟、物理、行为、Morph、粒子与 SVG 系统
 │   └── downloads/              带版本号的组件下载包
 ├── scripts/                    数据提取、打包与回归脚本
 └── ANALYSIS.md                 参考实现分析记录
 ```
+
+模块边界、数据流与行为契约详见 [ARCHITECTURE.md](./ARCHITECTURE.md)。
 
 ### 验证
 
@@ -328,8 +336,8 @@ npm run pack:component
 
 当前版本：
 
-- 动画实验室：`v1.4.0`
-- 独立组件：`v0.2.0`
+- 动画实验室：`v1.5.0`
+- 独立组件：`v0.3.0`
 
 ### 项目状态与声明
 

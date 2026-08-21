@@ -1,38 +1,23 @@
 import { EXPRESSIONS, HEAD_C, ORIGINAL_STATE_DATA, SHAPES } from "./original-data.js";
 import { GrokBotEngine } from "./grok-bot-engine.js";
+import {
+  MORPH_BY_STATE,
+  SHAPE_LABELS_ZH,
+  STATE_CATALOG,
+  STATE_GROUPS,
+  STATE_IDS,
+  STATE_LABELS_ZH,
+} from "./component/catalog.js";
 
-const stateGroups = [
-  { label: "Lifecycle · 基础状态", states: [["sleeping", "睡眠"], ["waking", "醒来"], ["idle", "待机"], ["listening", "倾听"], ["thinking", "思考"], ["searching", "搜索"], ["working", "工作"]] },
-  { label: "Reactions · 情绪反应", states: [["excited", "兴奋"], ["surprised", "惊讶"], ["suspicious", "怀疑"], ["angry", "生气"], ["drowsy", "困倦"], ["happy", "开心"], ["curious", "好奇"], ["confused", "困惑"], ["bored", "无聊"], ["proud", "得意"], ["shy", "害羞"], ["sad", "难过"], ["laughing", "大笑"], ["scared", "害怕"], ["playful", "调皮"], ["celebrate", "庆祝"]] },
-  { label: "Agent morphs · Agent 形变", states: [["orbit", "轨道"], ["radar", "雷达"], ["progress", "进度"]] },
-  { label: "Product lifecycle · 任务状态", states: [["spawning", "生成"], ["humming", "运转"], ["loading", "加载"], ["dictating", "听写"], ["writing", "书写"], ["sending", "发送"], ["receiving", "接收"], ["uploading", "上传"], ["notifying", "通知"], ["alerting", "警报"], ["dragging", "拖拽"], ["bouncing", "弹跳"], ["powering-down", "关机"]] },
-];
-
-const states = stateGroups.flatMap((group) => group.states);
-const stateIds = states.map(([id]) => id);
-const stateLabels = Object.fromEntries(states);
-const shapeLabels = {
-  blob: "圆形", pebble: "卵石", bean: "豆形", egg: "蛋形", squircle: "圆角方形",
-  tablet: "圆角矩形", capsule: "胶囊", cylinder: "圆柱", hex: "六边形", gem: "宝石",
-  crystal: "水晶", wedge: "三角楔形", shield: "盾牌", dome: "拱顶", arch: "拱门",
-  cloud: "云朵", teardrop: "水滴", leaf: "叶片",
-};
-const morphByState = {
-  thinking: "dots",
-  orbit: "orbit",
-  radar: "radar",
-  progress: "progress",
-  spawning: "gather",
-  dictating: "wave",
-  sending: "send",
-  receiving: "receive",
-  uploading: "dock",
-  bouncing: "ball",
-  loading: "whirl",
-  "powering-down": "standby",
-  writing: "pencil",
-  alerting: "bang",
-};
+const stateGroups = STATE_GROUPS.map((group) => ({
+  label: `${group.label.en} · ${group.label.zh}`,
+  states: group.states.map((id) => [id, STATE_LABELS_ZH[id]]),
+}));
+const states = STATE_CATALOG.map(({ id, zh }) => [id, zh]);
+const stateIds = STATE_IDS;
+const stateLabels = STATE_LABELS_ZH;
+const shapeLabels = SHAPE_LABELS_ZH;
+const morphByState = MORPH_BY_STATE;
 
 function defaultCharacter() {
   return {

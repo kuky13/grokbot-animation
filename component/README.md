@@ -15,6 +15,8 @@ morph-bot/
 ├── morph-bot.js
 ├── grok-bot-engine.js
 ├── original-data.js
+├── catalog.js
+├── runtime/
 ├── morph-bot.d.ts
 └── README.md
 ```
