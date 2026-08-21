@@ -15,8 +15,9 @@
       </a>
       <div class="header-actions">
         <span class="component-stats">39 状态 · 18 形状</span>
+        <a class="quiet-action" href="./docs/">API 文档</a>
         <a class="quiet-action" href="../">打开高级动画实验室</a>
-        <a class="download-action" href="./downloads/morph-bot-element-0.1.3.zip" download>下载组件包 <span>↓</span></a>
+        <a class="download-action" href="./downloads/morph-bot-element-0.1.4.zip" download>下载组件包 <span>↓</span></a>
       </div>
     </header>
 
@@ -99,7 +100,7 @@
           <div class="first-use">
             <span class="first-use-label">第一次使用？</span>
             <p>下载并解压到项目中，保留 <code>morph-bot/</code> 文件夹。</p>
-            <a href="./downloads/morph-bot-element-0.1.3.zip" download>下载 morph-bot.zip <span>↓</span></a>
+            <a href="./downloads/morph-bot-element-0.1.4.zip" download>下载 morph-bot.zip <span>↓</span></a>
           </div>
 
           <div class="code-card">
@@ -133,13 +134,13 @@ await bot.playMorph("send");</code></pre>
 
       <section class="below-studio" aria-labelledby="examples-title">
         <header>
-          <p>更多用法</p>
-          <h2 id="examples-title">同一个组件，放进不同任务。</h2>
-          <span><code>loading</code> 和 <code>progress</code> 是循环动画，不代表真实百分比。</span>
+          <p>场景参考</p>
+          <h2 id="examples-title">Bot 可以放在哪里？</h2>
+          <span>下面展示按钮、任务卡和页面加载的实际组合方式。<code>progress</code> 是循环动画，不代表真实百分比。</span>
         </header>
         <div class="example-grid">
           <article>
-            <div class="button-example"><morph-bot state="loading" shape="blob" size="18" decorative></morph-bot><span>正在生成</span></div>
+            <div class="button-example"><button type="button" disabled><morph-bot state="loading" shape="blob" size="18" color="#ffffff" eye-color="#4f66dd" decorative></morph-bot><span>正在生成</span></button></div>
             <strong>按钮内加载</strong><code>size="18"</code>
           </article>
           <article>
@@ -154,7 +155,7 @@ await bot.playMorph("send");</code></pre>
       </section>
     </main>
 
-    <footer><span>Morph Bot Element · framework-free Web Component</span><a href="./README.md">完整 API 文档 ↗</a></footer>
+    <footer><span>Morph Bot Element · framework-free Web Component</span><a href="./docs/">完整 API 文档 ↗</a></footer>
     <script type="module" src="./demo.js"></script>
   </body>
 </html>

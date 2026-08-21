@@ -181,14 +181,11 @@ main { width: 100%; }
 .below-studio header > span { color: var(--muted); font-size: 13px; line-height: 1.6; }
 .below-studio header code { color: var(--ink); }
 .example-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.example-grid article { min-height: 245px; display: grid; grid-template-columns: 1fr auto; grid-template-rows: 1fr auto; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.example-grid article { min-height: 210px; display: grid; grid-template-columns: 1fr auto; grid-template-rows: 1fr auto; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 .example-grid article > div { grid-column: 1 / -1; align-self: stretch; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: #e8e9e3; }
 .example-grid article > strong { font-size: 13px; }
 .example-grid article > code { color: var(--muted); font-size: 11px; }
-.button-example { gap: 8px; }
-.button-example::before { content: ""; position: absolute; }
-.button-example morph-bot, .button-example span { position: relative; z-index: 1; }
-.button-example span { padding: 10px 12px 10px 30px; margin-left: -28px; border-radius: 8px; color: white; background: var(--blue); font-size: 12px; }
+.button-example button { min-height: 42px; display: inline-flex; align-items: center; gap: 9px; padding: 0 15px; border: 0; border-radius: 9px; color: white; background: var(--blue); font-size: 12px; font-weight: 720; opacity: 1; }
 .card-example { gap: 12px; }
 .card-example p { display: grid; gap: 3px; margin: 0; }
 .card-example b { font-size: 13px; }

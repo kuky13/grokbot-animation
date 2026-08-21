@@ -33,7 +33,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.1.3");
+assert.equal(manifest.version, "0.1.4");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -74,6 +74,8 @@ assert.doesNotMatch(source, /from\s+["']\.\.\//, "published component must not i
 
 const demo = readFileSync(resolve(packageRoot, "index.html"), "utf8");
 const demoRuntime = readFileSync(resolve(packageRoot, "demo.js"), "utf8");
+const docs = readFileSync(resolve(packageRoot, "docs/index.html"), "utf8");
+const docsRuntime = readFileSync(resolve(packageRoot, "docs/docs.js"), "utf8");
 for (const section of ['id="edit"', 'id="display"', 'id="use"']) assert.ok(demo.includes(section), `component guide should include ${section}`);
 assert.ok(demo.includes('id="preview-stage"'), "component workbench should expose a live preview stage above the fold");
 assert.ok(demo.includes('id="component-code"'), "component workbench should expose synchronized generated code");
@@ -88,6 +90,15 @@ assert.doesNotMatch(demoRuntime, /preview\.shape = shapeInput|preview\.state = s
 assert.match(demoRuntime, /transitionButton\.addEventListener/, "A to B transition preview should be interactive");
 assert.match(demoRuntime, /bot\.setState\(/, "generated transition usage should call the public state API");
 assert.ok(demo.includes(`morph-bot-element-${manifest.version}.zip`), "component workbench should link the downloadable bundle");
+assert.ok(demo.includes('href="./docs/"'), "component workbench should link the readable API site");
+assert.match(demo, /button-example"><button[^>]*disabled><morph-bot/, "button usage example should contain a visible bot inside the button");
+for (const section of ["attributes", "properties", "methods", "events", "states", "shapes", "effects", "accessibility", "lifecycle", "typescript"]) {
+  assert.ok(docs.includes(`id="${section}"`), `API site should include the ${section} section`);
+}
+assert.match(docs, /id="docs-bot"/, "API site should include an interactive live component");
+assert.match(docsRuntime, /MORPH_BOT_STATES/, "API site should render the full exported state reference");
+assert.match(docsRuntime, /MORPH_BOT_SHAPES/, "API site should render the full exported shape reference");
+assert.match(docsRuntime, /MORPH_BOT_EFFECTS/, "API site should render the full exported morph reference");
 assert.ok(existsSync(downloadPath), "downloadable component ZIP should exist");
 
 console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and a downloadable WYSIWYG workbench.`);
