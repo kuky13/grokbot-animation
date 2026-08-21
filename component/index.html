@@ -17,7 +17,7 @@
         <span class="component-stats">39 状态 · 18 形状</span>
         <a class="quiet-action" href="./docs/">API 文档</a>
         <a class="quiet-action" href="../">打开高级动画实验室</a>
-        <a class="download-action" href="./downloads/morph-bot-element-0.1.4.zip" download>下载组件包 <span>↓</span></a>
+        <a class="download-action" href="./downloads/morph-bot-element-0.1.5.zip" download>下载组件包 <span>↓</span></a>
       </div>
     </header>
 
@@ -36,7 +36,7 @@
             <fieldset class="state-fieldset">
               <legend>全部状态 <span>39</span></legend>
               <div class="state-grid" id="state-grid"></div>
-              <p class="catalog-note">目录隐藏彩色粒子；点选后在中间查看完整状态。</p>
+              <p class="catalog-note">先点中间的 A 或 B，再点这里的状态。目录缩略图隐藏彩色粒子，完整效果在中间播放。</p>
             </fieldset>
 
             <fieldset class="shape-fieldset">
@@ -71,11 +71,29 @@
             <button type="button" data-context="page">页面</button>
           </div>
 
-          <div class="transition-builder" aria-label="状态切换预览">
-            <label><span>从 A</span><select id="transition-from"></select></label>
-            <span class="transition-arrow" aria-hidden="true">→</span>
-            <label><span>到 B</span><select id="transition-to"></select></label>
-            <button id="preview-transition" type="button"><span>▶</span> 预览 A → B</button>
+          <div class="transition-builder" id="transition-builder" data-active-slot="to" data-phase="ready" aria-label="状态切换预览">
+            <input id="transition-from" type="hidden" value="idle" />
+            <input id="transition-to" type="hidden" value="thinking" />
+            <div class="transition-slots">
+              <button class="transition-slot" type="button" data-transition-slot="from" aria-pressed="false">
+                <span class="slot-role"><b>A</b><small>起点</small></span>
+                <morph-bot id="transition-from-bot" state="idle" shape="blob" size="38" thumbnail decorative></morph-bot>
+                <span class="slot-copy"><strong id="transition-from-label">待机</strong><code id="transition-from-code">idle</code></span>
+              </button>
+              <button id="swap-transition" class="swap-transition" type="button" aria-label="交换起点和终点" title="交换 A 与 B">⇄</button>
+              <button class="transition-slot is-active" type="button" data-transition-slot="to" aria-pressed="true">
+                <span class="slot-role"><b>B</b><small>终点</small></span>
+                <morph-bot id="transition-to-bot" state="thinking" shape="blob" size="38" thumbnail decorative></morph-bot>
+                <span class="slot-copy"><strong id="transition-to-label">思考</strong><code id="transition-to-code">thinking</code></span>
+              </button>
+            </div>
+            <div class="transition-progress" aria-label="切换播放阶段">
+              <span data-transition-phase="a">A</span><i></i><span data-transition-phase="switch">切换</span><i></i><span data-transition-phase="b">B</span>
+            </div>
+            <div class="transition-action-row">
+              <p id="transition-hint"><strong>正在选择终点 B</strong><span>点击左侧任意状态即可替换</span></p>
+              <button id="preview-transition" type="button"><span>▶</span> 播放 A → B</button>
+            </div>
           </div>
 
           <figure class="preview-stage" id="preview-stage" data-context="solo">
@@ -100,7 +118,7 @@
           <div class="first-use">
             <span class="first-use-label">第一次使用？</span>
             <p>下载并解压到项目中，保留 <code>morph-bot/</code> 文件夹。</p>
-            <a href="./downloads/morph-bot-element-0.1.4.zip" download>下载 morph-bot.zip <span>↓</span></a>
+            <a href="./downloads/morph-bot-element-0.1.5.zip" download>下载 morph-bot.zip <span>↓</span></a>
           </div>
 
           <div class="code-card">

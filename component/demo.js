@@ -32,7 +32,16 @@ const pointerInput = document.querySelector("#demo-pointer");
 const pauseButton = document.querySelector("#demo-pause");
 const transitionFrom = document.querySelector("#transition-from");
 const transitionTo = document.querySelector("#transition-to");
+const transitionBuilder = document.querySelector("#transition-builder");
 const transitionButton = document.querySelector("#preview-transition");
+const transitionHint = document.querySelector("#transition-hint");
+const transitionFromBot = document.querySelector("#transition-from-bot");
+const transitionToBot = document.querySelector("#transition-to-bot");
+const transitionFromLabel = document.querySelector("#transition-from-label");
+const transitionFromCode = document.querySelector("#transition-from-code");
+const transitionToLabel = document.querySelector("#transition-to-label");
+const transitionToCode = document.querySelector("#transition-to-code");
+const swapTransitionButton = document.querySelector("#swap-transition");
 const bot = document.querySelector("#demo-bot");
 const previewStage = document.querySelector("#preview-stage");
 const contextTitle = document.querySelector("#context-title");
@@ -41,7 +50,9 @@ const readout = document.querySelector("#demo-readout");
 const runtime = document.querySelector("#demo-runtime");
 const code = document.querySelector("#component-code");
 let codeMode = "static";
+let activeTransitionSlot = "to";
 let transitionTimer = 0;
+let transitionPhaseTimer = 0;
 
 function botThumbnail({ state, shape, size }) {
   const preview = document.createElement("morph-bot");
@@ -57,17 +68,15 @@ for (const state of orderedStates) {
   const button = document.createElement("button");
   button.type = "button";
   button.dataset.stateOption = state;
-  button.setAttribute("aria-label", `预览${stateLabels[state]}状态`);
+  button.setAttribute("aria-label", `选择${stateLabels[state]}状态`);
   button.append(botThumbnail({ state, shape: "blob", size: 34 }));
   const label = document.createElement("span");
+  label.className = "state-option-copy";
   label.innerHTML = `<strong>${stateLabels[state]}</strong><code>${state}</code>`;
-  button.append(label);
+  const markers = document.createElement("span");
+  markers.className = "state-role-markers";
+  button.append(label, markers);
   stateGrid.append(button);
-
-  const fromOption = new Option(`${stateLabels[state]} · ${state}`, state);
-  const toOption = new Option(`${stateLabels[state]} · ${state}`, state);
-  transitionFrom.add(fromOption);
-  transitionTo.add(toOption);
 }
 
 for (const shape of MORPH_BOT_SHAPES) {
@@ -82,10 +91,10 @@ for (const shape of MORPH_BOT_SHAPES) {
   shapeGrid.append(button);
 }
 
-stateInput.value = "idle";
 shapeInput.value = "blob";
 transitionFrom.value = "idle";
 transitionTo.value = "thinking";
+stateInput.value = transitionTo.value;
 
 function escapeAttribute(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;");
@@ -133,6 +142,53 @@ function syncThumbnailAppearance() {
   });
 }
 
+function syncTransitionUI() {
+  const from = transitionFrom.value;
+  const to = transitionTo.value;
+  transitionBuilder.dataset.activeSlot = activeTransitionSlot;
+  document.querySelectorAll("[data-transition-slot]").forEach((slot) => {
+    const active = slot.dataset.transitionSlot === activeTransitionSlot;
+    slot.classList.toggle("is-active", active);
+    slot.setAttribute("aria-pressed", String(active));
+  });
+
+  transitionFromLabel.textContent = stateLabels[from];
+  transitionFromCode.textContent = from;
+  transitionToLabel.textContent = stateLabels[to];
+  transitionToCode.textContent = to;
+  for (const [slotBot, state] of [[transitionFromBot, from], [transitionToBot, to]]) {
+    if (slotBot.state !== state) slotBot.state = state;
+    if (slotBot.shape !== shapeInput.value) slotBot.shape = shapeInput.value;
+    if (slotBot.getAttribute("color") !== colorInput.value) slotBot.setAttribute("color", colorInput.value);
+    if (slotBot.getAttribute("eye-color") !== eyeColorInput.value) slotBot.setAttribute("eye-color", eyeColorInput.value);
+  }
+
+  const role = activeTransitionSlot === "from" ? ["起点 A", "A"] : ["终点 B", "B"];
+  transitionHint.innerHTML = `<strong>正在选择${role[0]}</strong><span>点击左侧任意状态即可替换 ${role[1]}</span>`;
+
+  stateGrid.querySelectorAll("[data-state-option]").forEach((button) => {
+    const state = button.dataset.stateOption;
+    const markers = [];
+    if (state === from) markers.push('<i class="role-a">A</i>');
+    if (state === to) markers.push('<i class="role-b">B</i>');
+    button.querySelector(".state-role-markers").innerHTML = markers.join("");
+    button.classList.toggle("has-transition-role", markers.length > 0);
+  });
+}
+
+function setCodeMode(mode) {
+  codeMode = mode;
+  document.querySelectorAll("[data-code-mode]").forEach((button) => button.classList.toggle("is-active", button.dataset.codeMode === codeMode));
+}
+
+function cancelTransitionPlayback() {
+  window.clearTimeout(transitionTimer);
+  window.clearTimeout(transitionPhaseTimer);
+  transitionBuilder.dataset.phase = "ready";
+  transitionButton.disabled = false;
+  transitionButton.innerHTML = "<span>▶</span> 播放 A → B";
+}
+
 function syncDemo() {
   bot.state = stateInput.value;
   bot.shape = shapeInput.value;
@@ -144,6 +200,7 @@ function syncDemo() {
   sizeOutput.textContent = `${sizeInput.value}px`;
   readout.textContent = `${stateInput.value} · ${shapeInput.value} · ${sizeInput.value}px`;
   [contextTitle.textContent, contextDescription.textContent] = contextText(stateInput.value);
+  syncTransitionUI();
   code.textContent = codeMode === "transition" ? transitionCode() : staticCode();
   stateGrid.querySelectorAll("[data-state-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.stateOption === stateInput.value));
   shapeGrid.querySelectorAll("[data-shape-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.shapeOption === shapeInput.value));
@@ -151,13 +208,35 @@ function syncDemo() {
 }
 
 [sizeInput, colorInput, eyeColorInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
-[transitionFrom, transitionTo].forEach((select) => select.addEventListener("input", syncDemo));
 
 stateGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-state-option]");
   if (!button) return;
+  cancelTransitionPlayback();
   stateInput.value = button.dataset.stateOption;
-  transitionTo.value = stateInput.value;
+  if (activeTransitionSlot === "from") transitionFrom.value = stateInput.value;
+  else transitionTo.value = stateInput.value;
+  setCodeMode("transition");
+  syncDemo();
+  bot.replay();
+});
+
+document.querySelectorAll("[data-transition-slot]").forEach((slot) => slot.addEventListener("click", () => {
+  cancelTransitionPlayback();
+  activeTransitionSlot = slot.dataset.transitionSlot;
+  stateInput.value = activeTransitionSlot === "from" ? transitionFrom.value : transitionTo.value;
+  syncDemo();
+  bot.replay();
+}));
+
+swapTransitionButton.addEventListener("click", () => {
+  cancelTransitionPlayback();
+  const previousFrom = transitionFrom.value;
+  transitionFrom.value = transitionTo.value;
+  transitionTo.value = previousFrom;
+  activeTransitionSlot = "to";
+  stateInput.value = transitionTo.value;
+  setCodeMode("transition");
   syncDemo();
   bot.replay();
 });
@@ -175,29 +254,31 @@ document.querySelectorAll(".context-tabs [data-context]").forEach((button) => bu
 }));
 
 document.querySelectorAll("[data-code-mode]").forEach((button) => button.addEventListener("click", () => {
-  codeMode = button.dataset.codeMode;
-  document.querySelectorAll("[data-code-mode]").forEach((candidate) => candidate.classList.toggle("is-active", candidate === button));
+  setCodeMode(button.dataset.codeMode);
   syncDemo();
 }));
 
 transitionButton.addEventListener("click", () => {
-  window.clearTimeout(transitionTimer);
-  codeMode = "transition";
-  document.querySelectorAll("[data-code-mode]").forEach((candidate) => candidate.classList.toggle("is-active", candidate.dataset.codeMode === codeMode));
+  cancelTransitionPlayback();
+  setCodeMode("transition");
+  activeTransitionSlot = "to";
+  transitionBuilder.dataset.phase = "a";
   stateInput.value = transitionFrom.value;
   syncDemo();
   bot.replay();
   transitionButton.disabled = true;
-  transitionButton.innerHTML = "正在展示 A…";
+  transitionButton.textContent = `A · ${stateLabels[transitionFrom.value]}`;
   transitionTimer = window.setTimeout(() => {
+    transitionBuilder.dataset.phase = "switch";
     stateInput.value = transitionTo.value;
     syncDemo();
     bot.replay();
-    transitionButton.innerHTML = "✓ 已切换到 B";
-    window.setTimeout(() => {
+    transitionButton.textContent = "正在切换…";
+    transitionPhaseTimer = window.setTimeout(() => {
+      transitionBuilder.dataset.phase = "b";
       transitionButton.disabled = false;
-      transitionButton.innerHTML = "<span>▶</span> 再次预览 A → B";
-    }, 900);
+      transitionButton.innerHTML = "<span>↻</span> 再次播放 A → B";
+    }, 500);
   }, 700);
 });
 
