@@ -378,10 +378,18 @@ class ParticleSystem {
     return { front, back };
   }
 
-  update(now, delta, { spinAngle, sizeScale, wideStyle }) {
+  update(now, delta, { spinAngle, sizeScale, wideStyle, enabled = true }) {
     this.sizeScale = sizeScale;
     this.spinAngle = spinAngle;
     this.wideStyle = wideStyle;
+    if (!enabled) {
+      if (this.particles.length) this.clear();
+      this.emissionQueue = [];
+      this.trailActive = false;
+      this.angularVelocity = 0;
+      this.lastSpinAngle = this.spinAngle;
+      return;
+    }
     let difference = this.spinAngle - this.lastSpinAngle;
     if (!Number.isFinite(difference) || Math.abs(difference) > 1.2) difference = 0;
     this.lastSpinAngle = this.spinAngle;
@@ -819,6 +827,7 @@ export class GrokBotEngine {
       spinAngle: this.particleSpinAngle,
       sizeScale,
       wideStyle: this.state === "humming" || this.celebrateWildActive || this.shapeChangeWide,
+      enabled: config.particlesEnabled !== false,
     });
     this.frameId = requestAnimationFrame(this.boundFrame);
   }

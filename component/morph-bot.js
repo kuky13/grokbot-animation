@@ -292,6 +292,7 @@ export class MorphBotElement extends HTMLElementBase {
       eyeColor,
       pointer,
       flipX,
+      particlesEnabled: !this.hasAttribute("thumbnail"),
       size: this.size,
       shape: this.shape,
       blinkCadence: stateConfig.blinkEnabled

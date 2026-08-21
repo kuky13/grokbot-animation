@@ -49,6 +49,7 @@ function botThumbnail({ state, shape, size }) {
   preview.setAttribute("shape", shape);
   preview.setAttribute("size", size);
   preview.setAttribute("decorative", "");
+  preview.setAttribute("thumbnail", "");
   return preview;
 }
 
@@ -123,12 +124,10 @@ function contextText(state) {
 
 function syncThumbnailAppearance() {
   stateGrid.querySelectorAll("morph-bot").forEach((preview) => {
-    if (preview.shape !== shapeInput.value) preview.shape = shapeInput.value;
     if (preview.getAttribute("color") !== colorInput.value) preview.setAttribute("color", colorInput.value);
     if (preview.getAttribute("eye-color") !== eyeColorInput.value) preview.setAttribute("eye-color", eyeColorInput.value);
   });
   shapeGrid.querySelectorAll("morph-bot").forEach((preview) => {
-    if (preview.state !== stateInput.value) preview.state = stateInput.value;
     if (preview.getAttribute("color") !== colorInput.value) preview.setAttribute("color", colorInput.value);
     if (preview.getAttribute("eye-color") !== eyeColorInput.value) preview.setAttribute("eye-color", eyeColorInput.value);
   });

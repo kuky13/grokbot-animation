@@ -33,7 +33,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.1.2");
+assert.equal(manifest.version, "0.1.3");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -62,6 +62,10 @@ assert.equal(element.shape, "wedge");
 assert.equal(element.paused, true);
 element.play();
 assert.equal(element.paused, false);
+element.setAttribute("thumbnail", "");
+assert.equal(element._engineConfig().particlesEnabled, false, "catalog thumbnails should disable particle emission");
+element.removeAttribute("thumbnail");
+assert.equal(element._engineConfig().particlesEnabled, true, "normal component instances should keep full particle effects");
 assert.throws(() => element.setState("missing"), RangeError);
 assert.throws(() => element.setShape("missing"), RangeError);
 
@@ -79,6 +83,8 @@ assert.ok(demo.includes('id="transition-from"') && demo.includes('id="transition
 assert.doesNotMatch(demo, /常用状态|常用形状/, "component workbench must not hide choices behind a common subset");
 assert.match(demoRuntime, /const orderedStates = \["idle",/, "idle should be the first visual state option");
 assert.match(demoRuntime, /botThumbnail\(\{ state, shape/, "state and shape catalogs should render real component thumbnails");
+assert.match(demoRuntime, /setAttribute\("thumbnail"/, "catalog previews should suppress incidental particle trails");
+assert.doesNotMatch(demoRuntime, /preview\.shape = shapeInput|preview\.state = stateInput/, "catalog previews must not trigger bulk shape or state transitions");
 assert.match(demoRuntime, /transitionButton\.addEventListener/, "A to B transition preview should be interactive");
 assert.match(demoRuntime, /bot\.setState\(/, "generated transition usage should call the public state API");
 assert.ok(demo.includes(`morph-bot-element-${manifest.version}.zip`), "component workbench should link the downloadable bundle");
