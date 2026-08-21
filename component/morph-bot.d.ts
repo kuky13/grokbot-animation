@@ -9,6 +9,20 @@ export interface MorphBotProject {
   states?: Partial<Record<MorphBotState, Record<string, unknown>>>;
 }
 
+export interface MorphBotSequenceStep {
+  state: MorphBotState;
+  hold?: number;
+  morph?: MorphBotEffect | "none" | null;
+  morphHold?: number;
+}
+
+export interface MorphBotSequenceResult {
+  cancelled: boolean;
+  cycles?: number;
+  cycle?: number;
+  index?: number;
+}
+
 export class MorphBotElement extends HTMLElement {
   state: MorphBotState;
   shape: MorphBotShape;
@@ -24,6 +38,8 @@ export class MorphBotElement extends HTMLElement {
   step(): this;
   restoreStateMorph(): this;
   playMorph(effect: MorphBotEffect, options?: { hold?: number; restore?: MorphBotState | "default" | null }): Promise<{ cancelled?: boolean; effect?: MorphBotEffect; restored?: string | null }>;
+  playSequence(steps: MorphBotSequenceStep[], options?: { loop?: boolean }): Promise<MorphBotSequenceResult>;
+  stopSequence(): this;
   snapshot(): Record<string, unknown> | null;
 }
 

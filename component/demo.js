@@ -1,4 +1,5 @@
 import {
+  MORPH_BOT_EFFECTS,
   MORPH_BOT_SHAPES,
   MORPH_BOT_STATES,
 } from "./morph-bot.js";
@@ -18,6 +19,11 @@ const shapeLabels = {
   arch: "拱门", cloud: "云朵", teardrop: "水滴", leaf: "叶片",
 };
 
+const effectLabels = {
+  dots: "思考点阵", orbit: "彩色轨道", radar: "雷达扫描", progress: "循环进度", gather: "聚合生成", wave: "声音波形", send: "向外发送",
+  receive: "接收进入", dock: "上传停靠", ball: "弹跳球体", whirl: "旋转加载", pencil: "书写铅笔", bang: "警报符号", standby: "待机关机",
+};
+
 const orderedStates = ["idle", ...MORPH_BOT_STATES.filter((state) => state !== "idle")];
 const stateInput = document.querySelector("#demo-state");
 const shapeInput = document.querySelector("#demo-shape");
@@ -30,18 +36,14 @@ const eyeColorInput = document.querySelector("#demo-eye-color");
 const speedSelect = document.querySelector("#demo-speed");
 const pointerInput = document.querySelector("#demo-pointer");
 const pauseButton = document.querySelector("#demo-pause");
-const transitionFrom = document.querySelector("#transition-from");
-const transitionTo = document.querySelector("#transition-to");
-const transitionBuilder = document.querySelector("#transition-builder");
-const transitionButton = document.querySelector("#preview-transition");
-const transitionHint = document.querySelector("#transition-hint");
-const transitionFromBot = document.querySelector("#transition-from-bot");
-const transitionToBot = document.querySelector("#transition-to-bot");
-const transitionFromLabel = document.querySelector("#transition-from-label");
-const transitionFromCode = document.querySelector("#transition-from-code");
-const transitionToLabel = document.querySelector("#transition-to-label");
-const transitionToCode = document.querySelector("#transition-to-code");
-const swapTransitionButton = document.querySelector("#swap-transition");
+const sequenceList = document.querySelector("#sequence-list");
+const sequenceMorphGrid = document.querySelector("#sequence-morph-grid");
+const selectedSequenceStepOutput = document.querySelector("#selected-sequence-step");
+const sequenceLoop = document.querySelector("#sequence-loop");
+const sequenceSummary = document.querySelector("#sequence-summary");
+const addSequenceStepButton = document.querySelector("#add-sequence-step");
+const previewSequenceButton = document.querySelector("#preview-sequence");
+const stopSequenceButton = document.querySelector("#stop-sequence");
 const bot = document.querySelector("#demo-bot");
 const previewStage = document.querySelector("#preview-stage");
 const contextTitle = document.querySelector("#context-title");
@@ -49,10 +51,17 @@ const contextDescription = document.querySelector("#context-description");
 const readout = document.querySelector("#demo-readout");
 const runtime = document.querySelector("#demo-runtime");
 const code = document.querySelector("#component-code");
+
 let codeMode = "static";
-let activeTransitionSlot = "to";
-let transitionTimer = 0;
-let transitionPhaseTimer = 0;
+let selectedStepIndex = 1;
+let playingStepIndex = -1;
+let sequenceRun = 0;
+let sequencePlaying = false;
+const sequence = [
+  { state: "idle", hold: 1000, morph: "gather", morphHold: 700 },
+  { state: "thinking", hold: 2400, morph: "send", morphHold: 700 },
+  { state: "celebrate", hold: 1600, morph: null, morphHold: 1000 },
+];
 
 function botThumbnail({ state, shape, size }) {
   const preview = document.createElement("morph-bot");
@@ -92,9 +101,7 @@ for (const shape of MORPH_BOT_SHAPES) {
 }
 
 shapeInput.value = "blob";
-transitionFrom.value = "idle";
-transitionTo.value = "thinking";
-stateInput.value = transitionTo.value;
+stateInput.value = sequence[selectedStepIndex].state;
 
 function escapeAttribute(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;");
@@ -117,10 +124,16 @@ function staticCode() {
   return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<morph-bot\n  ${componentAttributes(stateInput.value)}\n  label="${stateLabels[stateInput.value]}动画"\n></morph-bot>`;
 }
 
-function transitionCode() {
-  const from = transitionFrom.value;
-  const to = transitionTo.value;
-  return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<button id="change-bot-state">切换到${stateLabels[to]}</button>\n\n<morph-bot\n  id="status-bot"\n  ${componentAttributes(from)}\n  label="任务状态"\n></morph-bot>\n\n<script type="module">\n  const bot = document.querySelector("#status-bot");\n\n  document.querySelector("#change-bot-state")\n    .addEventListener("click", () => {\n      bot.setState("${to}");\n    });\n</script>`;
+function sequenceStepCode(step) {
+  const fields = [`state: "${step.state}"`, `hold: ${step.hold}`];
+  if (step.morph) fields.push(`morph: "${step.morph}"`, `morphHold: ${step.morphHold}`);
+  return `  { ${fields.join(", ")} }`;
+}
+
+function sequenceCode() {
+  const first = sequence[0];
+  const steps = sequence.map(sequenceStepCode).join(",\n");
+  return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<button id="start-bot-sequence">播放动画</button>\n<button id="stop-bot-sequence">停止</button>\n\n<morph-bot\n  id="status-bot"\n  ${componentAttributes(first.state)}\n  label="任务状态"\n></morph-bot>\n\n<script type="module">\n  const bot = document.querySelector("#status-bot");\n  const sequence = [\n${steps}\n  ];\n\n  document.querySelector("#start-bot-sequence")\n    .addEventListener("click", () => {\n      bot.playSequence(sequence, { loop: ${sequenceLoop.checked} });\n    });\n\n  document.querySelector("#stop-bot-sequence")\n    .addEventListener("click", () => bot.stopSequence());\n</script>`;
 }
 
 function contextText(state) {
@@ -129,6 +142,67 @@ function contextText(state) {
   if (state === "celebrate") return ["任务已完成", "结果已经准备好了"];
   if (["sad", "scared", "confused", "alerting"].includes(state)) return [`当前状态：${label}`, "你可以随时切换状态"];
   return [`正在${label}`, "通常只需要几秒钟"];
+}
+
+function renderSequence() {
+  selectedStepIndex = Math.max(0, Math.min(selectedStepIndex, sequence.length - 1));
+  sequenceList.replaceChildren();
+  sequence.forEach((step, index) => {
+    const article = document.createElement("article");
+    article.className = "sequence-step";
+    article.dataset.sequenceIndex = String(index);
+    article.classList.toggle("is-selected", index === selectedStepIndex);
+    article.classList.toggle("is-playing", index === playingStepIndex);
+    article.innerHTML = `
+      <button class="sequence-identity" type="button" data-select-sequence-step aria-pressed="${index === selectedStepIndex}">
+        <span class="sequence-number">${index + 1}</span>
+        <morph-bot state="${step.state}" shape="${shapeInput.value}" size="34" color="${colorInput.value}" eye-color="${eyeColorInput.value}" thumbnail decorative></morph-bot>
+        <span><strong>${stateLabels[step.state]}</strong><code>${step.state}</code></span>
+      </button>
+      <label class="sequence-field"><span>状态停留</span><input data-step-hold type="number" min="0" max="600" step="0.1" value="${step.hold / 1000}" /><i>秒</i></label>
+      <div class="sequence-morph-readout"><span>停留后播放</span><strong>${step.morph ? effectLabels[step.morph] : "不触发"}</strong><code>${step.morph || "none"}</code></div>
+      <label class="sequence-field${step.morph ? "" : " is-disabled"}"><span>Morph 保持</span><input data-step-morph-hold type="number" min="0" max="600" step="0.1" value="${step.morphHold / 1000}"${step.morph ? "" : " disabled"} /><i>秒</i></label>
+      <div class="sequence-actions">
+        <button type="button" data-sequence-action="up" aria-label="上移第 ${index + 1} 步"${index === 0 ? " disabled" : ""}>↑</button>
+        <button type="button" data-sequence-action="down" aria-label="下移第 ${index + 1} 步"${index === sequence.length - 1 ? " disabled" : ""}>↓</button>
+        <button type="button" data-sequence-action="delete" aria-label="删除第 ${index + 1} 步"${sequence.length === 1 ? " disabled" : ""}>删除</button>
+      </div>`;
+    sequenceList.append(article);
+  });
+  renderMorphPalette();
+  syncSequenceSummary();
+  syncStateMarkers();
+}
+
+function renderMorphPalette() {
+  const selected = sequence[selectedStepIndex].morph;
+  selectedSequenceStepOutput.textContent = `第 ${selectedStepIndex + 1} 步`;
+  sequenceMorphGrid.replaceChildren();
+  for (const effect of [null, ...MORPH_BOT_EFFECTS]) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.morphOption = effect || "none";
+    button.classList.toggle("is-selected", selected === effect);
+    button.setAttribute("aria-pressed", String(selected === effect));
+    button.innerHTML = `<strong>${effect ? effectLabels[effect] : "不触发"}</strong><code>${effect || "none"}</code>`;
+    sequenceMorphGrid.append(button);
+  }
+}
+
+function syncSequenceSummary(text = "") {
+  const stateHold = sequence.reduce((total, step) => total + step.hold, 0) / 1000;
+  sequenceSummary.textContent = text || `${sequence.length} 步 · 状态停留 ${Number(stateHold.toFixed(1))} 秒`;
+}
+
+function syncStateMarkers() {
+  stateGrid.querySelectorAll("[data-state-option]").forEach((button) => {
+    const state = button.dataset.stateOption;
+    const markers = sequence.flatMap((step, index) => step.state === state
+      ? [`<i class="sequence-role${index === selectedStepIndex ? " is-selected" : ""}">${index + 1}</i>`]
+      : []);
+    button.querySelector(".state-role-markers").innerHTML = markers.join("");
+    button.classList.toggle("has-sequence-step", markers.length > 0);
+  });
 }
 
 function syncThumbnailAppearance() {
@@ -140,39 +214,10 @@ function syncThumbnailAppearance() {
     if (preview.getAttribute("color") !== colorInput.value) preview.setAttribute("color", colorInput.value);
     if (preview.getAttribute("eye-color") !== eyeColorInput.value) preview.setAttribute("eye-color", eyeColorInput.value);
   });
-}
-
-function syncTransitionUI() {
-  const from = transitionFrom.value;
-  const to = transitionTo.value;
-  transitionBuilder.dataset.activeSlot = activeTransitionSlot;
-  document.querySelectorAll("[data-transition-slot]").forEach((slot) => {
-    const active = slot.dataset.transitionSlot === activeTransitionSlot;
-    slot.classList.toggle("is-active", active);
-    slot.setAttribute("aria-pressed", String(active));
-  });
-
-  transitionFromLabel.textContent = stateLabels[from];
-  transitionFromCode.textContent = from;
-  transitionToLabel.textContent = stateLabels[to];
-  transitionToCode.textContent = to;
-  for (const [slotBot, state] of [[transitionFromBot, from], [transitionToBot, to]]) {
-    if (slotBot.state !== state) slotBot.state = state;
-    if (slotBot.shape !== shapeInput.value) slotBot.shape = shapeInput.value;
-    if (slotBot.getAttribute("color") !== colorInput.value) slotBot.setAttribute("color", colorInput.value);
-    if (slotBot.getAttribute("eye-color") !== eyeColorInput.value) slotBot.setAttribute("eye-color", eyeColorInput.value);
-  }
-
-  const role = activeTransitionSlot === "from" ? ["起点 A", "A"] : ["终点 B", "B"];
-  transitionHint.innerHTML = `<strong>正在选择${role[0]}</strong><span>点击左侧任意状态即可替换 ${role[1]}</span>`;
-
-  stateGrid.querySelectorAll("[data-state-option]").forEach((button) => {
-    const state = button.dataset.stateOption;
-    const markers = [];
-    if (state === from) markers.push('<i class="role-a">A</i>');
-    if (state === to) markers.push('<i class="role-b">B</i>');
-    button.querySelector(".state-role-markers").innerHTML = markers.join("");
-    button.classList.toggle("has-transition-role", markers.length > 0);
+  sequenceList.querySelectorAll("morph-bot").forEach((stepBot) => {
+    if (stepBot.shape !== shapeInput.value) stepBot.shape = shapeInput.value;
+    if (stepBot.getAttribute("color") !== colorInput.value) stepBot.setAttribute("color", colorInput.value);
+    if (stepBot.getAttribute("eye-color") !== eyeColorInput.value) stepBot.setAttribute("eye-color", eyeColorInput.value);
   });
 }
 
@@ -181,12 +226,24 @@ function setCodeMode(mode) {
   document.querySelectorAll("[data-code-mode]").forEach((button) => button.classList.toggle("is-active", button.dataset.codeMode === codeMode));
 }
 
-function cancelTransitionPlayback() {
-  window.clearTimeout(transitionTimer);
-  window.clearTimeout(transitionPhaseTimer);
-  transitionBuilder.dataset.phase = "ready";
-  transitionButton.disabled = false;
-  transitionButton.innerHTML = "<span>▶</span> 播放 A → B";
+function syncSequencePlaybackUI() {
+  sequenceList.querySelectorAll("[data-sequence-index]").forEach((row) => {
+    row.classList.toggle("is-selected", Number(row.dataset.sequenceIndex) === selectedStepIndex);
+    row.classList.toggle("is-playing", Number(row.dataset.sequenceIndex) === playingStepIndex);
+    row.querySelector("[data-select-sequence-step]").setAttribute("aria-pressed", String(Number(row.dataset.sequenceIndex) === selectedStepIndex));
+  });
+  previewSequenceButton.disabled = sequencePlaying;
+  previewSequenceButton.innerHTML = sequencePlaying ? "正在播放…" : "<span>▶</span> 播放时间线";
+  stopSequenceButton.disabled = !sequencePlaying;
+}
+
+function stopEditorSequence({ resetSummary = true } = {}) {
+  sequenceRun += 1;
+  bot.stopSequence();
+  sequencePlaying = false;
+  playingStepIndex = -1;
+  if (resetSummary) syncSequenceSummary();
+  syncSequencePlaybackUI();
 }
 
 function syncDemo() {
@@ -200,10 +257,10 @@ function syncDemo() {
   sizeOutput.textContent = `${sizeInput.value}px`;
   readout.textContent = `${stateInput.value} · ${shapeInput.value} · ${sizeInput.value}px`;
   [contextTitle.textContent, contextDescription.textContent] = contextText(stateInput.value);
-  syncTransitionUI();
-  code.textContent = codeMode === "transition" ? transitionCode() : staticCode();
+  code.textContent = codeMode === "sequence" ? sequenceCode() : staticCode();
   stateGrid.querySelectorAll("[data-state-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.stateOption === stateInput.value));
   shapeGrid.querySelectorAll("[data-shape-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.shapeOption === shapeInput.value));
+  syncStateMarkers();
   syncThumbnailAppearance();
 }
 
@@ -212,31 +269,11 @@ function syncDemo() {
 stateGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-state-option]");
   if (!button) return;
-  cancelTransitionPlayback();
+  stopEditorSequence();
+  sequence[selectedStepIndex].state = button.dataset.stateOption;
   stateInput.value = button.dataset.stateOption;
-  if (activeTransitionSlot === "from") transitionFrom.value = stateInput.value;
-  else transitionTo.value = stateInput.value;
-  setCodeMode("transition");
-  syncDemo();
-  bot.replay();
-});
-
-document.querySelectorAll("[data-transition-slot]").forEach((slot) => slot.addEventListener("click", () => {
-  cancelTransitionPlayback();
-  activeTransitionSlot = slot.dataset.transitionSlot;
-  stateInput.value = activeTransitionSlot === "from" ? transitionFrom.value : transitionTo.value;
-  syncDemo();
-  bot.replay();
-}));
-
-swapTransitionButton.addEventListener("click", () => {
-  cancelTransitionPlayback();
-  const previousFrom = transitionFrom.value;
-  transitionFrom.value = transitionTo.value;
-  transitionTo.value = previousFrom;
-  activeTransitionSlot = "to";
-  stateInput.value = transitionTo.value;
-  setCodeMode("transition");
+  setCodeMode("sequence");
+  renderSequence();
   syncDemo();
   bot.replay();
 });
@@ -248,6 +285,116 @@ shapeGrid.addEventListener("click", (event) => {
   syncDemo();
 });
 
+sequenceList.addEventListener("click", (event) => {
+  const row = event.target.closest("[data-sequence-index]");
+  if (!row) return;
+  const index = Number(row.dataset.sequenceIndex);
+  if (event.target.closest("[data-select-sequence-step]")) {
+    stopEditorSequence();
+    selectedStepIndex = index;
+    stateInput.value = sequence[index].state;
+    renderSequence();
+    syncDemo();
+    bot.replay();
+    return;
+  }
+
+  const action = event.target.closest("[data-sequence-action]")?.dataset.sequenceAction;
+  if (!action) return;
+  stopEditorSequence();
+  if (action === "delete" && sequence.length > 1) {
+    sequence.splice(index, 1);
+    selectedStepIndex = Math.min(index, sequence.length - 1);
+  } else if (action === "up" && index > 0) {
+    [sequence[index - 1], sequence[index]] = [sequence[index], sequence[index - 1]];
+    selectedStepIndex = index - 1;
+  } else if (action === "down" && index < sequence.length - 1) {
+    [sequence[index + 1], sequence[index]] = [sequence[index], sequence[index + 1]];
+    selectedStepIndex = index + 1;
+  }
+  stateInput.value = sequence[selectedStepIndex].state;
+  setCodeMode("sequence");
+  renderSequence();
+  syncDemo();
+  bot.replay();
+});
+
+sequenceList.addEventListener("input", (event) => {
+  const row = event.target.closest("[data-sequence-index]");
+  if (!row) return;
+  const step = sequence[Number(row.dataset.sequenceIndex)];
+  if (event.target.matches("[data-step-hold]")) step.hold = Math.max(0, Math.round(Number(event.target.value || 0) * 1000));
+  if (event.target.matches("[data-step-morph-hold]")) step.morphHold = Math.max(0, Math.round(Number(event.target.value || 0) * 1000));
+  stopEditorSequence({ resetSummary: false });
+  setCodeMode("sequence");
+  syncSequenceSummary();
+  syncDemo();
+});
+
+sequenceMorphGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-morph-option]");
+  if (!button) return;
+  stopEditorSequence();
+  sequence[selectedStepIndex].morph = button.dataset.morphOption === "none" ? null : button.dataset.morphOption;
+  stateInput.value = sequence[selectedStepIndex].state;
+  setCodeMode("sequence");
+  renderSequence();
+  syncDemo();
+  bot.replay();
+  if (sequence[selectedStepIndex].morph) {
+    bot.playMorph(sequence[selectedStepIndex].morph, {
+      hold: sequence[selectedStepIndex].morphHold,
+      restore: "default",
+    });
+  }
+});
+
+addSequenceStepButton.addEventListener("click", () => {
+  stopEditorSequence();
+  sequence.push({ state: "idle", hold: 1000, morph: null, morphHold: 1000 });
+  selectedStepIndex = sequence.length - 1;
+  stateInput.value = "idle";
+  setCodeMode("sequence");
+  renderSequence();
+  syncDemo();
+});
+
+sequenceLoop.addEventListener("change", () => {
+  stopEditorSequence();
+  setCodeMode("sequence");
+  syncDemo();
+});
+
+previewSequenceButton.addEventListener("click", async () => {
+  stopEditorSequence();
+  const run = ++sequenceRun;
+  sequencePlaying = true;
+  setCodeMode("sequence");
+  syncSequenceSummary("准备第 1 步…");
+  syncSequencePlaybackUI();
+  const result = await bot.playSequence(sequence, { loop: sequenceLoop.checked });
+  if (run !== sequenceRun) return;
+  sequencePlaying = false;
+  playingStepIndex = -1;
+  syncSequencePlaybackUI();
+  syncSequenceSummary(result.cancelled ? "已停止" : "播放完成 · 可再次播放");
+});
+
+stopSequenceButton.addEventListener("click", () => stopEditorSequence());
+
+bot.addEventListener("sequencestep", (event) => {
+  playingStepIndex = event.detail.index;
+  stateInput.value = event.detail.state;
+  syncSequenceSummary(`第 ${event.detail.index + 1} 步 · ${stateLabels[event.detail.state]}停留 ${event.detail.hold / 1000} 秒`);
+  syncSequencePlaybackUI();
+  syncDemo();
+});
+
+bot.addEventListener("morphstart", (event) => {
+  if (!sequencePlaying) return;
+  syncSequenceSummary(`第 ${playingStepIndex + 1} 步 · Morph ${effectLabels[event.detail.effect]}`);
+});
+
 document.querySelectorAll(".context-tabs [data-context]").forEach((button) => button.addEventListener("click", () => {
   previewStage.dataset.context = button.dataset.context;
   document.querySelectorAll(".context-tabs [data-context]").forEach((candidate) => candidate.classList.toggle("is-active", candidate === button));
@@ -257,30 +404,6 @@ document.querySelectorAll("[data-code-mode]").forEach((button) => button.addEven
   setCodeMode(button.dataset.codeMode);
   syncDemo();
 }));
-
-transitionButton.addEventListener("click", () => {
-  cancelTransitionPlayback();
-  setCodeMode("transition");
-  activeTransitionSlot = "to";
-  transitionBuilder.dataset.phase = "a";
-  stateInput.value = transitionFrom.value;
-  syncDemo();
-  bot.replay();
-  transitionButton.disabled = true;
-  transitionButton.textContent = `A · ${stateLabels[transitionFrom.value]}`;
-  transitionTimer = window.setTimeout(() => {
-    transitionBuilder.dataset.phase = "switch";
-    stateInput.value = transitionTo.value;
-    syncDemo();
-    bot.replay();
-    transitionButton.textContent = "正在切换…";
-    transitionPhaseTimer = window.setTimeout(() => {
-      transitionBuilder.dataset.phase = "b";
-      transitionButton.disabled = false;
-      transitionButton.innerHTML = "<span>↻</span> 再次播放 A → B";
-    }, 500);
-  }, 700);
-});
 
 pauseButton.addEventListener("click", () => {
   bot.paused = !bot.paused;
@@ -317,5 +440,6 @@ function updateRuntime(now) {
   requestAnimationFrame(updateRuntime);
 }
 
+renderSequence();
 syncDemo();
 requestAnimationFrame(updateRuntime);

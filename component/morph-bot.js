@@ -134,6 +134,7 @@ export class MorphBotElement extends HTMLElementBase {
     this._visible = true;
     this._intersectionObserver = null;
     this._morphMonitor = 0;
+    this._sequenceToken = 0;
     this._componentId = `morph-bot-${++componentCounter}`;
     if (this.attachShadow) this.attachShadow({ mode: "open" });
   }
@@ -162,6 +163,7 @@ export class MorphBotElement extends HTMLElementBase {
 
   disconnectedCallback() {
     this._morphMonitor += 1;
+    this._sequenceToken += 1;
     this._intersectionObserver?.disconnect();
     this._intersectionObserver = null;
     this._engine?.destroy();
@@ -260,6 +262,69 @@ export class MorphBotElement extends HTMLElementBase {
           resolve({ effect, restored: restore });
           return;
         }
+        requestAnimationFrame(inspect);
+      };
+      requestAnimationFrame(inspect);
+    });
+  }
+
+  async playSequence(steps, { loop = false } = {}) {
+    if (!Array.isArray(steps) || steps.length === 0) throw new TypeError("Morph sequence requires at least one step");
+    if (!this._engine) throw new Error("morph-bot is not connected");
+    const sequence = steps.map((step, index) => {
+      if (!step || !MORPH_BOT_STATES.includes(step.state)) throw new RangeError(`Unknown state at sequence step ${index + 1}`);
+      const morph = step.morph === undefined || step.morph === null || step.morph === "none" ? null : step.morph;
+      if (morph && !MORPH_BOT_EFFECTS.includes(morph)) throw new RangeError(`Unknown morph effect at sequence step ${index + 1}: ${morph}`);
+      const hold = Number(step.hold ?? 1000);
+      const morphHold = Number(step.morphHold ?? 1200);
+      if (!Number.isFinite(hold) || hold < 0) throw new RangeError(`Invalid hold at sequence step ${index + 1}`);
+      if (!Number.isFinite(morphHold) || morphHold < 0) throw new RangeError(`Invalid morphHold at sequence step ${index + 1}`);
+      return { state: step.state, hold, morph, morphHold };
+    });
+
+    this.stopSequence();
+    const token = ++this._sequenceToken;
+    let cycle = 0;
+    this.dispatchEvent(new CustomEvent("sequencestart", { detail: { steps: sequence, loop: Boolean(loop) } }));
+
+    do {
+      for (let index = 0; index < sequence.length; index += 1) {
+        if (token !== this._sequenceToken || !this._engine) return { cancelled: true, cycle, index };
+        const step = sequence[index];
+        this.setState(step.state, { replay: true });
+        this.dispatchEvent(new CustomEvent("sequencestep", { detail: { index, cycle, ...step } }));
+        if (!(await this._waitForSequence(step.hold, token))) return { cancelled: true, cycle, index };
+        if (step.morph) {
+          const result = await this.playMorph(step.morph, { hold: step.morphHold, restore: "default" });
+          if (result.cancelled || token !== this._sequenceToken) return { cancelled: true, cycle, index };
+        }
+      }
+      cycle += 1;
+      if (loop && !(await this._waitForSequence(16, token))) return { cancelled: true, cycle };
+    } while (loop && token === this._sequenceToken && this._engine);
+
+    if (token !== this._sequenceToken || !this._engine) return { cancelled: true, cycle };
+    this.dispatchEvent(new CustomEvent("sequenceend", { detail: { cycles: cycle } }));
+    return { cancelled: false, cycles: cycle };
+  }
+
+  stopSequence() {
+    this._sequenceToken += 1;
+    this._morphMonitor += 1;
+    this._engine?.clearMorphPreview();
+    return this;
+  }
+
+  _waitForSequence(duration, token) {
+    if (duration <= 0) return Promise.resolve(token === this._sequenceToken);
+    return new Promise((resolve) => {
+      let remaining = duration;
+      let previous = performance.now();
+      const inspect = (now) => {
+        if (token !== this._sequenceToken || !this._engine) { resolve(false); return; }
+        if (!(this.paused || !this._visible)) remaining -= Math.max(0, now - previous);
+        previous = now;
+        if (remaining <= 0) { resolve(true); return; }
         requestAnimationFrame(inspect);
       };
       requestAnimationFrame(inspect);

@@ -33,7 +33,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.1.5");
+assert.equal(manifest.version, "0.2.0");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -44,6 +44,8 @@ assert.ok(component.MorphBotElement.observedAttributes.includes("state"));
 assert.ok(component.MorphBotElement.observedAttributes.includes("shape"));
 assert.equal(typeof component.MorphBotElement.prototype.configure, "function");
 assert.equal(typeof component.MorphBotElement.prototype.playMorph, "function");
+assert.equal(typeof component.MorphBotElement.prototype.playSequence, "function");
+assert.equal(typeof component.MorphBotElement.prototype.stopSequence, "function");
 assert.equal(typeof component.MorphBotElement.prototype.snapshot, "function");
 
 const element = new component.MorphBotElement();
@@ -68,6 +70,28 @@ element.removeAttribute("thumbnail");
 assert.equal(element._engineConfig().particlesEnabled, true, "normal component instances should keep full particle effects");
 assert.throws(() => element.setState("missing"), RangeError);
 assert.throws(() => element.setShape("missing"), RangeError);
+await assert.rejects(element.playSequence([]), TypeError);
+
+const sequenceCalls = [];
+element._engine = { clearMorphPreview() {} };
+element.setState = (state) => { sequenceCalls.push(`state:${state}`); return element; };
+element.playMorph = async (effect, options) => { sequenceCalls.push(`morph:${effect}:${options.hold}`); return { cancelled: false }; };
+element.dispatchEvent = (event) => { sequenceCalls.push(`event:${event.type}`); return true; };
+const sequenceResult = await element.playSequence([
+  { state: "idle", hold: 0, morph: "gather", morphHold: 700 },
+  { state: "thinking", hold: 0 },
+]);
+assert.equal(sequenceResult.cancelled, false);
+assert.equal(sequenceResult.cycles, 1);
+assert.deepEqual(sequenceCalls, [
+  "event:sequencestart",
+  "state:idle",
+  "event:sequencestep",
+  "morph:gather:700",
+  "state:thinking",
+  "event:sequencestep",
+  "event:sequenceend",
+]);
 
 const source = readFileSync(resolve(packageRoot, "morph-bot.js"), "utf8");
 assert.doesNotMatch(source, /from\s+["']\.\.\//, "published component must not import outside its package");
@@ -81,19 +105,22 @@ assert.ok(demo.includes('id="preview-stage"'), "component workbench should expos
 assert.ok(demo.includes('id="component-code"'), "component workbench should expose synchronized generated code");
 assert.ok(demo.includes('id="state-grid"'), "component workbench should expose the complete visual state catalog");
 assert.ok(demo.includes('id="shape-grid"'), "component workbench should expose the complete visual shape catalog");
-assert.ok(demo.includes('id="transition-from"') && demo.includes('id="transition-to"'), "component workbench should expose A to B transition controls");
-assert.doesNotMatch(demo, /<select[^>]+id="transition-(from|to)"/, "A and B selection should not fall back to opaque dropdowns");
-assert.equal((demo.match(/data-transition-slot=/g) || []).length, 2, "component workbench should expose two visual transition slots");
-assert.ok(demo.includes('id="swap-transition"'), "component workbench should allow swapping A and B");
+assert.ok(demo.includes('id="sequence-list"'), "component workbench should expose a visual sequence timeline");
+assert.ok(demo.includes('id="add-sequence-step"'), "component workbench should allow adding timeline steps");
+assert.ok(demo.includes('id="sequence-loop"'), "component workbench should expose timeline looping");
+assert.ok(demo.includes('id="preview-sequence"') && demo.includes('id="stop-sequence"'), "component workbench should expose timeline playback controls");
 assert.doesNotMatch(demo, /常用状态|常用形状/, "component workbench must not hide choices behind a common subset");
 assert.match(demoRuntime, /const orderedStates = \["idle",/, "idle should be the first visual state option");
 assert.match(demoRuntime, /botThumbnail\(\{ state, shape/, "state and shape catalogs should render real component thumbnails");
 assert.match(demoRuntime, /setAttribute\("thumbnail"/, "catalog previews should suppress incidental particle trails");
 assert.doesNotMatch(demoRuntime, /preview\.shape = shapeInput|preview\.state = stateInput/, "catalog previews must not trigger bulk shape or state transitions");
-assert.match(demoRuntime, /transitionButton\.addEventListener/, "A to B transition preview should be interactive");
-assert.match(demoRuntime, /activeTransitionSlot/, "state catalog clicks should assign the active A or B slot");
-assert.match(demoRuntime, /state-role-markers/, "state catalog should show A and B markers");
-assert.match(demoRuntime, /bot\.setState\(/, "generated transition usage should call the public state API");
+assert.match(demoRuntime, /const sequence = \[/, "workbench should keep an editable sequence model");
+assert.match(demoRuntime, /data-step-hold/, "timeline steps should expose state hold duration");
+assert.match(demoRuntime, /data-morph-option/, "timeline should expose a visible morph picker");
+assert.match(demoRuntime, /\[null, \.\.\.MORPH_BOT_EFFECTS\]/, "timeline should list every morph effect plus no-effect");
+assert.match(demoRuntime, /bot\.playSequence\(/, "timeline preview should use the public sequence API");
+assert.match(demoRuntime, /state-role-markers/, "state catalog should show timeline step markers");
+assert.match(demoRuntime, /bot\.stopSequence\(/, "timeline preview should be cancellable");
 assert.ok(demo.includes(`morph-bot-element-${manifest.version}.zip`), "component workbench should link the downloadable bundle");
 assert.ok(demo.includes('href="./docs/"'), "component workbench should link the readable API site");
 assert.match(demo, /button-example"><button[^>]*disabled><morph-bot/, "button usage example should contain a visible bot inside the button");
@@ -104,6 +131,7 @@ assert.match(docs, /id="docs-bot"/, "API site should include an interactive live
 assert.match(docsRuntime, /MORPH_BOT_STATES/, "API site should render the full exported state reference");
 assert.match(docsRuntime, /MORPH_BOT_SHAPES/, "API site should render the full exported shape reference");
 assert.match(docsRuntime, /MORPH_BOT_EFFECTS/, "API site should render the full exported morph reference");
+assert.match(docs, /playSequence\(steps, options\?\)/, "API site should document sequence playback");
 assert.ok(existsSync(downloadPath), "downloadable component ZIP should exist");
 
 console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and a downloadable WYSIWYG workbench.`);

@@ -14,9 +14,9 @@
         <span>Morph Bot <small>API</small></span>
       </a>
       <div>
-        <span class="version">v0.1.5</span>
+        <span class="version">v0.2.0</span>
         <a href="../">返回组件编辑器</a>
-        <a class="download" href="../downloads/morph-bot-element-0.1.5.zip" download>下载组件 ↓</a>
+        <a class="download" href="../downloads/morph-bot-element-0.2.0.zip" download>下载组件 ↓</a>
       </div>
     </header>
 
@@ -30,6 +30,7 @@
         <a href="#attributes">HTML 属性</a>
         <a href="#properties">JavaScript 属性</a>
         <a href="#methods">方法</a>
+        <a href="#sequence-api">动画时间线</a>
         <a href="#events">事件</a>
         <a href="#snapshot">运行快照</a>
         <p>动画参考</p>
@@ -144,21 +145,28 @@
             <article><h3><code>pause()</code> / <code>play()</code></h3><p>暂停或恢复动画，均返回当前元素。</p></article>
             <article><h3><code>step()</code></h3><p>前进一帧并保持暂停，适合逐帧检查。</p></article>
             <article><h3><code>playMorph(effect, options?)</code></h3><p>播放一次 Morph。<code>hold</code> 默认 2500ms；<code>restore</code> 可传状态名、<code>"default"</code> 或 <code>null</code>。返回 Promise。</p></article>
+            <article><h3><code>playSequence(steps, options?)</code></h3><p>依次执行状态停留和单次 Morph。每步支持 <code>state</code>、<code>hold</code>、<code>morph</code>、<code>morphHold</code>；<code>{ loop: true }</code> 可循环。</p></article>
+            <article><h3><code>stopSequence()</code></h3><p>立即取消当前时间线并退出正在播放的单次 Morph，返回当前元素。</p></article>
             <article><h3><code>restoreStateMorph()</code></h3><p>结束单次 Morph 预览，恢复当前状态自带的 Morph 逻辑。</p></article>
             <article><h3><code>configure(project)</code></h3><p>加载编辑器导出的 v5 preset，并返回当前元素。</p></article>
             <article><h3><code>snapshot()</code></h3><p>返回当前引擎快照；组件尚未连接时返回 <code>null</code>。</p></article>
           </div>
-          <h3 class="subheading">从状态 A 切换到状态 B</h3>
+          <h3 class="subheading" id="sequence-api">精确控制状态停留与 Morph</h3>
+          <p>每一步都按固定顺序执行：进入 <code>state</code> → 停留 <code>hold</code> 毫秒 → 播放 <code>morph</code> → 保持 <code>morphHold</code> 毫秒 → 进入下一步。省略 <code>morph</code> 就会在停留后直接进入下一状态。</p>
           <div class="code-block">
-            <div><span>事件触发</span><button type="button" data-copy-code>复制</button></div>
+            <div><span>状态时间线</span><button type="button" data-copy-code>复制</button></div>
             <pre><code>const bot = document.querySelector("#status-bot");
+const sequence = [
+  { state: "idle", hold: 1000, morph: "gather", morphHold: 700 },
+  { state: "thinking", hold: 2400, morph: "send", morphHold: 700 },
+  { state: "celebrate", hold: 1600 },
+];
 
-// A：初始状态来自 HTML 的 state="idle"
-document.querySelector("#start-task")
-  .addEventListener("click", () =&gt; {
-    // B：切换时不需要重新创建组件
-    bot.setState("thinking");
-  });</code></pre>
+// 播放一次；改为 loop: true 可持续循环
+bot.playSequence(sequence, { loop: false });
+
+// 随时停止
+bot.stopSequence();</code></pre>
           </div>
         </section>
 
@@ -173,6 +181,9 @@ document.querySelector("#start-task")
                 <tr><td><code>shapechange</code></td><td><code>{ shape }</code></td><td><code>shape</code> 属性改变。</td></tr>
                 <tr><td><code>morphstart</code></td><td><code>{ effect, hold }</code></td><td>单次 Morph 开始。</td></tr>
                 <tr><td><code>morphend</code></td><td><code>{ effect }</code></td><td>单次 Morph 完成退出。</td></tr>
+                <tr><td><code>sequencestart</code></td><td><code>{ steps, loop }</code></td><td>时间线开始。</td></tr>
+                <tr><td><code>sequencestep</code></td><td><code>{ index, cycle, state, hold, morph, morphHold }</code></td><td>进入一个状态步骤。</td></tr>
+                <tr><td><code>sequenceend</code></td><td><code>{ cycles }</code></td><td>非循环时间线完整结束。</td></tr>
               </tbody>
             </table>
           </div>
@@ -206,7 +217,7 @@ document.querySelector("#start-task")
 
         <section id="effects" class="doc-section">
           <div class="section-title"><span>10</span><div><p>MORPH REFERENCE</p><h2>14 个单次 Morph</h2></div></div>
-          <p>通过 <code>playMorph()</code> 主动触发。它们按 <code>RESET → ENTER → HOLD → EXIT → DONE</code> 完整播放。</p>
+          <p>通过 <code>playMorph()</code> 单独触发，或放进 <code>playSequence()</code> 的步骤中。它们按 <code>RESET → ENTER → HOLD → EXIT → DONE</code> 完整播放。</p>
           <div id="effect-reference" class="effect-reference"></div>
           <div class="code-block compact">
             <div><span>单次 Morph</span><button type="button" data-copy-code>复制</button></div>

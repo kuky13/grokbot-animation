@@ -82,7 +82,7 @@ morph-bot/
 </script>
 ```
 
-工作台中间的“从 A / 到 B / 预览 A → B”会真实执行同一段状态切换；右侧切到“A → B 切换”即可复制与当前选择一致的完整代码。
+工作台中间的时间线可以添加任意数量的步骤。选中一步后，点击左侧状态给它赋值，再设置“状态停留”“停留后播放的 Morph”和“Morph 保持”；右侧切到“时间线”即可复制一致的完整代码。
 
 ```js
 const bot = document.querySelector("morph-bot");
@@ -99,6 +99,21 @@ await bot.playMorph("send", {
   restore: "idle",
 });
 ```
+
+需要精确控制多个状态时，使用时间线 API。时间单位都是毫秒；每一步依次执行“进入状态 → 停留 → Morph → 下一步”：
+
+```js
+const sequence = [
+  { state: "idle", hold: 1000, morph: "gather", morphHold: 700 },
+  { state: "thinking", hold: 2400, morph: "send", morphHold: 700 },
+  { state: "celebrate", hold: 1600 },
+];
+
+bot.playSequence(sequence, { loop: false });
+bot.stopSequence();
+```
+
+调用 `pause()` 时，状态动画、Morph 和时间线等待会一起暂停；调用 `play()` 后从剩余时间继续。
 
 通过 `configure()` 使用编辑器导出的 v5 JSON：
 
@@ -117,6 +132,8 @@ bot.addEventListener("statechange", event => console.log(event.detail.state));
 bot.addEventListener("shapechange", event => console.log(event.detail.shape));
 bot.addEventListener("morphstart", event => console.log(event.detail.effect));
 bot.addEventListener("morphend", event => console.log(event.detail.effect));
+bot.addEventListener("sequencestep", event => console.log(event.detail.index, event.detail.state));
+bot.addEventListener("sequenceend", event => console.log(event.detail.cycles));
 ```
 
 ## 6. Loading 使用建议
