@@ -28,6 +28,9 @@ const speedSelect = document.querySelector("#demo-speed");
 const pointerInput = document.querySelector("#demo-pointer");
 const pauseButton = document.querySelector("#demo-pause");
 const bot = document.querySelector("#demo-bot");
+const previewStage = document.querySelector("#preview-stage");
+const contextTitle = document.querySelector("#context-title");
+const contextDescription = document.querySelector("#context-description");
 const readout = document.querySelector("#demo-readout");
 const runtime = document.querySelector("#demo-runtime");
 const code = document.querySelector("#component-code");
@@ -51,7 +54,14 @@ function generatedCode() {
   if (eyeColorInput.value.toLowerCase() !== "#ffffff") attributes.push(`eye-color="${escapeAttribute(eyeColorInput.value)}"`);
   if (speedSelect.value !== "1") attributes.push(`speed="${speedSelect.value}"`);
   if (pointerInput.checked) attributes.push("follow-pointer");
-  return `<script type="module" src="/component/morph-bot.js"></script>\n\n<morph-bot\n  ${attributes.join("\n  ")}\n  label="${stateLabels[stateSelect.value]}动画"\n></morph-bot>`;
+  return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<morph-bot\n  ${attributes.join("\n  ")}\n  label="${stateLabels[stateSelect.value]}动画"\n></morph-bot>`;
+}
+
+function contextText() {
+  const label = stateLabels[stateSelect.value];
+  if (stateSelect.value === "celebrate") return ["任务已完成", "结果已经准备好了"];
+  if (["sad", "scared", "confused", "alerting"].includes(stateSelect.value)) return [`当前状态：${label}`, "你可以随时切换状态"];
+  return [`正在${label}`, "通常只需要几秒钟"];
 }
 
 function syncDemo() {
@@ -63,9 +73,11 @@ function syncDemo() {
   bot.speed = Number(speedSelect.value);
   bot.toggleAttribute("follow-pointer", pointerInput.checked);
   sizeOutput.textContent = `${sizeInput.value}px`;
-  readout.textContent = `${stateSelect.value} · ${shapeSelect.value}`;
+  readout.textContent = `${stateSelect.value} · ${shapeSelect.value} · ${sizeInput.value}px`;
+  [contextTitle.textContent, contextDescription.textContent] = contextText();
   code.textContent = generatedCode();
   document.querySelectorAll("[data-preset]").forEach((button) => button.classList.toggle("is-active", button.dataset.preset === stateSelect.value));
+  document.querySelectorAll("[data-shape]").forEach((button) => button.classList.toggle("is-active", button.dataset.shape === shapeSelect.value));
 }
 
 [stateSelect, shapeSelect, sizeInput, colorInput, eyeColorInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
@@ -74,6 +86,16 @@ document.querySelectorAll("[data-preset]").forEach((button) => button.addEventLi
   stateSelect.value = button.dataset.preset;
   syncDemo();
   bot.replay();
+}));
+
+document.querySelectorAll("[data-shape]").forEach((button) => button.addEventListener("click", () => {
+  shapeSelect.value = button.dataset.shape;
+  syncDemo();
+}));
+
+document.querySelectorAll(".context-tabs [data-context]").forEach((button) => button.addEventListener("click", () => {
+  previewStage.dataset.context = button.dataset.context;
+  document.querySelectorAll(".context-tabs [data-context]").forEach((candidate) => candidate.classList.toggle("is-active", candidate === button));
 }));
 
 pauseButton.addEventListener("click", () => {
@@ -85,15 +107,19 @@ pauseButton.addEventListener("click", () => {
 document.querySelector("#copy-component-code").addEventListener("click", async (event) => {
   try {
     await navigator.clipboard.writeText(code.textContent);
-    event.currentTarget.textContent = "已复制";
-    window.setTimeout(() => { event.currentTarget.textContent = "复制代码"; }, 1200);
+    event.currentTarget.textContent = "已复制，可以粘贴了 ✓";
+    event.currentTarget.classList.add("is-copied");
+    window.setTimeout(() => {
+      event.currentTarget.textContent = "复制这段代码";
+      event.currentTarget.classList.remove("is-copied");
+    }, 1400);
   } catch {
     const selection = window.getSelection();
     const range = document.createRange();
     range.selectNodeContents(code);
     selection.removeAllRanges();
     selection.addRange(range);
-    event.currentTarget.textContent = "已选中，请复制";
+    event.currentTarget.textContent = "代码已选中，请按 ⌘C";
   }
 });
 

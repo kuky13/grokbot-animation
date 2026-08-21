@@ -15,10 +15,10 @@ npm run dev
 
 ## 独立组件
 
-`component/` 是可单独复制和发布的 Web Component 包，不依赖当前编辑器页面，也不依赖 React 或 Vue：
+`component/` 提供所见即所得的独立组件工作台，不依赖 React 或 Vue。打开页面后选择状态与形状，中间即时预览，右侧代码同步生成；第一次使用可直接下载 ZIP 并解压到项目：
 
 ```html
-<script type="module" src="/component/morph-bot.js"></script>
+<script type="module" src="./morph-bot/morph-bot.js"></script>
 
 <morph-bot
   state="loading"

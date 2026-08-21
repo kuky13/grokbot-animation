@@ -30,8 +30,10 @@ globalThis.HTMLElement = FakeHTMLElement;
 const packageRoot = resolve("component");
 const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
 const component = await import("../component/morph-bot.js");
+const downloadPath = resolve(packageRoot, "downloads/morph-bot-element-0.1.1.zip");
 
 assert.equal(manifest.name, "morph-bot-element");
+assert.equal(manifest.version, "0.1.1");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -68,5 +70,9 @@ assert.doesNotMatch(source, /from\s+["']\.\.\//, "published component must not i
 
 const demo = readFileSync(resolve(packageRoot, "index.html"), "utf8");
 for (const section of ['id="edit"', 'id="display"', 'id="use"']) assert.ok(demo.includes(section), `component guide should include ${section}`);
+assert.ok(demo.includes('id="preview-stage"'), "component workbench should expose a live preview stage above the fold");
+assert.ok(demo.includes('id="component-code"'), "component workbench should expose synchronized generated code");
+assert.ok(demo.includes("morph-bot-element-0.1.1.zip"), "component workbench should link the downloadable bundle");
+assert.ok(existsSync(downloadPath), "downloadable component ZIP should exist");
 
-console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and edit/display/use guide.`);
+console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and a downloadable WYSIWYG workbench.`);

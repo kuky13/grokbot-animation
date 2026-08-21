@@ -4,24 +4,30 @@
 
 > 这是非官方的动画研究项目，与 xAI 没有隶属或背书关系。公开分发精确参考几何或用于商业项目之前，请自行确认相关授权。
 
-## 1. 安装
+## 1. 最快使用
 
-将整个 `component/` 目录复制到项目的公开资源目录。组件运行时依赖同目录中的三个文件：
+打开组件工作台，先点“下载组件包”。解压后把完整的 `morph-bot/` 文件夹放到项目的公开资源目录：
 
 ```text
-component/
+morph-bot/
 ├── morph-bot.js
 ├── grok-bot-engine.js
-└── original-data.js
+├── original-data.js
+├── morph-bot.d.ts
+└── README.md
 ```
 
-然后加载入口模块：
+然后复制工作台右侧生成的代码。最小用法如下：
 
 ```html
-<script type="module" src="/component/morph-bot.js"></script>
+<script type="module" src="./morph-bot/morph-bot.js"></script>
+
+<morph-bot state="loading" shape="blob" size="48"></morph-bot>
 ```
 
-## 2. 声明组件
+工作台里的状态、形状、尺寸和颜色都是所见即所得的；右侧代码会与中间预览保持同步。
+
+## 2. 完整声明
 
 ```html
 <morph-bot
