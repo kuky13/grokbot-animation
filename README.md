@@ -44,13 +44,13 @@ cd grokbot-animation
 npm run dev
 ```
 
-Open:
+The command prints the local development URL. Open that URL and use these routes:
 
-- Advanced state lab: <http://127.0.0.1:4173/>
-- Component timeline editor: <http://127.0.0.1:4173/component/>
-- Interactive API documentation: <http://127.0.0.1:4173/component/docs/>
-
-The local server sends `Cache-Control: no-store`, so URL version query parameters are unnecessary.
+| Surface | Route |
+|---|---|
+| Advanced state lab | `/` |
+| Component timeline editor | `/component/` |
+| Interactive API documentation | `/component/docs/` |
 
 ### Use the component
 
@@ -208,13 +208,13 @@ cd grokbot-animation
 npm run dev
 ```
 
-打开：
+命令行会输出本地开发地址。打开该地址后，通过以下路由进入不同页面：
 
-- 高级状态实验室：<http://127.0.0.1:4173/>
-- 独立组件与时间线编辑器：<http://127.0.0.1:4173/component/>
-- 完整交互式 API 文档：<http://127.0.0.1:4173/component/docs/>
-
-本地服务器使用 `Cache-Control: no-store`，因此不需要在 URL 后添加版本查询参数。
+| 页面 | 路由 |
+|---|---|
+| 高级状态实验室 | `/` |
+| 独立组件与时间线编辑器 | `/component/` |
+| 完整交互式 API 文档 | `/component/docs/` |
 
 ### 使用独立组件
 
