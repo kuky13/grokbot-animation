@@ -18,8 +18,11 @@ const shapeLabels = {
   arch: "拱门", cloud: "云朵", teardrop: "水滴", leaf: "叶片",
 };
 
-const stateSelect = document.querySelector("#demo-state");
-const shapeSelect = document.querySelector("#demo-shape");
+const orderedStates = ["idle", ...MORPH_BOT_STATES.filter((state) => state !== "idle")];
+const stateInput = document.querySelector("#demo-state");
+const shapeInput = document.querySelector("#demo-shape");
+const stateGrid = document.querySelector("#state-grid");
+const shapeGrid = document.querySelector("#shape-grid");
 const sizeInput = document.querySelector("#demo-size");
 const sizeOutput = document.querySelector("#demo-size-output");
 const colorInput = document.querySelector("#demo-color");
@@ -27,6 +30,9 @@ const eyeColorInput = document.querySelector("#demo-eye-color");
 const speedSelect = document.querySelector("#demo-speed");
 const pointerInput = document.querySelector("#demo-pointer");
 const pauseButton = document.querySelector("#demo-pause");
+const transitionFrom = document.querySelector("#transition-from");
+const transitionTo = document.querySelector("#transition-to");
+const transitionButton = document.querySelector("#preview-transition");
 const bot = document.querySelector("#demo-bot");
 const previewStage = document.querySelector("#preview-stage");
 const contextTitle = document.querySelector("#context-title");
@@ -34,69 +40,167 @@ const contextDescription = document.querySelector("#context-description");
 const readout = document.querySelector("#demo-readout");
 const runtime = document.querySelector("#demo-runtime");
 const code = document.querySelector("#component-code");
+let codeMode = "static";
+let transitionTimer = 0;
 
-for (const state of MORPH_BOT_STATES) stateSelect.add(new Option(`${stateLabels[state]} · ${state}`, state));
-for (const shape of MORPH_BOT_SHAPES) shapeSelect.add(new Option(`${shapeLabels[shape]} · ${shape}`, shape));
-stateSelect.value = "loading";
-shapeSelect.value = "blob";
+function botThumbnail({ state, shape, size }) {
+  const preview = document.createElement("morph-bot");
+  preview.setAttribute("state", state);
+  preview.setAttribute("shape", shape);
+  preview.setAttribute("size", size);
+  preview.setAttribute("decorative", "");
+  return preview;
+}
+
+for (const state of orderedStates) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.stateOption = state;
+  button.setAttribute("aria-label", `预览${stateLabels[state]}状态`);
+  button.append(botThumbnail({ state, shape: "blob", size: 34 }));
+  const label = document.createElement("span");
+  label.innerHTML = `<strong>${stateLabels[state]}</strong><code>${state}</code>`;
+  button.append(label);
+  stateGrid.append(button);
+
+  const fromOption = new Option(`${stateLabels[state]} · ${state}`, state);
+  const toOption = new Option(`${stateLabels[state]} · ${state}`, state);
+  transitionFrom.add(fromOption);
+  transitionTo.add(toOption);
+}
+
+for (const shape of MORPH_BOT_SHAPES) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.shapeOption = shape;
+  button.setAttribute("aria-label", `选择${shapeLabels[shape]}形状`);
+  button.append(botThumbnail({ state: "idle", shape, size: 38 }));
+  const label = document.createElement("span");
+  label.innerHTML = `<strong>${shapeLabels[shape]}</strong><code>${shape}</code>`;
+  button.append(label);
+  shapeGrid.append(button);
+}
+
+stateInput.value = "idle";
+shapeInput.value = "blob";
+transitionFrom.value = "idle";
+transitionTo.value = "thinking";
 
 function escapeAttribute(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;");
 }
 
-function generatedCode() {
+function componentAttributes(state) {
   const attributes = [
-    `state="${escapeAttribute(stateSelect.value)}"`,
-    `shape="${escapeAttribute(shapeSelect.value)}"`,
+    `state="${escapeAttribute(state)}"`,
+    `shape="${escapeAttribute(shapeInput.value)}"`,
     `size="${sizeInput.value}"`,
     `color="${escapeAttribute(colorInput.value)}"`,
   ];
   if (eyeColorInput.value.toLowerCase() !== "#ffffff") attributes.push(`eye-color="${escapeAttribute(eyeColorInput.value)}"`);
   if (speedSelect.value !== "1") attributes.push(`speed="${speedSelect.value}"`);
   if (pointerInput.checked) attributes.push("follow-pointer");
-  return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<morph-bot\n  ${attributes.join("\n  ")}\n  label="${stateLabels[stateSelect.value]}动画"\n></morph-bot>`;
+  return attributes.join("\n  ");
 }
 
-function contextText() {
-  const label = stateLabels[stateSelect.value];
-  if (stateSelect.value === "celebrate") return ["任务已完成", "结果已经准备好了"];
-  if (["sad", "scared", "confused", "alerting"].includes(stateSelect.value)) return [`当前状态：${label}`, "你可以随时切换状态"];
+function staticCode() {
+  return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<morph-bot\n  ${componentAttributes(stateInput.value)}\n  label="${stateLabels[stateInput.value]}动画"\n></morph-bot>`;
+}
+
+function transitionCode() {
+  const from = transitionFrom.value;
+  const to = transitionTo.value;
+  return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<button id="change-bot-state">切换到${stateLabels[to]}</button>\n\n<morph-bot\n  id="status-bot"\n  ${componentAttributes(from)}\n  label="任务状态"\n></morph-bot>\n\n<script type="module">\n  const bot = document.querySelector("#status-bot");\n\n  document.querySelector("#change-bot-state")\n    .addEventListener("click", () => {\n      bot.setState("${to}");\n    });\n</script>`;
+}
+
+function contextText(state) {
+  const label = stateLabels[state];
+  if (state === "idle") return ["等待任务", "状态可以随时切换"];
+  if (state === "celebrate") return ["任务已完成", "结果已经准备好了"];
+  if (["sad", "scared", "confused", "alerting"].includes(state)) return [`当前状态：${label}`, "你可以随时切换状态"];
   return [`正在${label}`, "通常只需要几秒钟"];
 }
 
+function syncThumbnailAppearance() {
+  stateGrid.querySelectorAll("morph-bot").forEach((preview) => {
+    if (preview.shape !== shapeInput.value) preview.shape = shapeInput.value;
+    if (preview.getAttribute("color") !== colorInput.value) preview.setAttribute("color", colorInput.value);
+    if (preview.getAttribute("eye-color") !== eyeColorInput.value) preview.setAttribute("eye-color", eyeColorInput.value);
+  });
+  shapeGrid.querySelectorAll("morph-bot").forEach((preview) => {
+    if (preview.state !== stateInput.value) preview.state = stateInput.value;
+    if (preview.getAttribute("color") !== colorInput.value) preview.setAttribute("color", colorInput.value);
+    if (preview.getAttribute("eye-color") !== eyeColorInput.value) preview.setAttribute("eye-color", eyeColorInput.value);
+  });
+}
+
 function syncDemo() {
-  bot.state = stateSelect.value;
-  bot.shape = shapeSelect.value;
+  bot.state = stateInput.value;
+  bot.shape = shapeInput.value;
   bot.size = Number(sizeInput.value);
   bot.setAttribute("color", colorInput.value);
   bot.setAttribute("eye-color", eyeColorInput.value);
   bot.speed = Number(speedSelect.value);
   bot.toggleAttribute("follow-pointer", pointerInput.checked);
   sizeOutput.textContent = `${sizeInput.value}px`;
-  readout.textContent = `${stateSelect.value} · ${shapeSelect.value} · ${sizeInput.value}px`;
-  [contextTitle.textContent, contextDescription.textContent] = contextText();
-  code.textContent = generatedCode();
-  document.querySelectorAll("[data-preset]").forEach((button) => button.classList.toggle("is-active", button.dataset.preset === stateSelect.value));
-  document.querySelectorAll("[data-shape]").forEach((button) => button.classList.toggle("is-active", button.dataset.shape === shapeSelect.value));
+  readout.textContent = `${stateInput.value} · ${shapeInput.value} · ${sizeInput.value}px`;
+  [contextTitle.textContent, contextDescription.textContent] = contextText(stateInput.value);
+  code.textContent = codeMode === "transition" ? transitionCode() : staticCode();
+  stateGrid.querySelectorAll("[data-state-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.stateOption === stateInput.value));
+  shapeGrid.querySelectorAll("[data-shape-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.shapeOption === shapeInput.value));
+  syncThumbnailAppearance();
 }
 
-[stateSelect, shapeSelect, sizeInput, colorInput, eyeColorInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
+[sizeInput, colorInput, eyeColorInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
+[transitionFrom, transitionTo].forEach((select) => select.addEventListener("input", syncDemo));
 
-document.querySelectorAll("[data-preset]").forEach((button) => button.addEventListener("click", () => {
-  stateSelect.value = button.dataset.preset;
+stateGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-state-option]");
+  if (!button) return;
+  stateInput.value = button.dataset.stateOption;
+  transitionTo.value = stateInput.value;
   syncDemo();
   bot.replay();
-}));
+});
 
-document.querySelectorAll("[data-shape]").forEach((button) => button.addEventListener("click", () => {
-  shapeSelect.value = button.dataset.shape;
+shapeGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-shape-option]");
+  if (!button) return;
+  shapeInput.value = button.dataset.shapeOption;
   syncDemo();
-}));
+});
 
 document.querySelectorAll(".context-tabs [data-context]").forEach((button) => button.addEventListener("click", () => {
   previewStage.dataset.context = button.dataset.context;
   document.querySelectorAll(".context-tabs [data-context]").forEach((candidate) => candidate.classList.toggle("is-active", candidate === button));
 }));
+
+document.querySelectorAll("[data-code-mode]").forEach((button) => button.addEventListener("click", () => {
+  codeMode = button.dataset.codeMode;
+  document.querySelectorAll("[data-code-mode]").forEach((candidate) => candidate.classList.toggle("is-active", candidate === button));
+  syncDemo();
+}));
+
+transitionButton.addEventListener("click", () => {
+  window.clearTimeout(transitionTimer);
+  codeMode = "transition";
+  document.querySelectorAll("[data-code-mode]").forEach((candidate) => candidate.classList.toggle("is-active", candidate.dataset.codeMode === codeMode));
+  stateInput.value = transitionFrom.value;
+  syncDemo();
+  bot.replay();
+  transitionButton.disabled = true;
+  transitionButton.innerHTML = "正在展示 A…";
+  transitionTimer = window.setTimeout(() => {
+    stateInput.value = transitionTo.value;
+    syncDemo();
+    bot.replay();
+    transitionButton.innerHTML = "✓ 已切换到 B";
+    window.setTimeout(() => {
+      transitionButton.disabled = false;
+      transitionButton.innerHTML = "<span>▶</span> 再次预览 A → B";
+    }, 900);
+  }, 700);
+});
 
 pauseButton.addEventListener("click", () => {
   bot.paused = !bot.paused;

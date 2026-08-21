@@ -30,10 +30,10 @@ globalThis.HTMLElement = FakeHTMLElement;
 const packageRoot = resolve("component");
 const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
 const component = await import("../component/morph-bot.js");
-const downloadPath = resolve(packageRoot, "downloads/morph-bot-element-0.1.1.zip");
+const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.1.1");
+assert.equal(manifest.version, "0.1.2");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -69,10 +69,19 @@ const source = readFileSync(resolve(packageRoot, "morph-bot.js"), "utf8");
 assert.doesNotMatch(source, /from\s+["']\.\.\//, "published component must not import outside its package");
 
 const demo = readFileSync(resolve(packageRoot, "index.html"), "utf8");
+const demoRuntime = readFileSync(resolve(packageRoot, "demo.js"), "utf8");
 for (const section of ['id="edit"', 'id="display"', 'id="use"']) assert.ok(demo.includes(section), `component guide should include ${section}`);
 assert.ok(demo.includes('id="preview-stage"'), "component workbench should expose a live preview stage above the fold");
 assert.ok(demo.includes('id="component-code"'), "component workbench should expose synchronized generated code");
-assert.ok(demo.includes("morph-bot-element-0.1.1.zip"), "component workbench should link the downloadable bundle");
+assert.ok(demo.includes('id="state-grid"'), "component workbench should expose the complete visual state catalog");
+assert.ok(demo.includes('id="shape-grid"'), "component workbench should expose the complete visual shape catalog");
+assert.ok(demo.includes('id="transition-from"') && demo.includes('id="transition-to"'), "component workbench should expose A to B transition controls");
+assert.doesNotMatch(demo, /常用状态|常用形状/, "component workbench must not hide choices behind a common subset");
+assert.match(demoRuntime, /const orderedStates = \["idle",/, "idle should be the first visual state option");
+assert.match(demoRuntime, /botThumbnail\(\{ state, shape/, "state and shape catalogs should render real component thumbnails");
+assert.match(demoRuntime, /transitionButton\.addEventListener/, "A to B transition preview should be interactive");
+assert.match(demoRuntime, /bot\.setState\(/, "generated transition usage should call the public state API");
+assert.ok(demo.includes(`morph-bot-element-${manifest.version}.zip`), "component workbench should link the downloadable bundle");
 assert.ok(existsSync(downloadPath), "downloadable component ZIP should exist");
 
 console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and a downloadable WYSIWYG workbench.`);

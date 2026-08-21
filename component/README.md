@@ -66,6 +66,22 @@ morph-bot/
 
 ## 4. JavaScript API
 
+从状态 A 切换到状态 B，不需要重新创建组件，只需调用 `setState()`：
+
+```html
+<button id="change-state">开始思考</button>
+<morph-bot id="status-bot" state="idle" shape="blob"></morph-bot>
+
+<script type="module">
+  const bot = document.querySelector("#status-bot");
+  document.querySelector("#change-state").addEventListener("click", () => {
+    bot.setState("thinking");
+  });
+</script>
+```
+
+工作台中间的“从 A / 到 B / 预览 A → B”会真实执行同一段状态切换；右侧切到“A → B 切换”即可复制与当前选择一致的完整代码。
+
 ```js
 const bot = document.querySelector("morph-bot");
 

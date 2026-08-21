@@ -16,7 +16,7 @@
       <div class="header-actions">
         <span class="component-stats">39 状态 · 18 形状</span>
         <a class="quiet-action" href="../">打开高级动画实验室</a>
-        <a class="download-action" href="./downloads/morph-bot-element-0.1.1.zip" download>下载组件包 <span>↓</span></a>
+        <a class="download-action" href="./downloads/morph-bot-element-0.1.2.zip" download>下载组件包 <span>↓</span></a>
       </div>
     </header>
 
@@ -29,31 +29,18 @@
           </header>
 
           <form class="quick-editor" id="quick-editor">
-            <fieldset class="preset-fieldset">
-              <legend>常用状态</legend>
-              <div class="preset-strip">
-                <button type="button" data-preset="loading"><span>加载</span><code>loading</code></button>
-                <button type="button" data-preset="thinking"><span>思考</span><code>thinking</code></button>
-                <button type="button" data-preset="searching"><span>搜索</span><code>searching</code></button>
-                <button type="button" data-preset="celebrate"><span>完成</span><code>celebrate</code></button>
-              </div>
-            </fieldset>
+            <input id="demo-state" type="hidden" value="idle" />
+            <input id="demo-shape" type="hidden" value="blob" />
 
-            <label class="field"><span>全部状态 <small>39</small></span><select id="demo-state"></select></label>
+            <fieldset class="state-fieldset">
+              <legend>全部状态 <span>39</span></legend>
+              <div class="state-grid" id="state-grid"></div>
+            </fieldset>
 
             <fieldset class="shape-fieldset">
-              <legend>常用形状</legend>
-              <div class="shape-strip">
-                <button type="button" data-shape="blob"><i class="shape-icon shape-icon--blob"></i><span>圆形</span></button>
-                <button type="button" data-shape="hex"><i class="shape-icon shape-icon--hex"></i><span>六边形</span></button>
-                <button type="button" data-shape="wedge"><i class="shape-icon shape-icon--wedge"></i><span>三角</span></button>
-                <button type="button" data-shape="gem"><i class="shape-icon shape-icon--gem"></i><span>宝石</span></button>
-                <button type="button" data-shape="cloud"><i class="shape-icon shape-icon--cloud"></i><span>云朵</span></button>
-                <button type="button" data-shape="capsule"><i class="shape-icon shape-icon--capsule"></i><span>胶囊</span></button>
-              </div>
+              <legend>全部形状 <span>18</span></legend>
+              <div class="shape-grid" id="shape-grid"></div>
             </fieldset>
-
-            <label class="field"><span>全部形状 <small>18</small></span><select id="demo-shape"></select></label>
 
             <details class="advanced-controls">
               <summary>尺寸、颜色与播放设置 <span>＋</span></summary>
@@ -82,14 +69,21 @@
             <button type="button" data-context="page">页面</button>
           </div>
 
+          <div class="transition-builder" aria-label="状态切换预览">
+            <label><span>从 A</span><select id="transition-from"></select></label>
+            <span class="transition-arrow" aria-hidden="true">→</span>
+            <label><span>到 B</span><select id="transition-to"></select></label>
+            <button id="preview-transition" type="button"><span>▶</span> 预览 A → B</button>
+          </div>
+
           <figure class="preview-stage" id="preview-stage" data-context="solo">
             <div class="stage-grid" aria-hidden="true"></div>
             <div class="preview-object">
-              <morph-bot id="demo-bot" state="loading" shape="blob" size="72" color="#111210" eye-color="#ffffff" label="Configured animated bot"></morph-bot>
-              <div class="context-copy"><strong id="context-title">正在生成</strong><span id="context-description">通常只需要几秒钟</span></div>
+              <morph-bot id="demo-bot" state="idle" shape="blob" size="72" color="#111210" eye-color="#ffffff" label="Configured animated bot"></morph-bot>
+              <div class="context-copy"><strong id="context-title">等待任务</strong><span id="context-description">状态可以随时切换</span></div>
             </div>
             <figcaption>
-              <strong id="demo-readout">loading · blob · 72px</strong>
+              <strong id="demo-readout">idle · blob · 72px</strong>
               <code id="demo-runtime">E00 · ENTER</code>
             </figcaption>
           </figure>
@@ -104,11 +98,17 @@
           <div class="first-use">
             <span class="first-use-label">第一次使用？</span>
             <p>下载并解压到项目中，保留 <code>morph-bot/</code> 文件夹。</p>
-            <a href="./downloads/morph-bot-element-0.1.1.zip" download>下载 morph-bot.zip <span>↓</span></a>
+            <a href="./downloads/morph-bot-element-0.1.2.zip" download>下载 morph-bot.zip <span>↓</span></a>
           </div>
 
           <div class="code-card">
-            <div class="code-card-bar"><span>当前配置 · HTML</span><span class="sync-indicator"><i></i> 已同步</span></div>
+            <div class="code-card-bar">
+              <div class="code-mode-tabs" role="group" aria-label="代码类型">
+                <button class="is-active" type="button" data-code-mode="static">单状态</button>
+                <button type="button" data-code-mode="transition">A → B 切换</button>
+              </div>
+              <span class="sync-indicator"><i></i> 已同步</span>
+            </div>
             <pre><code id="component-code"></code></pre>
             <button id="copy-component-code" type="button">复制这段代码</button>
           </div>

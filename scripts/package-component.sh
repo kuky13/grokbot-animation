@@ -6,7 +6,8 @@ repo_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
 stage_dir=$(mktemp -d)
 bundle_dir="$stage_dir/morph-bot"
 output_dir="$repo_dir/component/downloads"
-output_file="$output_dir/morph-bot-element-0.1.1.zip"
+component_version=$(node -p "require('$repo_dir/component/package.json').version")
+output_file="$output_dir/morph-bot-element-$component_version.zip"
 
 cleanup() {
   rm -r "$stage_dir"
