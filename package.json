@@ -1,11 +1,11 @@
 {
   "name": "grokbot-expression-lab",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "test": "node --check app.js && node --check grok-bot-engine.js && node --check original-data.js && node scripts/verify-original-data.mjs && node scripts/verify-morph-transitions.mjs && node scripts/verify-runtime-transitions.mjs"
+    "test": "node --check app.js && node --check grok-bot-engine.js && node --check original-data.js && node --check component/grok-bot-engine.js && node --check component/original-data.js && node --check component/morph-bot.js && node --check component/demo.js && node scripts/verify-original-data.mjs && node scripts/verify-morph-transitions.mjs && node scripts/verify-runtime-transitions.mjs && node scripts/verify-component-package.mjs"
   }
 }

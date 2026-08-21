@@ -69,8 +69,23 @@ code {
 
 .wordmark,
 .source-link,
+.component-link,
 footer a {
   text-decoration: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.component-link {
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: var(--surface);
+  background: var(--ink);
+  font-size: 13px;
 }
 
 .wordmark {
@@ -837,6 +852,7 @@ figcaption {
 
 .editor-history button,
 .editor-io button,
+.editor-io a,
 .import-button {
   min-height: 36px;
   display: inline-flex;
@@ -851,6 +867,14 @@ figcaption {
   font-weight: 650;
   text-align: center;
   cursor: pointer;
+}
+
+.editor-io .component-guide-button {
+  grid-column: 1 / -1;
+  color: var(--surface);
+  border-color: var(--ink);
+  background: var(--ink);
+  text-decoration: none;
 }
 
 .editor-history button:disabled {

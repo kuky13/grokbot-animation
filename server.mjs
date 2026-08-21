@@ -19,7 +19,11 @@ createServer((request, response) => {
   const rawPath = decodeURIComponent((request.url || "/").split("?")[0]);
   const relativePath = rawPath === "/" ? "index.html" : rawPath.replace(/^\/+/, "");
   const safePath = normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, "");
-  const filePath = join(root, safePath);
+  let filePath = join(root, safePath);
+
+  if (filePath.startsWith(root) && existsSync(filePath) && statSync(filePath).isDirectory()) {
+    filePath = join(filePath, "index.html");
+  }
 
   if (!filePath.startsWith(root) || !existsSync(filePath) || statSync(filePath).isDirectory()) {
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });

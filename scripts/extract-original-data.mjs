@@ -4,7 +4,7 @@ import path from "node:path";
 
 const sourcePath = process.argv[2] || "/tmp/grokbot-assets.Lakwl2/15ylhd4-5eno7.js";
 const stateSourcePath = process.argv[3] || "/tmp/grokbot-assets.Lakwl2/3bln_e_up5ydn.js";
-const outputPath = process.argv[4] || path.resolve("original-data.js");
+const outputPath = process.argv[4] || path.resolve("component/original-data.js");
 const source = fs.readFileSync(sourcePath, "utf8");
 const pushed = [];
 const context = {

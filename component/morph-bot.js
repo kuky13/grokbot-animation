@@ -1,0 +1,327 @@
+import { GrokBotEngine, MORPH_SIZES } from "./grok-bot-engine.js";
+import { ORIGINAL_STATE_DATA, SHAPES } from "./original-data.js";
+
+export const MORPH_BOT_STATES = Object.freeze(Object.keys(ORIGINAL_STATE_DATA.EXPRESSION_POOLS));
+export const MORPH_BOT_SHAPES = Object.freeze(Object.keys(SHAPES));
+export const MORPH_BOT_EFFECTS = Object.freeze(Object.keys(MORPH_SIZES));
+
+export const MORPH_BY_STATE = Object.freeze({
+  thinking: "dots",
+  orbit: "orbit",
+  radar: "radar",
+  progress: "progress",
+  spawning: "gather",
+  dictating: "wave",
+  sending: "send",
+  receiving: "receive",
+  uploading: "dock",
+  bouncing: "ball",
+  loading: "whirl",
+  "powering-down": "standby",
+  writing: "pencil",
+  alerting: "bang",
+});
+
+const DEFAULT_CHARACTER = Object.freeze({
+  color: "#0b0b0b",
+  eyeColor: "#ffffff",
+  size: 96,
+  flipX: false,
+  pointer: false,
+  badgeColor: "#1d9bf0",
+  badgeScale: 1,
+});
+
+const HTMLElementBase = globalThis.HTMLElement || class {};
+let componentCounter = 0;
+
+function defaultState(state) {
+  const id = MORPH_BOT_STATES.includes(state) ? state : "idle";
+  const blink = ORIGINAL_STATE_DATA.BLINK_CADENCE[id];
+  return {
+    expressionPool: [...ORIGINAL_STATE_DATA.EXPRESSION_POOLS[id]],
+    expressionWeights: {},
+    expressionCadence: [...ORIGINAL_STATE_DATA.EXPRESSION_CADENCE[id]],
+    blinkEnabled: Boolean(blink),
+    blinkMin: blink?.[0] ?? 3000,
+    blinkMax: blink?.[1] ?? 7000,
+    morph: MORPH_BY_STATE[id] || "none",
+    headX: 0,
+    headY: 0,
+    headRotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    eyeOpen: 1,
+    eyeScale: 1,
+    gazeScale: 1,
+    motionScale: 1,
+    tempo: 1,
+  };
+}
+
+function numberAttribute(element, name, fallback, min, max) {
+  const value = Number(element.getAttribute(name));
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+function cloneConfig(value) {
+  if (!value || typeof value !== "object") return null;
+  return typeof structuredClone === "function" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+}
+
+function svgTemplate(id) {
+  const clipId = `${id}-head-clip`;
+  return `
+    <style>
+      :host {
+        --morph-bot-size: 96px;
+        display: inline-grid;
+        width: var(--morph-bot-size);
+        height: var(--morph-bot-size);
+        place-items: center;
+        contain: layout style;
+        vertical-align: middle;
+      }
+      svg {
+        --fg: #0b0b0b;
+        --bg: #fff;
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .grok-bot-mark__head,
+      .morph-part { fill: var(--fg); }
+      .grok-bot-mark__eye { fill: var(--bg); }
+      .eye-path { transform-origin: 0 0; }
+      .morph-ring { fill: none; stroke: var(--fg); }
+      .morph-glyph { fill: var(--fg); }
+      [hidden] { display: none !important; }
+      @media (prefers-reduced-motion: reduce) {
+        svg { transition: none; }
+      }
+    </style>
+    <svg id="${id}" class="grok-bot-mark" data-state="idle" viewBox="-15 -15 259 259" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs><clipPath id="${clipId}"><path id="head-clip-path"></path></clipPath></defs>
+      <g id="particles-back" aria-hidden="true"></g>
+      <path class="grok-bot-mark__head morph-head" hidden></path>
+      <path class="grok-bot-mark__head morph-head" hidden></path>
+      ${Array.from({ length: 5 }, () => '<circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden></circle>').join("")}
+      ${Array.from({ length: 5 }, () => '<circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden></circle>').join("")}
+      ${Array.from({ length: 3 }, () => '<path class="morph-glyph" hidden></path>').join("")}
+      <g id="bot-transform">
+        <path id="head-path" class="grok-bot-mark__head"></path>
+        <g clip-path="url(#${clipId})">
+          <path class="grok-bot-mark__eye eye-path"></path>
+          <path class="grok-bot-mark__eye eye-path"></path>
+        </g>
+        <circle id="notify-badge" cx="114.2705" cy="114.2705" r="0" hidden></circle>
+      </g>
+      <g id="particles-front" aria-hidden="true"></g>
+    </svg>`;
+}
+
+export class MorphBotElement extends HTMLElementBase {
+  static get observedAttributes() {
+    return ["state", "shape", "size", "color", "eye-color", "speed", "follow-pointer", "flip", "paused", "decorative", "label"];
+  }
+
+  constructor() {
+    super();
+    this._engine = null;
+    this._preset = null;
+    this._visible = true;
+    this._intersectionObserver = null;
+    this._morphMonitor = 0;
+    this._componentId = `morph-bot-${++componentCounter}`;
+    if (this.attachShadow) this.attachShadow({ mode: "open" });
+  }
+
+  connectedCallback() {
+    if (!this.shadowRoot) return;
+    if (!this.shadowRoot.querySelector("svg")) this.shadowRoot.innerHTML = svgTemplate(this._componentId);
+    this._syncSize();
+    this._syncAccessibility();
+    if (!this._engine) {
+      const svg = this.shadowRoot.querySelector("svg");
+      this._engine = new GrokBotEngine(svg, () => this._engineConfig());
+      this._engine.setPlaybackRate(this.speed);
+      this._engine.setPaused(this.paused);
+      this._engine.setState(this.state, true);
+      if (globalThis.IntersectionObserver) {
+        this._intersectionObserver = new IntersectionObserver(([entry]) => {
+          this._visible = entry?.isIntersecting ?? true;
+          this._syncPaused();
+        });
+        this._intersectionObserver.observe(this);
+      }
+      queueMicrotask(() => this.dispatchEvent(new CustomEvent("ready")));
+    }
+  }
+
+  disconnectedCallback() {
+    this._morphMonitor += 1;
+    this._intersectionObserver?.disconnect();
+    this._intersectionObserver = null;
+    this._engine?.destroy();
+    this._engine = null;
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue) return;
+    if (name === "size") this._syncSize();
+    if (["state", "decorative", "label"].includes(name)) this._syncAccessibility();
+    if (!this._engine) return;
+    if (name === "state") {
+      this._engine.setState(this.state, true);
+      this.dispatchEvent(new CustomEvent("statechange", { detail: { state: this.state } }));
+    } else if (name === "shape") {
+      this.dispatchEvent(new CustomEvent("shapechange", { detail: { shape: this.shape } }));
+    } else if (name === "speed") this._engine.setPlaybackRate(this.speed);
+    else if (name === "paused") this._syncPaused();
+  }
+
+  get state() {
+    const value = this.getAttribute("state") || "idle";
+    return MORPH_BOT_STATES.includes(value) ? value : "idle";
+  }
+
+  set state(value) {
+    this.setAttribute("state", MORPH_BOT_STATES.includes(value) ? value : "idle");
+  }
+
+  get shape() {
+    const fallback = MORPH_BOT_SHAPES.includes(this._preset?.shape) ? this._preset.shape : "blob";
+    const value = this.getAttribute("shape") || fallback;
+    return MORPH_BOT_SHAPES.includes(value) ? value : fallback;
+  }
+
+  set shape(value) {
+    this.setAttribute("shape", MORPH_BOT_SHAPES.includes(value) ? value : "blob");
+  }
+
+  get size() { return numberAttribute(this, "size", this._preset?.character?.size || DEFAULT_CHARACTER.size, 12, 1024); }
+  set size(value) { this.setAttribute("size", String(value)); }
+  get speed() { return numberAttribute(this, "speed", 1, 0.1, 4); }
+  set speed(value) { this.setAttribute("speed", String(value)); }
+  get paused() { return this.hasAttribute("paused"); }
+  set paused(value) { this.toggleAttribute("paused", Boolean(value)); }
+
+  configure(project) {
+    this._preset = cloneConfig(project);
+    this._syncSize();
+    this._engine?.setState(this.state, true);
+    this.dispatchEvent(new CustomEvent("configure"));
+    return this;
+  }
+
+  setState(state, { replay = false } = {}) {
+    if (!MORPH_BOT_STATES.includes(state)) throw new RangeError(`Unknown morph-bot state: ${state}`);
+    if (state === this.state && replay) this._engine?.setState(state, true);
+    else this.state = state;
+    return this;
+  }
+
+  setShape(shape) {
+    if (!MORPH_BOT_SHAPES.includes(shape)) throw new RangeError(`Unknown morph-bot shape: ${shape}`);
+    this.shape = shape;
+    return this;
+  }
+
+  replay() {
+    this._engine?.setState(this.state, true);
+    return this;
+  }
+
+  pause() { this.paused = true; return this; }
+  play() { this.paused = false; return this; }
+  step() { this._engine?.stepFrame(); this.paused = true; return this; }
+
+  restoreStateMorph() {
+    this._morphMonitor += 1;
+    this._engine?.clearMorphPreview();
+    return this;
+  }
+
+  playMorph(effect, { hold = 2500, restore = null } = {}) {
+    if (!MORPH_BOT_EFFECTS.includes(effect)) return Promise.reject(new RangeError(`Unknown morph effect: ${effect}`));
+    if (!this._engine) return Promise.reject(new Error("morph-bot is not connected"));
+    const token = ++this._morphMonitor;
+    this._engine.triggerMorphPreview(effect, hold);
+    this.dispatchEvent(new CustomEvent("morphstart", { detail: { effect, hold } }));
+    return new Promise((resolve) => {
+      const inspect = () => {
+        if (token !== this._morphMonitor || !this._engine) { resolve({ cancelled: true }); return; }
+        if (this._engine.getSnapshot().morphPhase === "DONE") {
+          this.dispatchEvent(new CustomEvent("morphend", { detail: { effect } }));
+          if (restore === "default") this._engine.clearMorphPreview();
+          else if (MORPH_BOT_STATES.includes(restore)) this.state = restore;
+          resolve({ effect, restored: restore });
+          return;
+        }
+        requestAnimationFrame(inspect);
+      };
+      requestAnimationFrame(inspect);
+    });
+  }
+
+  snapshot() {
+    return this._engine?.getSnapshot() || null;
+  }
+
+  _engineConfig() {
+    const state = this.state;
+    const baseState = defaultState(state);
+    const stateConfig = { ...baseState, ...(this._preset?.states?.[state] || {}) };
+    stateConfig.expressionPool = Array.isArray(stateConfig.expressionPool) && stateConfig.expressionPool.length
+      ? stateConfig.expressionPool
+      : baseState.expressionPool;
+    stateConfig.expressionCadence = Array.isArray(stateConfig.expressionCadence)
+      ? stateConfig.expressionCadence
+      : baseState.expressionCadence;
+    const character = { ...DEFAULT_CHARACTER, ...(this._preset?.character || {}) };
+    const color = this.getAttribute("color") || character.color;
+    const eyeColor = this.getAttribute("eye-color") || character.eyeColor;
+    const pointer = this.hasAttribute("follow-pointer") ? true : Boolean(character.pointer);
+    const flipX = this.hasAttribute("flip") ? true : Boolean(character.flipX);
+    return {
+      ...character,
+      ...stateConfig,
+      color,
+      eyeColor,
+      pointer,
+      flipX,
+      size: this.size,
+      shape: this.shape,
+      blinkCadence: stateConfig.blinkEnabled
+        ? [Math.min(stateConfig.blinkMin, stateConfig.blinkMax), Math.max(stateConfig.blinkMin, stateConfig.blinkMax)]
+        : null,
+    };
+  }
+
+  _syncSize() {
+    this.style?.setProperty("--morph-bot-size", `${this.size}px`);
+  }
+
+  _syncPaused() {
+    this._engine?.setPaused(this.paused || !this._visible);
+  }
+
+  _syncAccessibility() {
+    if (this.hasAttribute("decorative")) {
+      this.setAttribute("aria-hidden", "true");
+      this.removeAttribute("role");
+      return;
+    }
+    this.removeAttribute("aria-hidden");
+    if (!this.hasAttribute("role")) this.setAttribute("role", ["loading", "progress", "spawning"].includes(this.state) ? "status" : "img");
+    if (!this.hasAttribute("aria-label")) this.setAttribute("aria-label", this.getAttribute("label") || `Animated bot: ${this.state}`);
+  }
+}
+
+if (globalThis.customElements && !customElements.get("morph-bot")) {
+  customElements.define("morph-bot", MorphBotElement);
+}
+
+export default MorphBotElement;

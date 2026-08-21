@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Edit, preview and embed the framework-free Morph Bot Web Component." />
+    <title>Morph Bot Element · 编辑、展示、使用</title>
+    <link rel="stylesheet" href="./demo.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Morph Bot Element 首页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+        <span>Morph Bot <small>Element</small></span>
+      </a>
+      <nav aria-label="页面导航">
+        <a href="#edit">编辑</a>
+        <a href="#display">展示</a>
+        <a href="#use">使用</a>
+        <a class="editor-link" href="../">高级编辑器 ↗</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <span class="overline">Framework-free · SVG runtime · v0.1.0</span>
+          <h1 id="hero-title">One tag.<br /><em>39 behaviours.</em></h1>
+          <p>把一个有情绪的几何角色放进按钮、空状态或任务流程。无需 React，不用复制 SVG，只需指定形状和状态。</p>
+          <a class="hero-action" href="#edit">开始配置 <span>↓</span></a>
+        </div>
+        <div class="hero-specimen" aria-label="Morph Bot loading 动画展示">
+          <span class="specimen-axis specimen-axis--x" aria-hidden="true"></span>
+          <span class="specimen-axis specimen-axis--y" aria-hidden="true"></span>
+          <morph-bot state="loading" shape="blob" size="250" color="#111210" label="Loading animation"></morph-bot>
+          <code>&lt;morph-bot state="loading"&gt;</code>
+        </div>
+      </section>
+
+      <section class="flow" aria-label="组件使用流程">
+        <aside class="flow-index" aria-hidden="true">
+          <span class="is-active">01 EDIT</span><span>02 DISPLAY</span><span>03 USE</span>
+        </aside>
+
+        <div class="flow-content">
+          <section id="edit" class="flow-section edit-section" aria-labelledby="edit-title">
+            <header class="section-heading">
+              <span class="step">01</span>
+              <div><p>EDIT</p><h2 id="edit-title">先决定它是谁，正在做什么。</h2></div>
+            </header>
+            <div class="edit-layout">
+              <form class="quick-editor" id="quick-editor">
+                <label><span>状态 State</span><select id="demo-state"></select></label>
+                <label><span>形状 Shape</span><select id="demo-shape"></select></label>
+                <label class="range-control"><span>尺寸 Size</span><input id="demo-size" type="range" min="32" max="280" value="164" /><output id="demo-size-output">164px</output></label>
+                <label><span>身体颜色</span><input id="demo-color" type="color" value="#111210" /></label>
+                <label><span>眼睛颜色</span><input id="demo-eye-color" type="color" value="#ffffff" /></label>
+                <label><span>播放速度</span><select id="demo-speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+                <label class="toggle"><input id="demo-pointer" type="checkbox" /><span>跟随指针</span></label>
+                <button id="demo-pause" type="button">暂停动画</button>
+              </form>
+              <div class="preset-strip" aria-label="常用状态">
+                <button type="button" data-preset="loading"><span>加载</span><code>loading</code></button>
+                <button type="button" data-preset="thinking"><span>思考</span><code>thinking</code></button>
+                <button type="button" data-preset="searching"><span>搜索</span><code>searching</code></button>
+                <button type="button" data-preset="celebrate"><span>完成</span><code>celebrate</code></button>
+              </div>
+            </div>
+          </section>
+
+          <section id="display" class="flow-section display-section" aria-labelledby="display-title">
+            <header class="section-heading">
+              <span class="step">02</span>
+              <div><p>DISPLAY</p><h2 id="display-title">先在真实尺寸里看，再决定放在哪里。</h2></div>
+            </header>
+            <div class="display-layout">
+              <figure class="live-stage">
+                <div class="stage-measure" aria-hidden="true"><span></span><span></span><span></span></div>
+                <morph-bot id="demo-bot" state="loading" shape="blob" size="164" color="#111210" eye-color="#ffffff" label="Configured animated bot"></morph-bot>
+                <figcaption><strong id="demo-readout">loading · blob</strong><code id="demo-runtime">E00 · ENTER</code></figcaption>
+              </figure>
+              <div class="context-list">
+                <article>
+                  <div class="button-context"><morph-bot state="loading" shape="blob" size="18" decorative></morph-bot><span>正在生成</span></div>
+                  <div><strong>按钮内</strong><code>18px</code></div>
+                </article>
+                <article>
+                  <div class="status-context"><morph-bot state="thinking" shape="hex" size="44" decorative></morph-bot><p><b>正在整理答案</b><span>通常需要几秒钟</span></p></div>
+                  <div><strong>任务状态</strong><code>44px</code></div>
+                </article>
+                <article>
+                  <div class="page-context"><morph-bot state="progress" shape="pebble" size="82" decorative></morph-bot><span>PREPARING WORKSPACE</span></div>
+                  <div><strong>页面加载</strong><code>82px</code></div>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <section id="use" class="flow-section use-section" aria-labelledby="use-title">
+            <header class="section-heading">
+              <span class="step">03</span>
+              <div><p>USE</p><h2 id="use-title">复制组件目录，然后写一个标签。</h2></div>
+            </header>
+            <div class="use-layout">
+              <ol class="install-steps">
+                <li><span>1</span><div><strong>复制组件</strong><p>将整个 <code>component/</code> 目录放进你的项目公开资源目录。</p></div></li>
+                <li><span>2</span><div><strong>加载模块</strong><p>通过一个 ES Module 脚本注册 <code>&lt;morph-bot&gt;</code>。</p></div></li>
+                <li><span>3</span><div><strong>声明状态</strong><p>使用 <code>state</code> 与 <code>shape</code>，其余参数按需添加。</p></div></li>
+              </ol>
+              <div class="code-card">
+                <div class="code-card-bar"><span>HTML · CURRENT CONFIG</span><button id="copy-component-code" type="button">复制代码</button></div>
+                <pre><code id="component-code"></code></pre>
+              </div>
+            </div>
+            <details class="api-details">
+              <summary>需要在运行时切换状态？</summary>
+              <pre><code>const bot = document.querySelector("morph-bot");
+
+bot.setState("thinking");
+bot.setShape("hex");
+await bot.playMorph("send", { hold: 1200 });
+bot.setState("celebrate");</code></pre>
+            </details>
+            <div class="usage-note">
+              <strong>Loading 的语义</strong>
+              <p><code>loading</code> 和 <code>progress</code> 都是不确定进度动画。如果要表达真实的 65% 进度，应由业务界面另外显示数值，不要让循环动画假装是确定进度。</p>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer><span>Morph Bot Element · framework-free Web Component</span><a href="./README.md">完整 API 文档 ↗</a></footer>
+    <script type="module" src="./demo.js"></script>
+  </body>
+</html>

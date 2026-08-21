@@ -10,6 +10,27 @@ npm run dev
 
 打开 <http://127.0.0.1:4173>。
 
+- 高级状态编辑器：<http://127.0.0.1:4173/>
+- 独立组件工作台：<http://127.0.0.1:4173/component/>
+
+## 独立组件
+
+`component/` 是可单独复制和发布的 Web Component 包，不依赖当前编辑器页面，也不依赖 React 或 Vue：
+
+```html
+<script type="module" src="/component/morph-bot.js"></script>
+
+<morph-bot
+  state="loading"
+  shape="blob"
+  size="48"
+  color="#0b0b0b"
+  label="正在加载"
+></morph-bot>
+```
+
+它支持 39 个 `state`、18 个 `shape`、实时属性更新、暂停/恢复、逐帧、状态重播、单次 morph、编辑器 v5 JSON preset、多实例 Shadow DOM、离屏暂停和生命周期清理。完整接入说明见 [component/README.md](./component/README.md)。
+
 ## 对齐内容
 
 - 39 个原始 `data-state`
@@ -45,4 +66,4 @@ npm test
 
 回归覆盖 39 × 39 共 1,521 个有序状态切换、14 种 morph 的进出与直接互切、可恢复默认的单次 morph 状态机，以及 18 种形状 × 25 种眼形 × 4 档开合度共 1,800 个眼位组合。
 
-原版几何数据集中在 `original-data.js`，可用 `scripts/extract-original-data.mjs` 从保存的公开脚本重新生成。完整分析见 [ANALYSIS.md](./ANALYSIS.md)。
+原版几何数据集中在 `component/original-data.js`，可用 `scripts/extract-original-data.mjs` 从保存的公开脚本重新生成。根目录同名文件仅保留兼容导出。完整分析见 [ANALYSIS.md](./ANALYSIS.md)。
