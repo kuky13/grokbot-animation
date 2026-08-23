@@ -1,7 +1,9 @@
+const freezeStops = (stops) => stops ? Object.freeze(stops.map((stop) => Object.freeze(stop))) : undefined;
 const defineCatalog = (entries) => Object.freeze(entries.map((entry) => Object.freeze({
   ...entry,
   label: Object.freeze(entry.label),
-  stops: entry.stops ? Object.freeze(entry.stops.map((stop) => Object.freeze(stop))) : undefined,
+  stops: freezeStops(entry.stops),
+  rimStops: freezeStops(entry.rimStops),
 })));
 
 export const MATERIAL_IDS = Object.freeze(["solid", "gradient", "rainbow-glass"]);
@@ -103,6 +105,34 @@ export const GRADIENT_PRESETS = defineCatalog([
 
 export const GLASS_PRESETS = defineCatalog([
   {
+    id: "iridescent-orb",
+    label: { zh: "深海虹彩", en: "Iridescent orb" },
+    stops: [
+      { offset: 0, color: "#eafcff" },
+      { offset: 0.1, color: "#a2e9ff" },
+      { offset: 0.23, color: "#3d80df" },
+      { offset: 0.4, color: "#172268" },
+      { offset: 0.59, color: "#090b36" },
+      { offset: 0.75, color: "#190747" },
+      { offset: 0.9, color: "#4b13c5" },
+      { offset: 1, color: "#1d5dff" },
+    ],
+    rimStops: [
+      { offset: 0, color: "#c7fbff" },
+      { offset: 0.18, color: "#53ddff" },
+      { offset: 0.42, color: "#176cff" },
+      { offset: 0.68, color: "#6427ff" },
+      { offset: 0.86, color: "#ff35d3" },
+      { offset: 1, color: "#53f1df" },
+    ],
+    shadow: "#03051f",
+    rim: "#bffaff",
+    sheen: 0.94,
+    caustic: "#6724ff",
+    causticAccent: "#ff2fcf",
+    depth: 0.82,
+  },
+  {
     id: "prism",
     label: { zh: "棱镜泡泡", en: "Prism bubble" },
     stops: [
@@ -116,6 +146,9 @@ export const GLASS_PRESETS = defineCatalog([
     shadow: "#33216b",
     rim: "#ffffff",
     sheen: 0.76,
+    caustic: "#6d5cff",
+    causticAccent: "#ff65b5",
+    depth: 0.52,
   },
   {
     id: "aurora",
@@ -130,6 +163,9 @@ export const GLASS_PRESETS = defineCatalog([
     shadow: "#153f69",
     rim: "#d9ffff",
     sheen: 0.7,
+    caustic: "#4d62ff",
+    causticAccent: "#d867ff",
+    depth: 0.48,
   },
   {
     id: "candy",
@@ -144,6 +180,9 @@ export const GLASS_PRESETS = defineCatalog([
     shadow: "#7b285d",
     rim: "#fff7fd",
     sheen: 0.8,
+    caustic: "#ff704d",
+    causticAccent: "#ff4fbd",
+    depth: 0.42,
   },
   {
     id: "opal",
@@ -158,6 +197,9 @@ export const GLASS_PRESETS = defineCatalog([
     shadow: "#53638c",
     rim: "#ffffff",
     sheen: 0.9,
+    caustic: "#9a79ff",
+    causticAccent: "#ff98c7",
+    depth: 0.28,
   },
 ]);
 
@@ -178,6 +220,67 @@ export const DEFAULT_MATERIAL = Object.freeze({
 });
 
 const findPreset = (catalog, id, fallback = catalog[0]) => catalog.find((preset) => preset.id === id) || fallback;
+
+function parseHexColor(color) {
+  const match = String(color).trim().match(/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+  return match ? match.slice(1).map((part) => Number.parseInt(part, 16) / 255) : null;
+}
+
+const srgbToLinear = (value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+const linearToSrgb = (value) => value <= 0.0031308 ? 12.92 * value : 1.055 * value ** (1 / 2.4) - 0.055;
+
+function rgbToOklab([red, green, blue]) {
+  const r = srgbToLinear(red);
+  const g = srgbToLinear(green);
+  const b = srgbToLinear(blue);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+}
+
+function oklabToHex([lightness, a, b]) {
+  const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const channels = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ].map((value) => Math.round(Math.min(1, Math.max(0, linearToSrgb(value))) * 255));
+  return `#${channels.map((value) => value.toString(16).padStart(2, "0")).join("")}`;
+}
+
+export function smoothMaterialStops(stops, subdivisions = 4) {
+  if (!Array.isArray(stops) || stops.length < 2 || subdivisions < 2) return stops;
+  const expanded = [];
+  for (let index = 0; index < stops.length - 1; index += 1) {
+    const from = stops[index];
+    const to = stops[index + 1];
+    const fromRgb = parseHexColor(from.color);
+    const toRgb = parseHexColor(to.color);
+    if (!fromRgb || !toRgb) return stops;
+    const fromLab = rgbToOklab(fromRgb);
+    const toLab = rgbToOklab(toRgb);
+    for (let sample = 0; sample < subdivisions; sample += 1) {
+      const amount = sample / subdivisions;
+      const lab = fromLab.map((value, channel) => value + (toLab[channel] - value) * amount);
+      expanded.push({
+        offset: from.offset + (to.offset - from.offset) * amount,
+        color: oklabToHex(lab),
+        ...(from.opacity === undefined && to.opacity === undefined ? {} : {
+          opacity: (from.opacity ?? 1) + ((to.opacity ?? 1) - (from.opacity ?? 1)) * amount,
+        }),
+      });
+    }
+  }
+  expanded.push({ ...stops.at(-1) });
+  return expanded;
+}
 
 export function resolveMaterial(config = {}) {
   const material = MATERIAL_IDS.includes(config.material) ? config.material : DEFAULT_MATERIAL.material;

@@ -3,12 +3,12 @@ export type MorphBotShape = "blob" | "pebble" | "bean" | "egg" | "squircle" | "t
 export type MorphBotEffect = "dots" | "orbit" | "radar" | "progress" | "gather" | "wave" | "send" | "receive" | "dock" | "ball" | "whirl" | "pencil" | "bang" | "standby";
 export type MorphBotMaterial = "solid" | "gradient" | "rainbow-glass";
 export type MorphBotGradientPreset = "electric-dusk" | "ocean-signal" | "warm-flare" | "mint-violet" | "midnight-plum" | "peach-sky" | "acid-lime" | "blue-hour";
-export type MorphBotGlassPreset = "prism" | "aurora" | "candy" | "opal";
+export type MorphBotGlassPreset = "iridescent-orb" | "prism" | "aurora" | "candy" | "opal";
 
-export interface MorphBotMaterialStop { offset: number; color: string; }
+export interface MorphBotMaterialStop { offset: number; color: string; opacity?: number; }
 export interface MorphBotSolidPresetDefinition { id: string; label: { zh: string; en: string }; color: string; }
 export interface MorphBotGradientPresetDefinition { id: MorphBotGradientPreset; label: { zh: string; en: string }; angle: number; stops: readonly MorphBotMaterialStop[]; }
-export interface MorphBotGlassPresetDefinition { id: MorphBotGlassPreset; label: { zh: string; en: string }; stops: readonly MorphBotMaterialStop[]; shadow: string; rim: string; sheen: number; }
+export interface MorphBotGlassPresetDefinition { id: MorphBotGlassPreset; label: { zh: string; en: string }; stops: readonly MorphBotMaterialStop[]; rimStops?: readonly MorphBotMaterialStop[]; shadow: string; rim: string; sheen: number; caustic: string; causticAccent: string; depth: number; }
 
 export interface MorphBotCharacterConfig {
   material?: MorphBotMaterial;

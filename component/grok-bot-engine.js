@@ -231,8 +231,8 @@ export class GrokBotEngine {
     this.updateMorph(now, config);
     this.updateStateTargets(now, config, delta);
     stepPhysics.call(this, delta, REDUCE_MOTION.matches);
-    this.render(now, config);
-    this.materials.syncHeadPath(this.head.getAttribute("d"));
+    const rendered = this.render(now, config);
+    this.materials.syncHeadPath(rendered?.headPath || this.head.getAttribute("d"), rendered?.rotation || 0);
     if (this.spinSpring && Math.abs(this.spinSpring.target - this.spinSpring.x) < 0.004 && Math.abs(this.spinSpring.v) < 0.015) {
       this.spinSpring = null;
       this.shapeChangeWide = false;

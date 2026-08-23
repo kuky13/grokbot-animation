@@ -14,9 +14,9 @@
         <span>Morph Bot <small>API</small></span>
       </a>
       <div>
-        <span class="version">v0.4.0</span>
+        <span class="version">v0.4.1</span>
         <a href="../">返回组件编辑器</a>
-        <a class="download" href="../downloads/morph-bot-element-0.4.0.zip" download>下载组件 ↓</a>
+        <a class="download" href="../downloads/morph-bot-element-0.4.1.zip" download>下载组件 ↓</a>
       </div>
     </header>
 
@@ -36,7 +36,7 @@
         <p>动画参考</p>
         <a href="#states">39 个状态</a>
         <a href="#shapes">18 个形状</a>
-        <a href="#materials">20 个材质预设</a>
+        <a href="#materials">21 个材质预设</a>
         <a href="#effects">14 个 Morph</a>
         <p>工程化</p>
         <a href="#configuration">Preset 配置</a>
@@ -109,7 +109,7 @@
                 <tr><td><code>gradient-start</code></td><td>CSS color</td><td>—</td><td>自定义双色渐变起始色；设置后不必提供 preset。</td></tr>
                 <tr><td><code>gradient-end</code></td><td>CSS color</td><td>—</td><td>自定义双色渐变结束色。</td></tr>
                 <tr><td><code>gradient-angle</code></td><td>number</td><td><code>135</code></td><td>自定义渐变方向，范围 0–360°。</td></tr>
-                <tr><td><code>glass-preset</code></td><td>string</td><td><code>prism</code></td><td>选择彩虹玻璃预设。</td></tr>
+                <tr><td><code>glass-preset</code></td><td>string</td><td><code>iridescent-orb</code></td><td>选择彩虹玻璃预设。</td></tr>
                 <tr><td><code>eye-color</code></td><td>CSS color</td><td><code>#ffffff</code></td><td>眼睛颜色。</td></tr>
                 <tr><td><code>speed</code></td><td>number</td><td><code>1</code></td><td>播放倍率，范围 0.1–4。</td></tr>
                 <tr><td><code>follow-pointer</code></td><td>boolean</td><td>关闭</td><td>让视线跟随页面指针。</td></tr>
@@ -231,8 +231,8 @@ bot.stopSequence();</code></pre>
         </section>
 
         <section id="materials" class="doc-section">
-          <div class="section-title"><span>10</span><div><p>MATERIAL REFERENCE</p><h2>20 个材质预设</h2></div></div>
-          <p>纯色提供 8 个基础色；渐变提供 8 个带明确角度与有序色标的预设，并使用 <code>linearRGB</code> 插值；彩虹玻璃提供 4 个由基底、暗部、高光和轮廓组成的多层预设。点击任意卡片即可应用到右侧 Live API。</p>
+          <div class="section-title"><span>10</span><div><p>MATERIAL REFERENCE</p><h2>21 个材质预设</h2></div></div>
+          <p>纯色提供 8 个基础色；渐变提供 8 个带明确角度与有序色标的预设，并通过 OKLab 采样生成平滑过渡；彩虹玻璃提供 5 个由基底、暗部、固定环境高光、边缘色散和内部焦散组成的多层预设。点击任意卡片即可应用到右侧 Live API。</p>
           <p class="tip"><strong>设计依据：</strong>预设结构参考 <a href="https://open-props.style/" target="_blank" rel="noreferrer">Open Props</a> 的可移植渐变 token 与 <a href="https://github.com/itmeo/webgradients" target="_blank" rel="noreferrer">WebGradients</a> 的 angle + ordered stops 表达；具体配色与玻璃分层为本项目设计。</p>
           <div id="material-reference" class="material-reference"></div>
           <div class="code-block compact">
@@ -243,7 +243,7 @@ bot.setMaterial("gradient", {
   end: "#34d399",
   angle: 130,
 });
-bot.setMaterial("rainbow-glass", { preset: "prism" });</code></pre>
+bot.setMaterial("rainbow-glass", { preset: "iridescent-orb" });</code></pre>
           </div>
         </section>
 

@@ -6,12 +6,13 @@ import {
   MATERIAL_IDS,
   SOLID_PRESETS,
   resolveMaterial,
+  smoothMaterialStops,
 } from "../component/materials.js";
 
 assert.deepEqual(MATERIAL_IDS, ["solid", "gradient", "rainbow-glass"]);
 assert.equal(SOLID_PRESETS.length, 8);
 assert.equal(GRADIENT_PRESETS.length, 8);
-assert.equal(GLASS_PRESETS.length, 4);
+assert.equal(GLASS_PRESETS.length, 5);
 
 for (const preset of SOLID_PRESETS) assert.match(preset.color, /^#[0-9a-f]{6}$/i, `${preset.id} should use a portable hex color`);
 for (const preset of GRADIENT_PRESETS) {
@@ -41,5 +42,15 @@ assert.deepEqual(resolveMaterial({
   stops: [{ offset: 0, color: "#123456" }, { offset: 1, color: "#abcdef" }],
 });
 assert.equal(resolveMaterial({ material: "rainbow-glass", glassPreset: "aurora" }).preset, "aurora");
+assert.equal(resolveMaterial({ material: "rainbow-glass" }).preset, "iridescent-orb");
 
-console.log("Material presets verified: 8 solids, 8 gradients, 4 rainbow glass variants.");
+const smoothStops = smoothMaterialStops([
+  { offset: 0, color: "#315cf5" },
+  { offset: 1, color: "#34d399" },
+], 5);
+assert.equal(smoothStops.length, 6, "OKLab sampling should add intermediate stops without changing the endpoints");
+assert.deepEqual(smoothStops[0], { offset: 0, color: "#315cf5" });
+assert.deepEqual(smoothStops.at(-1), { offset: 1, color: "#34d399" });
+assert.notEqual(smoothStops[1].color, "#315cf5", "the first intermediate sample should move through perceptual color space");
+
+console.log("Material presets verified: 8 solids, 8 OKLab-smoothed gradients, 5 rainbow glass variants.");

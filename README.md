@@ -25,7 +25,7 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 
 - 39 visual states, with `idle` first in every state picker.
 - 18 body shapes with shape-aware eye placement.
-- 20 material presets: 8 solids, 8 multi-stop gradients, and 4 layered rainbow-glass variants.
+- 21 material presets: 8 solids, 8 OKLab-smoothed gradients, and 5 layered rainbow-glass variants.
 - 25 two-eye expression rings and 1,800 verified shape/expression/open combinations.
 - 14 one-shot Morph effects with a complete `RESET → ENTER → HOLD → EXIT → DONE` lifecycle.
 - A visual timeline: choose a state, set how long it stays, trigger a Morph, then continue to the next state.
@@ -35,7 +35,7 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 - A framework-free Web Component with Shadow DOM, TypeScript declarations, visibility pausing, and lifecycle cleanup.
 - A readable interactive API site, not only a Markdown reference.
 
-The preset data model is informed by [Open Props](https://open-props.style/) gradient tokens and the MIT-licensed [WebGradients](https://github.com/itmeo/webgradients) angle/ordered-stop format. The palettes and layered glass treatment in this project are original additions, rendered as SVG with explicit `linearRGB` interpolation.
+The preset data model is informed by [Open Props](https://open-props.style/) gradient tokens and the MIT-licensed [WebGradients](https://github.com/itmeo/webgradients) angle/ordered-stop format. The palettes and layered glass treatment are original additions. Gradient segments are densely sampled in OKLab before being rendered as SVG, while glass lighting remains camera-anchored during shape rotation.
 
 ### Run locally
 
@@ -176,8 +176,8 @@ The regression suite covers:
 
 Current releases:
 
-- Animation lab: `v1.6.0`
-- Standalone component: `v0.4.0`
+- Animation lab: `v1.6.1`
+- Standalone component: `v0.4.1`
 
 ### Status and disclaimer
 
@@ -201,7 +201,7 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 
 - 39 个完整状态，所有状态选择器都以 `idle` 开始。
 - 18 种身体轮廓，并针对不同形状自动适配眼睛位置。
-- 20 个材质预设：8 个纯色、8 个多色标渐变、4 个分层彩虹玻璃。
+- 21 个材质预设：8 个纯色、8 个经过 OKLab 平滑的渐变、5 个分层彩虹玻璃。
 - 25 组双眼表情环，验证了 1,800 种形状、表情和开合度组合。
 - 14 种单次 Morph，完整执行 `RESET → ENTER → HOLD → EXIT → DONE`。
 - 可视化时间线：选择状态、设置停留时间、指定 Morph，然后进入下一状态。
@@ -211,7 +211,7 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 - 原生 Web Component：无框架依赖，提供 Shadow DOM、TypeScript 类型、离屏暂停和生命周期清理。
 - 完整 API 文档是可阅读、可操作的网页，而不只是 Markdown。
 
-预设数据结构参考了 [Open Props](https://open-props.style/) 的渐变 token，以及 MIT 许可的 [WebGradients](https://github.com/itmeo/webgradients) 中 angle + ordered stops 的表达。具体配色与分层玻璃效果由本项目重新设计，并在 SVG 中显式使用 `linearRGB` 插值。
+预设数据结构参考了 [Open Props](https://open-props.style/) 的渐变 token，以及 MIT 许可的 [WebGradients](https://github.com/itmeo/webgradients) 中 angle + ordered stops 的表达。具体配色与分层玻璃效果由本项目重新设计；渐变在 OKLab 中密集采样后输出 SVG，玻璃光照在形状旋转时保持镜头方向固定。
 
 ### 本地运行
 
@@ -352,8 +352,8 @@ npm run pack:component
 
 当前版本：
 
-- 动画实验室：`v1.6.0`
-- 独立组件：`v0.4.0`
+- 动画实验室：`v1.6.1`
+- 独立组件：`v0.4.1`
 
 ### 项目状态与声明
 

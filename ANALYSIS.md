@@ -105,4 +105,4 @@ v6 配置把原组件的属性边界明确拆开：
 
 材质是角色级配置，不属于某个状态，也不会另画一套形状。`MaterialSystem` 在同一条实时头部 path 上应用三类表面：纯色、带明确角度和有序色标的 SVG 渐变、由彩虹基底/体积暗部/局部高光/轮廓组成的玻璃。眼睛保持在材质层上方，状态 Morph 使用相同 paint，因此切换形状、状态或任务形变时不会回退为默认黑色。
 
-渐变数据结构参考 Open Props 的可移植 token 方式和 WebGradients 的 angle + ordered stops 表达；颜色为本项目重新设计。SVG 渐变声明 `color-interpolation="linearRGB"`，避免只用两端颜色时产生过灰的中间段。纯色、渐变和彩虹玻璃预设全部集中在 `component/materials.js`，实验室、组件编辑器、生成代码和 API 文档不再各自维护名称与颜色。
+渐变数据结构参考 Open Props 的可移植 token 方式和 WebGradients 的 angle + ordered stops 表达；颜色为本项目重新设计。运行时在 OKLab 中为相邻颜色生成密集采样点，再以 SVG `sRGB` 小区间插值输出，避免三段渐变在中间色标处出现生硬拐点。彩虹玻璃的环境高光、暗部、边缘色散和内部焦散会用逆旋转抵消角色姿态旋转，因此几何在转，光场仍固定在镜头方向。全部预设集中在 `component/materials.js`，实验室、组件编辑器、生成代码和 API 文档不再各自维护名称与颜色。

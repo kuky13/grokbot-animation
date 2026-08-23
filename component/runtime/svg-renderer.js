@@ -124,6 +124,7 @@ export function render(now, config) {
   const expansion = activeExpansion * morphBlend + previousExpansion * (1 - morphBlend);
   const radius = 129.5 / (1 + (expansion - 1) * morphAmount * responsive);
   this.svg.setAttribute("viewBox", `${(114.5 - radius).toFixed(2)} ${(114.5 - radius).toFixed(2)} ${(2 * radius).toFixed(2)} ${(2 * radius).toFixed(2)}`);
+  return { headPath, rotation };
 }
 
 export function renderEyes(now, config, shape, shapeRing, turnAngle, morphAmount) {

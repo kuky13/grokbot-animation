@@ -24,7 +24,7 @@ class FakeElement {
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   getAttribute(name) { return this.attributes.get(name); }
   removeAttribute(name) { this.attributes.delete(name); }
-  append(child) { this.children.push(child); }
+  append(...children) { this.children.push(...children); }
   appendChild(child) { this.children.push(child); return child; }
   insertBefore(child) { this.children.push(child); return child; }
   remove() {}
@@ -128,18 +128,31 @@ const engine = new GrokBotEngine(svg, () => configs[activeState]);
 Object.assign(baseConfig, { material: "gradient", gradientPreset: "ocean-signal" });
 engine.frame(clock);
 assert.match(svg.style["--fg"], /^url\(#.+-material-gradient\)$/, "gradient material should become the shared SVG paint");
-assert.equal(engine.materials.gradient.children.length, 3, "gradient presets should render every ordered stop");
-assert.equal(engine.materials.gradient.getAttribute("color-interpolation"), "linearRGB", "gradient interpolation should be explicit");
+assert.ok(engine.materials.gradient.children.length > 3, "gradient presets should expand into perceptually smoothed intermediate stops");
+assert.equal(engine.materials.gradient.getAttribute("color-interpolation"), "sRGB", "densely sampled gradients should use short sRGB interpolation segments");
+assert.equal(engine.materials.gradientOverlayGroup.hidden, false, "gradient materials should add soft volume lighting");
+assert.equal(engine.materials.gradientLightPath.getAttribute("d"), nodes.head.getAttribute("d"), "gradient lighting should follow the current shape path");
 
-Object.assign(baseConfig, { material: "rainbow-glass", glassPreset: "prism" });
-engine.frame(clock);
+Object.assign(baseConfig, { material: "rainbow-glass", glassPreset: "iridescent-orb" });
+engine.materials.apply(baseConfig);
+engine.directRotation = 31;
+const rotatedGlass = engine.render(clock, baseConfig);
+engine.materials.syncHeadPath(rotatedGlass.headPath, rotatedGlass.rotation);
 assert.equal(engine.materials.overlayGroup.hidden, false, "rainbow glass should enable its shading layers");
 assert.equal(engine.materials.sheenPath.getAttribute("d"), nodes.head.getAttribute("d"), "glass highlights should follow the current shape path");
+assert.equal(engine.materials.causticPath.getAttribute("d"), nodes.head.getAttribute("d"), "glass caustics should follow the current shape path");
+assert.match(nodes.transform.getAttribute("transform"), /rotate\(31\.00\)/, "the shape itself should retain its visual rotation");
+for (const gradient of [engine.materials.glass, engine.materials.shadow, engine.materials.caustic, engine.materials.causticRing, engine.materials.sheen, engine.materials.rim]) {
+  assert.equal(gradient.getAttribute("gradientTransform"), `rotate(-31.000 ${HEAD_C} ${HEAD_C})`, "glass lighting should counter-rotate around the same center as the shape");
+  assert.equal(gradient.getAttribute("gradientUnits"), "userSpaceOnUse", "glass lighting should use a stable shared coordinate system");
+}
 
 Object.assign(baseConfig, { material: "solid", color: "#0b0b0b" });
+engine.directRotation = 0;
 engine.frame(clock);
 assert.equal(svg.style["--fg"], "#0b0b0b", "solid material should remain backwards compatible with color");
 assert.equal(engine.materials.overlayGroup.hidden, true, "solid material should remove glass shading layers");
+assert.equal(engine.materials.gradientOverlayGroup.hidden, true, "solid material should remove gradient lighting layers");
 
 const advance = (milliseconds) => {
   const frames = Math.ceil(milliseconds / (1000 / 60));

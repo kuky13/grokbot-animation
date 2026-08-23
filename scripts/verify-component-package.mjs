@@ -34,7 +34,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.4.0");
+assert.equal(manifest.version, "0.4.1");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -44,7 +44,7 @@ assert.equal(component.MORPH_BOT_EFFECTS.length, 14, "component should expose al
 assert.equal(component.MORPH_BOT_MATERIALS.length, 3, "component should expose all material modes");
 assert.equal(component.MORPH_BOT_SOLID_PRESETS.length, 8, "component should expose all solid presets");
 assert.equal(component.MORPH_BOT_GRADIENT_PRESETS.length, 8, "component should expose all gradient presets");
-assert.equal(component.MORPH_BOT_GLASS_PRESETS.length, 4, "component should expose all glass presets");
+assert.equal(component.MORPH_BOT_GLASS_PRESETS.length, 5, "component should expose all glass presets");
 assert.ok(component.MorphBotElement.observedAttributes.includes("state"));
 assert.ok(component.MorphBotElement.observedAttributes.includes("shape"));
 assert.equal(typeof component.MorphBotElement.prototype.configure, "function");
@@ -164,5 +164,8 @@ for (const file of [
   "morph-bot/runtime/state-behavior-system.js",
   "morph-bot/runtime/svg-renderer.js",
 ]) assert.match(bundledFiles, new RegExp(`^${file}$`, "m"), `download bundle should include ${file}`);
+const bundledMaterialSystem = execFileSync("unzip", ["-p", downloadPath, "morph-bot/runtime/material-system.js"], { encoding: "utf8" });
+assert.match(bundledMaterialSystem, /smoothMaterialStops/, "download bundle should contain perceptually smoothed gradients");
+assert.match(bundledMaterialSystem, /userSpaceOnUse/, "download bundle should contain camera-anchored material lighting");
 
 console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and a downloadable WYSIWYG workbench.`);

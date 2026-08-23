@@ -30,7 +30,7 @@ morph-bot/
 <morph-bot state="loading" shape="blob" size="48"></morph-bot>
 ```
 
-工作台里的状态、形状、尺寸和材质都是所见即所得的；右侧代码会与中间预览保持同步。材质包含 8 个纯色、8 个渐变和 4 个彩虹玻璃预设。
+工作台里的状态、形状、尺寸和材质都是所见即所得的；右侧代码会与中间预览保持同步。材质包含 8 个纯色、8 个平滑渐变和 5 个彩虹玻璃预设。
 
 ## 2. 完整声明
 
@@ -65,7 +65,7 @@ morph-bot/
 | `gradient-preset` | `electric-dusk` | 内置渐变预设 |
 | `gradient-start` / `gradient-end` | — | 自定义双色渐变 |
 | `gradient-angle` | `135` | 自定义渐变角度 |
-| `glass-preset` | `prism` | 彩虹玻璃预设 |
+| `glass-preset` | `iridescent-orb` | 彩虹玻璃预设 |
 | `eye-color` | `#ffffff` | 眼睛颜色 |
 | `speed` | `1` | 播放倍率，范围 0.1–4 |
 | `follow-pointer` | 关闭 | 跟随页面指针 |
@@ -99,7 +99,7 @@ bot.setState("thinking");
 bot.setShape("hex");
 bot.setMaterial("gradient", { preset: "ocean-signal" });
 bot.setMaterial("gradient", { start: "#315cf5", end: "#34d399", angle: 130 });
-bot.setMaterial("rainbow-glass", { preset: "prism" });
+bot.setMaterial("rainbow-glass", { preset: "iridescent-orb" });
 bot.replay();
 bot.pause();
 bot.play();

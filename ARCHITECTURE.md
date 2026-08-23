@@ -20,7 +20,7 @@ original-data.js ─────────► GrokBotEngine facade
 
 `component/catalog.js` is the single bilingual source for state groups, state labels, shape labels, Morph labels, ordering, and default state-to-Morph mappings. Extracted source geometry and timing data remain in `component/original-data.js`.
 
-`component/materials.js` is the shared source for material modes and the 8 solid, 8 gradient, and 4 rainbow-glass presets. Editors and docs consume the same definitions used by the renderer, so preset IDs, labels, generated code, and SVG output cannot drift independently.
+`component/materials.js` is the shared source for material modes and the 8 solid, 8 gradient, and 5 rainbow-glass presets. Editors and docs consume the same definitions used by the renderer, so preset IDs, labels, generated code, and SVG output cannot drift independently.
 
 ## Runtime boundaries
 

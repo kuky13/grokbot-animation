@@ -31,3 +31,5 @@ export function resolveMaterial(config?: Record<string, unknown>): {
   rim?: string;
   sheen?: number;
 };
+
+export function smoothMaterialStops(stops: readonly MorphBotMaterialStop[], subdivisions?: number): MorphBotMaterialStop[];

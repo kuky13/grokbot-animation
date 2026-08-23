@@ -46,7 +46,7 @@ function materialCatalog(material = materialSelect.value) {
 function materialBackground(material, preset) {
   if (material === "solid") return preset.color;
   if (material === "gradient") return `linear-gradient(${preset.angle}deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
-  return `radial-gradient(circle at 24% 18%, rgba(255,255,255,.98) 0 5%, rgba(255,255,255,.28) 18%, transparent 38%), conic-gradient(from 205deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+  return `radial-gradient(circle at 22% 14%, rgba(255,255,255,.98) 0 4%, rgba(205,245,255,.42) 17%, transparent 39%), radial-gradient(circle at 76% 76%, ${preset.causticAccent} 0, ${preset.caustic} 24%, transparent 58%), radial-gradient(circle at 63% 71%, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
 }
 
 function fillMaterialPresetSelect(preferred = null) {
