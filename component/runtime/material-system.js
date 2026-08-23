@@ -46,7 +46,6 @@ export class MaterialSystem {
       glass: `${safePrefix}-glass-base`,
       shadow: `${safePrefix}-glass-shadow`,
       caustic: `${safePrefix}-glass-caustic`,
-      causticRing: `${safePrefix}-glass-caustic-ring`,
       sheen: `${safePrefix}-glass-sheen`,
       rim: `${safePrefix}-glass-rim`,
     };
@@ -109,15 +108,6 @@ export class MaterialSystem {
       fx: 166.8,
       fy: 171.4,
     });
-    this.causticRing = svgElement("radialGradient", {
-      id: this.ids.causticRing,
-      gradientUnits: "userSpaceOnUse",
-      cx: 102.8,
-      cy: 54.9,
-      r: 173.7,
-      fx: 102.8,
-      fy: 54.9,
-    });
     this.sheen = svgElement("radialGradient", {
       id: this.ids.sheen,
       gradientUnits: "userSpaceOnUse",
@@ -142,7 +132,6 @@ export class MaterialSystem {
       this.glass,
       this.shadow,
       this.caustic,
-      this.causticRing,
       this.sheen,
       this.rim,
     );
@@ -155,14 +144,14 @@ export class MaterialSystem {
     this.overlayGroup = svgElement("g", { class: "material-glass-layers", "pointer-events": "none" });
     this.shadowPath = svgElement("path", { fill: `url(#${this.ids.shadow})` });
     this.causticPath = svgElement("path", { fill: `url(#${this.ids.caustic})`, style: "mix-blend-mode:screen" });
-    this.causticRingPath = svgElement("path", { fill: `url(#${this.ids.causticRing})`, style: "mix-blend-mode:screen" });
     this.sheenPath = svgElement("path", { fill: `url(#${this.ids.sheen})`, style: "mix-blend-mode:screen" });
     this.rimPath = svgElement("path", {
       fill: "none",
       stroke: `url(#${this.ids.rim})`,
-      "stroke-width": 3.2,
+      "stroke-width": 1.35,
+      opacity: 0.7,
     });
-    this.overlayGroup.append(this.shadowPath, this.causticPath, this.causticRingPath, this.sheenPath, this.rimPath);
+    this.overlayGroup.append(this.shadowPath, this.causticPath, this.sheenPath, this.rimPath);
     transformGroup.insertBefore(this.gradientOverlayGroup, head.nextSibling || null);
     transformGroup.insertBefore(this.overlayGroup, this.gradientOverlayGroup.nextSibling || null);
     this.gradientOverlayGroup.hidden = true;
@@ -219,16 +208,6 @@ export class MaterialSystem {
       { offset: 0.74, color: material.caustic, opacity: 0 },
       { offset: 1, color: material.caustic, opacity: 0 },
     ]);
-    replaceStops(this.causticRing, [
-      { offset: 0, color: material.caustic, opacity: 0 },
-      { offset: 0.56, color: material.caustic, opacity: 0 },
-      { offset: 0.69, color: material.caustic, opacity: 0.12 },
-      { offset: 0.755, color: material.causticAccent, opacity: 0.62 },
-      { offset: 0.785, color: material.rim, opacity: 0.72 },
-      { offset: 0.83, color: material.caustic, opacity: 0.16 },
-      { offset: 0.92, color: material.caustic, opacity: 0 },
-      { offset: 1, color: material.caustic, opacity: 0 },
-    ]);
     replaceStops(this.sheen, [
       { offset: 0, color: "#ffffff", opacity: material.sheen },
       { offset: 0.14, color: "#e9fbff", opacity: material.sheen * 0.72 },
@@ -256,7 +235,6 @@ export class MaterialSystem {
       this.glass,
       this.shadow,
       this.caustic,
-      this.causticRing,
       this.sheen,
       this.rim,
     ]) gradient.setAttribute("gradientTransform", inverseRotation);
@@ -267,7 +245,6 @@ export class MaterialSystem {
     if (!this.overlayGroup.hidden) {
       this.shadowPath.setAttribute("d", path);
       this.causticPath.setAttribute("d", path);
-      this.causticRingPath.setAttribute("d", path);
       this.sheenPath.setAttribute("d", path);
       this.rimPath.setAttribute("d", path);
     }
@@ -282,7 +259,6 @@ export class MaterialSystem {
     this.glass.remove();
     this.shadow.remove();
     this.caustic.remove();
-    this.causticRing.remove();
     this.sheen.remove();
     this.rim.remove();
     if (this.ownsDefs) this.defs.remove();

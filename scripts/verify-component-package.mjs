@@ -167,5 +167,7 @@ for (const file of [
 const bundledMaterialSystem = execFileSync("unzip", ["-p", downloadPath, "morph-bot/runtime/material-system.js"], { encoding: "utf8" });
 assert.match(bundledMaterialSystem, /smoothMaterialStops/, "download bundle should contain perceptually smoothed gradients");
 assert.match(bundledMaterialSystem, /userSpaceOnUse/, "download bundle should contain camera-anchored material lighting");
+assert.doesNotMatch(bundledMaterialSystem, /causticRing/, "download bundle should not contain the removed hard reflection ring");
+assert.match(bundledMaterialSystem, /"stroke-width": 1\.35/, "download bundle should contain the refined glass rim");
 
 console.log(`Component package verified: ${component.MORPH_BOT_STATES.length} states, ${component.MORPH_BOT_SHAPES.length} shapes, ${component.MORPH_BOT_EFFECTS.length} effects, self-contained exports and a downloadable WYSIWYG workbench.`);

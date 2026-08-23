@@ -141,8 +141,10 @@ engine.materials.syncHeadPath(rotatedGlass.headPath, rotatedGlass.rotation);
 assert.equal(engine.materials.overlayGroup.hidden, false, "rainbow glass should enable its shading layers");
 assert.equal(engine.materials.sheenPath.getAttribute("d"), nodes.head.getAttribute("d"), "glass highlights should follow the current shape path");
 assert.equal(engine.materials.causticPath.getAttribute("d"), nodes.head.getAttribute("d"), "glass caustics should follow the current shape path");
+assert.equal(engine.materials.causticRing, undefined, "glass should not draw a hard internal reflection ring");
+assert.equal(engine.materials.rimPath.getAttribute("stroke-width"), "1.35", "glass rim should remain fine rather than reading as a neon outline");
 assert.match(nodes.transform.getAttribute("transform"), /rotate\(31\.00\)/, "the shape itself should retain its visual rotation");
-for (const gradient of [engine.materials.glass, engine.materials.shadow, engine.materials.caustic, engine.materials.causticRing, engine.materials.sheen, engine.materials.rim]) {
+for (const gradient of [engine.materials.glass, engine.materials.shadow, engine.materials.caustic, engine.materials.sheen, engine.materials.rim]) {
   assert.equal(gradient.getAttribute("gradientTransform"), `rotate(-31.000 ${HEAD_C} ${HEAD_C})`, "glass lighting should counter-rotate around the same center as the shape");
   assert.equal(gradient.getAttribute("gradientUnits"), "userSpaceOnUse", "glass lighting should use a stable shared coordinate system");
 }
