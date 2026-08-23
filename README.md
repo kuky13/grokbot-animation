@@ -25,6 +25,7 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 
 - 39 visual states, with `idle` first in every state picker.
 - 18 body shapes with shape-aware eye placement.
+- 20 material presets: 8 solids, 8 multi-stop gradients, and 4 layered rainbow-glass variants.
 - 25 two-eye expression rings and 1,800 verified shape/expression/open combinations.
 - 14 one-shot Morph effects with a complete `RESET → ENTER → HOLD → EXIT → DONE` lifecycle.
 - A visual timeline: choose a state, set how long it stays, trigger a Morph, then continue to the next state.
@@ -33,6 +34,8 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 - Synchronized copy-ready HTML and JavaScript.
 - A framework-free Web Component with Shadow DOM, TypeScript declarations, visibility pausing, and lifecycle cleanup.
 - A readable interactive API site, not only a Markdown reference.
+
+The preset data model is informed by [Open Props](https://open-props.style/) gradient tokens and the MIT-licensed [WebGradients](https://github.com/itmeo/webgradients) angle/ordered-stop format. The palettes and layered glass treatment in this project are original additions, rendered as SVG with explicit `linearRGB` interpolation.
 
 ### Run locally
 
@@ -76,6 +79,7 @@ const bot = document.querySelector("morph-bot");
 
 bot.setState("thinking");
 bot.setShape("pebble");
+bot.setMaterial("gradient", { preset: "ocean-signal" });
 await bot.playMorph("send", { hold: 900, restore: "default" });
 ```
 
@@ -112,11 +116,12 @@ Calling `bot.pause()` pauses the SVG simulation, timeline wait, and active Morph
 |---|---|
 | `setState(state, { replay? })` | Switch to one of 39 states. |
 | `setShape(shape)` | Switch to one of 18 SVG outlines. |
+| `setMaterial(material, options?)` | Apply a solid, gradient, or rainbow-glass material. |
 | `playMorph(effect, options?)` | Play one of 14 one-shot Morph effects. |
 | `playSequence(steps, { loop? })` | Run a timed multi-state animation sequence. |
 | `stopSequence()` | Cancel the current sequence and active one-shot Morph. |
 | `pause()` / `play()` / `step()` | Control the shared simulation clock. |
-| `configure(project)` | Load an editor-exported v5 preset. |
+| `configure(project)` | Load an editor-exported v6 preset. |
 | `snapshot()` | Read the current expression, eye, Morph, and clock state. |
 
 See [component/README.md](./component/README.md) for the offline component guide, or open the interactive documentation locally for the complete attribute, method, event, state, shape, and Morph references.
@@ -125,6 +130,7 @@ See [component/README.md](./component/README.md) for the offline component guide
 
 - A **state** controls expression pools, cadence, blinking, pose, motion, and its default Morph behavior.
 - A **shape** changes the head outline and adapted eye placement without changing state meaning.
+- A **material** paints the same animated geometry with a solid, ordered-stop gradient, or layered rainbow-glass surface; eyes remain above the material.
 - A **one-shot Morph** is an explicitly triggered task animation that fully enters, holds, exits, and stays done until restored.
 - `progress` and `spawning` use repeated one-shot cycles with a rest interval; persistent state Morphs remain active while their state is active.
 
@@ -133,7 +139,7 @@ See [component/README.md](./component/README.md) for the offline component guide
 ```text
 .
 ├── index.html                  Advanced state laboratory
-├── app.js                      Advanced editor and v5 preset runtime
+├── app.js                      Advanced editor and v6 preset runtime
 ├── grok-bot-engine.js          Compatibility export
 ├── component/
 │   ├── index.html              WYSIWYG component and timeline editor
@@ -141,6 +147,7 @@ See [component/README.md](./component/README.md) for the offline component guide
 │   ├── morph-bot.js            Web Component entry
 │   ├── morph-bot.d.ts          TypeScript declarations
 │   ├── catalog.js              Shared bilingual state/shape/Morph catalog
+│   ├── materials.js            Shared solid, gradient, and glass presets
 │   ├── grok-bot-engine.js      Stable engine facade and coordinator
 │   ├── original-data.js        States, expressions, and geometry
 │   ├── runtime/                Clock, physics, behavior, Morph, particle, and SVG systems
@@ -165,11 +172,12 @@ The regression suite covers:
 - direct entry and exit behavior for all 14 Morph effects;
 - restoration of both eyes after one-shot Morphs;
 - component exports, editor controls, docs, and the downloadable ZIP.
+- material preset integrity and custom gradient configuration.
 
 Current releases:
 
-- Animation lab: `v1.5.0`
-- Standalone component: `v0.3.0`
+- Animation lab: `v1.6.0`
+- Standalone component: `v0.4.0`
 
 ### Status and disclaimer
 
@@ -193,6 +201,7 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 
 - 39 个完整状态，所有状态选择器都以 `idle` 开始。
 - 18 种身体轮廓，并针对不同形状自动适配眼睛位置。
+- 20 个材质预设：8 个纯色、8 个多色标渐变、4 个分层彩虹玻璃。
 - 25 组双眼表情环，验证了 1,800 种形状、表情和开合度组合。
 - 14 种单次 Morph，完整执行 `RESET → ENTER → HOLD → EXIT → DONE`。
 - 可视化时间线：选择状态、设置停留时间、指定 Morph，然后进入下一状态。
@@ -201,6 +210,8 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 - HTML 与 JavaScript 使用代码随编辑结果同步生成。
 - 原生 Web Component：无框架依赖，提供 Shadow DOM、TypeScript 类型、离屏暂停和生命周期清理。
 - 完整 API 文档是可阅读、可操作的网页，而不只是 Markdown。
+
+预设数据结构参考了 [Open Props](https://open-props.style/) 的渐变 token，以及 MIT 许可的 [WebGradients](https://github.com/itmeo/webgradients) 中 angle + ordered stops 的表达。具体配色与分层玻璃效果由本项目重新设计，并在 SVG 中显式使用 `linearRGB` 插值。
 
 ### 本地运行
 
@@ -244,6 +255,7 @@ const bot = document.querySelector("morph-bot");
 
 bot.setState("thinking");
 bot.setShape("pebble");
+bot.setMaterial("gradient", { preset: "ocean-signal" });
 await bot.playMorph("send", { hold: 900, restore: "default" });
 ```
 
@@ -280,11 +292,12 @@ bot.stopSequence();
 |---|---|
 | `setState(state, { replay? })` | 切换到 39 个状态之一。 |
 | `setShape(shape)` | 切换到 18 种 SVG 轮廓之一。 |
+| `setMaterial(material, options?)` | 应用纯色、渐变或彩虹玻璃材质。 |
 | `playMorph(effect, options?)` | 播放 14 种单次 Morph 之一。 |
 | `playSequence(steps, { loop? })` | 运行带时间控制的多状态动画序列。 |
 | `stopSequence()` | 取消当前序列和正在播放的单次 Morph。 |
 | `pause()` / `play()` / `step()` | 控制统一的仿真时钟。 |
-| `configure(project)` | 加载编辑器导出的 v5 preset。 |
+| `configure(project)` | 加载编辑器导出的 v6 preset。 |
 | `snapshot()` | 读取当前表情、眼睛、Morph 和时钟状态。 |
 
 离线组件说明见 [component/README.md](./component/README.md)。运行项目后，可在完整 API 网页中查看全部属性、方法、事件、状态、形状和 Morph，并直接操作测试。
@@ -293,6 +306,7 @@ bot.stopSequence();
 
 - **状态 state**：控制表情池、节奏、眨眼、姿态、运动和默认 Morph 行为。
 - **形状 shape**：只改变身体轮廓和适配后的眼睛位置，不改变状态语义。
+- **材质 material**：在同一套动画几何上应用纯色、有序色标渐变或分层彩虹玻璃；眼睛始终位于材质之上。
 - **单次 Morph**：由业务主动触发，完整进入、保持、退出，结束后停留在完成态，直到恢复。
 - `progress` 与 `spawning` 会重复执行单次展示并在中间休止；持续型状态 Morph 会在对应状态存在期间保持。
 
@@ -301,7 +315,7 @@ bot.stopSequence();
 ```text
 .
 ├── index.html                  高级状态实验室
-├── app.js                      高级编辑器与 v5 preset 运行时
+├── app.js                      高级编辑器与 v6 preset 运行时
 ├── grok-bot-engine.js          兼容导出
 ├── component/
 │   ├── index.html              所见即所得组件与时间线编辑器
@@ -309,6 +323,7 @@ bot.stopSequence();
 │   ├── morph-bot.js            Web Component 入口
 │   ├── morph-bot.d.ts          TypeScript 类型声明
 │   ├── catalog.js              状态、形状与 Morph 双语目录
+│   ├── materials.js            纯色、渐变与玻璃共享预设
 │   ├── grok-bot-engine.js      稳定引擎门面与系统编排
 │   ├── original-data.js        状态、表情与几何数据
 │   ├── runtime/                时钟、物理、行为、Morph、粒子与 SVG 系统
@@ -333,11 +348,12 @@ npm run pack:component
 - 14 种 Morph 的进入、退出与直接切换；
 - 单次 Morph 结束后的双眼恢复；
 - 组件导出、编辑器操作、网页文档与 ZIP 下载包。
+- 材质预设完整性与自定义渐变参数。
 
 当前版本：
 
-- 动画实验室：`v1.5.0`
-- 独立组件：`v0.3.0`
+- 动画实验室：`v1.6.0`
+- 独立组件：`v0.4.0`
 
 ### 项目状态与声明
 

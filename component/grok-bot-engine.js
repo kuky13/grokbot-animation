@@ -6,6 +6,7 @@ import { ParticleSystem } from "./runtime/particle-system.js";
 import { lerpRing } from "./runtime/geometry.js";
 import { clamp, random, springValue } from "./runtime/math.js";
 import * as morphSystem from "./runtime/morph-system.js";
+import { MaterialSystem } from "./runtime/material-system.js";
 import { stepPhysics } from "./runtime/physics-system.js";
 import * as simulationClock from "./runtime/simulation-clock.js";
 import * as stateBehavior from "./runtime/state-behavior-system.js";
@@ -36,6 +37,11 @@ export class GrokBotEngine {
       glyphs: this.glyphs,
     };
     this.morphLayers = new Map();
+    this.materials = new MaterialSystem(svg, {
+      head: this.head,
+      transformGroup: this.transformGroup,
+      idPrefix: svg.id || "grok-bot",
+    });
     this.badge = svg.querySelector("#notify-badge");
     this.currentBeltRadius = SHAPES.blob.beltRadius;
     this.particleSpinAngle = 0;
@@ -142,6 +148,7 @@ export class GrokBotEngine {
     window.removeEventListener("pointermove", this.pointerMove);
     document.documentElement.removeEventListener("mouseleave", this.pointerLeave);
     for (const layer of this.morphLayers.values()) layer.group.remove();
+    this.materials.destroy();
   }
 
   setState(state, immediate = false) {
@@ -217,7 +224,7 @@ export class GrokBotEngine {
     const { now, delta } = simulationClock.advanceSimulationClock.call(this, realNow);
     const config = this.getConfig();
     this.svg.dataset.state = this.state;
-    this.svg.style.setProperty("--fg", config.color);
+    this.materials.apply(config);
     this.svg.style.setProperty("--bg", config.eyeColor);
     this.svg.style.setProperty("--bot-size", `${config.size}px`);
     this.svg.style.transform = config.flipX ? "scaleX(-1)" : "";
@@ -225,6 +232,7 @@ export class GrokBotEngine {
     this.updateStateTargets(now, config, delta);
     stepPhysics.call(this, delta, REDUCE_MOTION.matches);
     this.render(now, config);
+    this.materials.syncHeadPath(this.head.getAttribute("d"));
     if (this.spinSpring && Math.abs(this.spinSpring.target - this.spinSpring.x) < 0.004 && Math.abs(this.spinSpring.v) < 0.015) {
       this.spinSpring = null;
       this.shapeChangeWide = false;

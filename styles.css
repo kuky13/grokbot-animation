@@ -1421,6 +1421,145 @@ footer a:hover {
   font-size: 8px;
 }
 
+.material-studio {
+  margin: 18px 0 20px;
+  padding: 16px;
+  border: 1px solid var(--soft-line);
+  border-radius: 16px;
+  background: #f7f7f3;
+}
+
+.material-studio-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.material-studio-heading span,
+.material-studio-heading output {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.material-studio-heading h3 {
+  margin: 3px 0 0;
+  font-size: 17px;
+}
+
+.material-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.material-mode-tabs button {
+  min-width: 0;
+  padding: 9px 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.material-mode-tabs strong,
+.material-mode-tabs code {
+  display: block;
+}
+
+.material-mode-tabs strong { font-size: 11px; }
+.material-mode-tabs code { margin-top: 3px; font-size: 7px; opacity: .56; }
+
+.material-mode-tabs button.is-selected {
+  border-color: var(--ink);
+  color: var(--surface);
+  background: var(--ink);
+}
+
+.material-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.material-preset-grid button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid var(--soft-line);
+  border-radius: 11px;
+  color: var(--ink);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.material-preset-grid button > i {
+  width: 35px;
+  height: 35px;
+  border: 1px solid rgba(16, 17, 16, .12);
+  border-radius: 10px;
+  background: var(--material-swatch);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+
+.material-preset-grid strong,
+.material-preset-grid code { display: block; }
+.material-preset-grid strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.material-preset-grid code { margin-top: 2px; font-size: 7px; opacity: .54; }
+
+.material-preset-grid button:hover,
+.material-preset-grid button.is-selected { border-color: var(--ink); }
+
+.material-preset-grid button.is-selected {
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.material-custom-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--soft-line);
+}
+
+.material-custom-controls label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.material-custom-controls input[type="color"] {
+  width: 42px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+}
+
+.material-custom-controls label:has(input[type="range"]) { grid-column: 1 / -1; grid-template-columns: 70px 1fr auto; }
+.material-custom-controls input[type="range"] { min-width: 0; width: 100%; accent-color: var(--ink); }
+.material-custom-controls output { min-width: 34px; font: 700 9px/1 var(--mono); text-align: right; }
+.material-custom-controls p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+
 .shape-library {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1444,21 +1583,13 @@ footer a:hover {
   transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
-.shape-option svg {
+.shape-option svg,
+.shape-option morph-bot {
   grid-column: 1 / -1;
   width: 100%;
   height: 72px;
   margin-bottom: 3px;
   overflow: visible;
-}
-
-.shape-option-head {
-  fill: currentColor;
-  opacity: 0.88;
-}
-
-.shape-option-eye {
-  fill: var(--surface);
 }
 
 .shape-option span {

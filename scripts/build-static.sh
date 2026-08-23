@@ -17,6 +17,7 @@ cp \
   "$repo_dir/grok-bot-engine.js" \
   "$repo_dir/original-data.js" \
   "$repo_dir/catalog.js" \
+  "$repo_dir/materials.js" \
   "$repo_dir/ANALYSIS.md" \
   "$repo_dir/ARCHITECTURE.md" \
   "$repo_dir/README.md" \

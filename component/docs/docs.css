@@ -151,6 +151,20 @@ td:first-child { color: var(--ink); font-weight: 700; }
 .shape-reference strong { font-size: 12px; }
 .shape-reference code { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; }
 
+.material-reference { display: grid; gap: 12px; }
+.material-reference section { overflow: hidden; border: 1px solid var(--line); border-radius: 11px; }
+.material-reference h3 { display: flex; align-items: center; justify-content: space-between; margin: 0; padding: 10px 12px; border-bottom: 1px solid var(--line); background: #f5f5f1; font-size: 12px; }
+.material-reference h3 code { color: var(--muted); font-size: 10px; }
+.material-reference section > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 8px; }
+.material-reference button { min-width: 0; display: grid; grid-template-columns: 46px 28px minmax(0, 1fr); align-items: center; gap: 8px; padding: 7px; border: 1px solid transparent; border-radius: 9px; color: var(--ink); background: #f8f8f5; text-align: left; cursor: pointer; }
+.material-reference button:hover { border-color: var(--blue); background: var(--blue-soft); }
+.material-reference morph-bot { pointer-events: none; }
+.material-reference button > i { width: 28px; height: 28px; border: 1px solid rgba(16,17,16,.1); border-radius: 8px; background: var(--material-swatch); }
+.material-reference button > span, .material-reference strong, .material-reference code { min-width: 0; display: block; }
+.material-reference strong, .material-reference code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.material-reference strong { font-size: 11px; }
+.material-reference button code { margin-top: 3px; color: var(--muted); font-size: 9px; }
+
 .effect-reference { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
 .effect-reference button { min-height: 62px; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: #f8f8f5; text-align: left; cursor: pointer; }
 .effect-reference button:hover { border-color: var(--blue); background: var(--blue-soft); }
@@ -201,7 +215,7 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid
   .doc-intro h1 { font-size: 46px; }
   .lede { font-size: 15px; }
   .notice { grid-template-columns: 1fr; gap: 7px; }
-  .quick-steps, .state-reference, .shape-reference, .effect-reference { grid-template-columns: 1fr; }
+  .quick-steps, .state-reference, .shape-reference, .effect-reference, .material-reference section > div { grid-template-columns: 1fr; }
   .api-list article { grid-template-columns: 1fr; gap: 5px; }
   .file-tree span { display: grid; gap: 3px; }
   .live-api { display: block; padding: 30px 17px 45px; }

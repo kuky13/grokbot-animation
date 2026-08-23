@@ -124,6 +124,23 @@ configs.drowsy = {
 };
 
 const engine = new GrokBotEngine(svg, () => configs[activeState]);
+
+Object.assign(baseConfig, { material: "gradient", gradientPreset: "ocean-signal" });
+engine.frame(clock);
+assert.match(svg.style["--fg"], /^url\(#.+-material-gradient\)$/, "gradient material should become the shared SVG paint");
+assert.equal(engine.materials.gradient.children.length, 3, "gradient presets should render every ordered stop");
+assert.equal(engine.materials.gradient.getAttribute("color-interpolation"), "linearRGB", "gradient interpolation should be explicit");
+
+Object.assign(baseConfig, { material: "rainbow-glass", glassPreset: "prism" });
+engine.frame(clock);
+assert.equal(engine.materials.overlayGroup.hidden, false, "rainbow glass should enable its shading layers");
+assert.equal(engine.materials.sheenPath.getAttribute("d"), nodes.head.getAttribute("d"), "glass highlights should follow the current shape path");
+
+Object.assign(baseConfig, { material: "solid", color: "#0b0b0b" });
+engine.frame(clock);
+assert.equal(svg.style["--fg"], "#0b0b0b", "solid material should remain backwards compatible with color");
+assert.equal(engine.materials.overlayGroup.hidden, true, "solid material should remove glass shading layers");
+
 const advance = (milliseconds) => {
   const frames = Math.ceil(milliseconds / (1000 / 60));
   for (let frame = 0; frame < frames; frame += 1) {

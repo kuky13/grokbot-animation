@@ -8,13 +8,21 @@ import {
   STATE_IDS as orderedStates,
   STATE_LABELS_ZH as stateLabels,
 } from "./catalog.js";
+import {
+  DEFAULT_MATERIAL,
+  GLASS_PRESETS,
+  GRADIENT_PRESETS,
+  MATERIAL_IDS,
+  MATERIAL_LABELS,
+  SOLID_PRESETS,
+  resolveMaterial,
+} from "./materials.js";
 const stateInput = document.querySelector("#demo-state");
 const shapeInput = document.querySelector("#demo-shape");
 const stateGrid = document.querySelector("#state-grid");
 const shapeGrid = document.querySelector("#shape-grid");
 const sizeInput = document.querySelector("#demo-size");
 const sizeOutput = document.querySelector("#demo-size-output");
-const colorInput = document.querySelector("#demo-color");
 const eyeColorInput = document.querySelector("#demo-eye-color");
 const speedSelect = document.querySelector("#demo-speed");
 const pointerInput = document.querySelector("#demo-pointer");
@@ -34,12 +42,17 @@ const contextDescription = document.querySelector("#context-description");
 const readout = document.querySelector("#demo-readout");
 const runtime = document.querySelector("#demo-runtime");
 const code = document.querySelector("#component-code");
+const materialTabs = document.querySelector("#material-tabs");
+const materialPresets = document.querySelector("#material-presets");
+const materialCustom = document.querySelector("#material-custom");
+const materialReadout = document.querySelector("#material-readout");
 
 let codeMode = "static";
 let selectedStepIndex = 1;
 let playingStepIndex = -1;
 let sequenceRun = 0;
 let sequencePlaying = false;
+const materialConfig = { ...DEFAULT_MATERIAL };
 const sequence = [
   { state: "idle", hold: 1000, morph: "gather", morphHold: 700 },
   { state: "thinking", hold: 2400, morph: "send", morphHold: 700 },
@@ -90,13 +103,163 @@ function escapeAttribute(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;");
 }
 
+function presetCatalog(material = materialConfig.material) {
+  if (material === "solid") return SOLID_PRESETS;
+  if (material === "gradient") return GRADIENT_PRESETS;
+  return GLASS_PRESETS;
+}
+
+function presetBackground(material, preset) {
+  if (material === "solid") return preset.color;
+  if (material === "gradient") return `linear-gradient(${preset.angle}deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+  return `radial-gradient(circle at 24% 18%, rgba(255,255,255,.98) 0 5%, rgba(255,255,255,.3) 18%, transparent 39%), conic-gradient(from 205deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+}
+
+function setMaterialAttributes(element) {
+  element.setAttribute("material", materialConfig.material);
+  element.setAttribute("color", materialConfig.color);
+  if (materialConfig.material === "gradient") {
+    if (materialConfig.gradientPreset === "custom") {
+      element.removeAttribute("gradient-preset");
+      element.setAttribute("gradient-start", materialConfig.gradientStart);
+      element.setAttribute("gradient-end", materialConfig.gradientEnd);
+      element.setAttribute("gradient-angle", String(materialConfig.gradientAngle));
+    } else {
+      element.setAttribute("gradient-preset", materialConfig.gradientPreset);
+      element.removeAttribute("gradient-start");
+      element.removeAttribute("gradient-end");
+      element.removeAttribute("gradient-angle");
+    }
+  } else {
+    element.removeAttribute("gradient-preset");
+    element.removeAttribute("gradient-start");
+    element.removeAttribute("gradient-end");
+    element.removeAttribute("gradient-angle");
+  }
+  if (materialConfig.material === "rainbow-glass") element.setAttribute("glass-preset", materialConfig.glassPreset);
+  else element.removeAttribute("glass-preset");
+}
+
+function syncMaterialSelection() {
+  const resolved = resolveMaterial(materialConfig);
+  materialTabs.querySelectorAll("[data-material]").forEach((button) => {
+    const selected = button.dataset.material === materialConfig.material;
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  materialPresets.querySelectorAll("[data-material-preset]").forEach((button) => {
+    const selected = materialConfig.material === "solid"
+      ? button.dataset.materialPreset === resolved.preset
+      : button.dataset.materialPreset === (materialConfig.material === "gradient" ? materialConfig.gradientPreset : materialConfig.glassPreset);
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  const preset = presetCatalog().find(({ id }) => id === resolved.preset);
+  materialReadout.textContent = `${MATERIAL_LABELS[materialConfig.material].zh} · ${preset?.label.zh || "自定义"}`;
+}
+
+function materialControl(label, type, value, attributes = {}) {
+  const control = document.createElement("label");
+  control.innerHTML = `<span>${label}</span>`;
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = String(value);
+  for (const [name, setting] of Object.entries(attributes)) input.setAttribute(name, String(setting));
+  control.append(input);
+  return { control, input };
+}
+
+function renderMaterialCustom() {
+  materialCustom.replaceChildren();
+  if (materialConfig.material === "solid") {
+    const custom = materialControl("自定义纯色", "color", materialConfig.color);
+    custom.input.addEventListener("input", () => {
+      materialConfig.color = custom.input.value;
+      syncMaterialSelection();
+      syncDemo();
+    });
+    materialCustom.append(custom.control);
+    return;
+  }
+  if (materialConfig.material === "gradient") {
+    const resolved = resolveMaterial(materialConfig);
+    const start = materialControl("起始色", "color", materialConfig.gradientPreset === "custom" ? materialConfig.gradientStart : resolved.stops[0].color);
+    const end = materialControl("结束色", "color", materialConfig.gradientPreset === "custom" ? materialConfig.gradientEnd : resolved.stops.at(-1).color);
+    const angle = materialControl("方向", "range", materialConfig.gradientPreset === "custom" ? materialConfig.gradientAngle : resolved.angle, { min: 0, max: 360, step: 1 });
+    const output = document.createElement("output");
+    output.textContent = `${angle.input.value}°`;
+    angle.control.append(output);
+    const update = () => {
+      materialConfig.gradientPreset = "custom";
+      materialConfig.gradientStart = start.input.value;
+      materialConfig.gradientEnd = end.input.value;
+      materialConfig.gradientAngle = Number(angle.input.value);
+      output.textContent = `${angle.input.value}°`;
+      syncMaterialSelection();
+      syncDemo();
+    };
+    for (const input of [start.input, end.input, angle.input]) input.addEventListener("input", update);
+    materialCustom.append(start.control, end.control, angle.control);
+    return;
+  }
+  const note = document.createElement("p");
+  note.textContent = "玻璃预设由彩虹基底、体积暗部、局部高光和折射轮廓组成，并会自动贴合全部 18 种形状。";
+  materialCustom.append(note);
+}
+
+function renderMaterialEditor() {
+  materialTabs.replaceChildren();
+  for (const material of MATERIAL_IDS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.material = material;
+    button.innerHTML = `<strong>${MATERIAL_LABELS[material].zh}</strong><code>${material}</code>`;
+    button.addEventListener("click", () => {
+      stopEditorSequence();
+      materialConfig.material = material;
+      renderMaterialEditor();
+      syncDemo();
+    });
+    materialTabs.append(button);
+  }
+  materialPresets.replaceChildren();
+  for (const preset of presetCatalog()) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.materialPreset = preset.id;
+    button.innerHTML = `<i style="--material-swatch:${presetBackground(materialConfig.material, preset)}"></i><span><strong>${preset.label.zh}</strong><code>${preset.id}</code></span>`;
+    button.addEventListener("click", () => {
+      stopEditorSequence();
+      if (materialConfig.material === "solid") materialConfig.color = preset.color;
+      else if (materialConfig.material === "gradient") materialConfig.gradientPreset = preset.id;
+      else materialConfig.glassPreset = preset.id;
+      renderMaterialEditor();
+      syncDemo();
+    });
+    materialPresets.append(button);
+  }
+  renderMaterialCustom();
+  syncMaterialSelection();
+}
+
 function componentAttributes(state) {
   const attributes = [
     `state="${escapeAttribute(state)}"`,
     `shape="${escapeAttribute(shapeInput.value)}"`,
     `size="${sizeInput.value}"`,
-    `color="${escapeAttribute(colorInput.value)}"`,
   ];
+  if (materialConfig.material === "solid") attributes.push(`color="${escapeAttribute(materialConfig.color)}"`);
+  else attributes.push(`material="${materialConfig.material}"`);
+  if (materialConfig.material === "gradient") {
+    if (materialConfig.gradientPreset === "custom") {
+      attributes.push(
+        `gradient-start="${materialConfig.gradientStart}"`,
+        `gradient-end="${materialConfig.gradientEnd}"`,
+        `gradient-angle="${materialConfig.gradientAngle}"`,
+      );
+    } else attributes.push(`gradient-preset="${materialConfig.gradientPreset}"`);
+  }
+  if (materialConfig.material === "rainbow-glass") attributes.push(`glass-preset="${materialConfig.glassPreset}"`);
   if (eyeColorInput.value.toLowerCase() !== "#ffffff") attributes.push(`eye-color="${escapeAttribute(eyeColorInput.value)}"`);
   if (speedSelect.value !== "1") attributes.push(`speed="${speedSelect.value}"`);
   if (pointerInput.checked) attributes.push("follow-pointer");
@@ -139,7 +302,7 @@ function renderSequence() {
     article.innerHTML = `
       <button class="sequence-identity" type="button" data-select-sequence-step aria-pressed="${index === selectedStepIndex}">
         <span class="sequence-number">${index + 1}</span>
-        <morph-bot state="${step.state}" shape="${shapeInput.value}" size="34" color="${colorInput.value}" eye-color="${eyeColorInput.value}" thumbnail decorative></morph-bot>
+        <morph-bot state="${step.state}" shape="${shapeInput.value}" size="34" eye-color="${eyeColorInput.value}" thumbnail decorative></morph-bot>
         <span><strong>${stateLabels[step.state]}</strong><code>${step.state}</code></span>
       </button>
       <label class="sequence-field"><span>状态停留</span><input data-step-hold type="number" min="0" max="600" step="0.1" value="${step.hold / 1000}" /><i>秒</i></label>
@@ -190,16 +353,16 @@ function syncStateMarkers() {
 
 function syncThumbnailAppearance() {
   stateGrid.querySelectorAll("morph-bot").forEach((preview) => {
-    if (preview.getAttribute("color") !== colorInput.value) preview.setAttribute("color", colorInput.value);
+    setMaterialAttributes(preview);
     if (preview.getAttribute("eye-color") !== eyeColorInput.value) preview.setAttribute("eye-color", eyeColorInput.value);
   });
   shapeGrid.querySelectorAll("morph-bot").forEach((preview) => {
-    if (preview.getAttribute("color") !== colorInput.value) preview.setAttribute("color", colorInput.value);
+    setMaterialAttributes(preview);
     if (preview.getAttribute("eye-color") !== eyeColorInput.value) preview.setAttribute("eye-color", eyeColorInput.value);
   });
   sequenceList.querySelectorAll("morph-bot").forEach((stepBot) => {
     if (stepBot.shape !== shapeInput.value) stepBot.shape = shapeInput.value;
-    if (stepBot.getAttribute("color") !== colorInput.value) stepBot.setAttribute("color", colorInput.value);
+    setMaterialAttributes(stepBot);
     if (stepBot.getAttribute("eye-color") !== eyeColorInput.value) stepBot.setAttribute("eye-color", eyeColorInput.value);
   });
 }
@@ -233,12 +396,12 @@ function syncDemo() {
   bot.state = stateInput.value;
   bot.shape = shapeInput.value;
   bot.size = Number(sizeInput.value);
-  bot.setAttribute("color", colorInput.value);
+  setMaterialAttributes(bot);
   bot.setAttribute("eye-color", eyeColorInput.value);
   bot.speed = Number(speedSelect.value);
   bot.toggleAttribute("follow-pointer", pointerInput.checked);
   sizeOutput.textContent = `${sizeInput.value}px`;
-  readout.textContent = `${stateInput.value} · ${shapeInput.value} · ${sizeInput.value}px`;
+  readout.textContent = `${stateInput.value} · ${shapeInput.value} · ${MATERIAL_LABELS[materialConfig.material].zh} · ${sizeInput.value}px`;
   [contextTitle.textContent, contextDescription.textContent] = contextText(stateInput.value);
   code.textContent = codeMode === "sequence" ? sequenceCode() : staticCode();
   stateGrid.querySelectorAll("[data-state-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.stateOption === stateInput.value));
@@ -247,7 +410,7 @@ function syncDemo() {
   syncThumbnailAppearance();
 }
 
-[sizeInput, colorInput, eyeColorInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
+[sizeInput, eyeColorInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
 
 stateGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-state-option]");
@@ -423,6 +586,7 @@ function updateRuntime(now) {
   requestAnimationFrame(updateRuntime);
 }
 
+renderMaterialEditor();
 renderSequence();
 syncDemo();
 requestAnimationFrame(updateRuntime);

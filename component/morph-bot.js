@@ -1,14 +1,26 @@
 import { GrokBotEngine } from "./grok-bot-engine.js";
 import { ORIGINAL_STATE_DATA } from "./original-data.js";
 import { MORPH_BY_STATE, MORPH_IDS, SHAPE_IDS, STATE_IDS } from "./catalog.js";
+import {
+  DEFAULT_MATERIAL,
+  GLASS_PRESETS,
+  GRADIENT_PRESETS,
+  MATERIAL_IDS,
+  SOLID_PRESETS,
+} from "./materials.js";
 
 export const MORPH_BOT_STATES = STATE_IDS;
 export const MORPH_BOT_SHAPES = SHAPE_IDS;
 export const MORPH_BOT_EFFECTS = MORPH_IDS;
+export const MORPH_BOT_MATERIALS = MATERIAL_IDS;
+export const MORPH_BOT_SOLID_PRESETS = SOLID_PRESETS;
+export const MORPH_BOT_GRADIENT_PRESETS = GRADIENT_PRESETS;
+export const MORPH_BOT_GLASS_PRESETS = GLASS_PRESETS;
 export { MORPH_BY_STATE };
 
 const DEFAULT_CHARACTER = Object.freeze({
   color: "#0b0b0b",
+  ...DEFAULT_MATERIAL,
   eyeColor: "#ffffff",
   size: 96,
   flipX: false,
@@ -109,7 +121,10 @@ function svgTemplate(id) {
 
 export class MorphBotElement extends HTMLElementBase {
   static get observedAttributes() {
-    return ["state", "shape", "size", "color", "eye-color", "speed", "follow-pointer", "flip", "paused", "decorative", "label"];
+    return [
+      "state", "shape", "size", "color", "eye-color", "speed", "follow-pointer", "flip", "paused", "decorative", "label",
+      "material", "gradient-preset", "gradient-start", "gradient-end", "gradient-angle", "glass-preset",
+    ];
   }
 
   constructor() {
@@ -165,6 +180,8 @@ export class MorphBotElement extends HTMLElementBase {
       this.dispatchEvent(new CustomEvent("statechange", { detail: { state: this.state } }));
     } else if (name === "shape") {
       this.dispatchEvent(new CustomEvent("shapechange", { detail: { shape: this.shape } }));
+    } else if (["material", "color", "gradient-preset", "gradient-start", "gradient-end", "gradient-angle", "glass-preset"].includes(name)) {
+      this.dispatchEvent(new CustomEvent("materialchange", { detail: { material: this.material } }));
     } else if (name === "speed") this._engine.setPlaybackRate(this.speed);
     else if (name === "paused") this._syncPaused();
   }
@@ -186,6 +203,29 @@ export class MorphBotElement extends HTMLElementBase {
 
   set shape(value) {
     this.setAttribute("shape", MORPH_BOT_SHAPES.includes(value) ? value : "blob");
+  }
+
+  get material() {
+    const fallback = MATERIAL_IDS.includes(this._preset?.character?.material) ? this._preset.character.material : DEFAULT_MATERIAL.material;
+    const value = this.getAttribute("material") || fallback;
+    return MATERIAL_IDS.includes(value) ? value : fallback;
+  }
+
+  set material(value) {
+    this.setAttribute("material", MATERIAL_IDS.includes(value) ? value : DEFAULT_MATERIAL.material);
+  }
+
+  get gradientPreset() {
+    if ((this.hasAttribute("gradient-start") || this.hasAttribute("gradient-end")) && !this.hasAttribute("gradient-preset")) return "custom";
+    const fallback = this._preset?.character?.gradientPreset || DEFAULT_MATERIAL.gradientPreset;
+    const value = this.getAttribute("gradient-preset") || fallback;
+    return value === "custom" || GRADIENT_PRESETS.some(({ id }) => id === value) ? value : DEFAULT_MATERIAL.gradientPreset;
+  }
+
+  get glassPreset() {
+    const fallback = this._preset?.character?.glassPreset || DEFAULT_MATERIAL.glassPreset;
+    const value = this.getAttribute("glass-preset") || fallback;
+    return GLASS_PRESETS.some(({ id }) => id === value) ? value : DEFAULT_MATERIAL.glassPreset;
   }
 
   get size() { return numberAttribute(this, "size", this._preset?.character?.size || DEFAULT_CHARACTER.size, 12, 1024); }
@@ -213,6 +253,27 @@ export class MorphBotElement extends HTMLElementBase {
   setShape(shape) {
     if (!MORPH_BOT_SHAPES.includes(shape)) throw new RangeError(`Unknown morph-bot shape: ${shape}`);
     this.shape = shape;
+    return this;
+  }
+
+  setMaterial(material, options = {}) {
+    if (!MATERIAL_IDS.includes(material)) throw new RangeError(`Unknown morph-bot material: ${material}`);
+    this.material = material;
+    if (material === "solid" && options.color) this.setAttribute("color", options.color);
+    if (material === "gradient") {
+      if (options.preset) {
+        this.setAttribute("gradient-preset", options.preset);
+        this.removeAttribute("gradient-start");
+        this.removeAttribute("gradient-end");
+        this.removeAttribute("gradient-angle");
+      } else if (options.start || options.end || options.angle !== undefined) {
+        this.removeAttribute("gradient-preset");
+        if (options.start) this.setAttribute("gradient-start", options.start);
+        if (options.end) this.setAttribute("gradient-end", options.end);
+        if (options.angle !== undefined) this.setAttribute("gradient-angle", String(options.angle));
+      }
+    }
+    if (material === "rainbow-glass" && options.preset) this.setAttribute("glass-preset", options.preset);
     return this;
   }
 
@@ -332,6 +393,12 @@ export class MorphBotElement extends HTMLElementBase {
       : baseState.expressionCadence;
     const character = { ...DEFAULT_CHARACTER, ...(this._preset?.character || {}) };
     const color = this.getAttribute("color") || character.color;
+    const material = this.material;
+    const gradientPreset = this.gradientPreset;
+    const gradientStart = this.getAttribute("gradient-start") || character.gradientStart;
+    const gradientEnd = this.getAttribute("gradient-end") || character.gradientEnd;
+    const gradientAngle = numberAttribute(this, "gradient-angle", character.gradientAngle, 0, 360);
+    const glassPreset = this.glassPreset;
     const eyeColor = this.getAttribute("eye-color") || character.eyeColor;
     const pointer = this.hasAttribute("follow-pointer") ? true : Boolean(character.pointer);
     const flipX = this.hasAttribute("flip") ? true : Boolean(character.flipX);
@@ -339,6 +406,12 @@ export class MorphBotElement extends HTMLElementBase {
       ...character,
       ...stateConfig,
       color,
+      material,
+      gradientPreset,
+      gradientStart,
+      gradientEnd,
+      gradientAngle,
+      glassPreset,
       eyeColor,
       pointer,
       flipX,

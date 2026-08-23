@@ -34,19 +34,24 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.3.0");
+assert.equal(manifest.version, "0.4.0");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
 assert.equal(component.MORPH_BOT_STATES.length, 39, "component should expose all source states");
 assert.equal(component.MORPH_BOT_SHAPES.length, 18, "component should expose all source shapes");
 assert.equal(component.MORPH_BOT_EFFECTS.length, 14, "component should expose all morph effects");
+assert.equal(component.MORPH_BOT_MATERIALS.length, 3, "component should expose all material modes");
+assert.equal(component.MORPH_BOT_SOLID_PRESETS.length, 8, "component should expose all solid presets");
+assert.equal(component.MORPH_BOT_GRADIENT_PRESETS.length, 8, "component should expose all gradient presets");
+assert.equal(component.MORPH_BOT_GLASS_PRESETS.length, 4, "component should expose all glass presets");
 assert.ok(component.MorphBotElement.observedAttributes.includes("state"));
 assert.ok(component.MorphBotElement.observedAttributes.includes("shape"));
 assert.equal(typeof component.MorphBotElement.prototype.configure, "function");
 assert.equal(typeof component.MorphBotElement.prototype.playMorph, "function");
 assert.equal(typeof component.MorphBotElement.prototype.playSequence, "function");
 assert.equal(typeof component.MorphBotElement.prototype.stopSequence, "function");
+assert.equal(typeof component.MorphBotElement.prototype.setMaterial, "function");
 assert.equal(typeof component.MorphBotElement.prototype.snapshot, "function");
 
 const element = new component.MorphBotElement();
@@ -65,12 +70,21 @@ assert.equal(element.shape, "wedge");
 assert.equal(element.paused, true);
 element.play();
 assert.equal(element.paused, false);
+element.setMaterial("gradient", { preset: "ocean-signal" });
+assert.equal(element.material, "gradient");
+assert.equal(element.gradientPreset, "ocean-signal");
+element.setMaterial("gradient", { start: "#123456", end: "#abcdef", angle: 42 });
+assert.equal(element.gradientPreset, "custom");
+assert.equal(element._engineConfig().gradientAngle, 42);
+element.setMaterial("rainbow-glass", { preset: "aurora" });
+assert.equal(element.glassPreset, "aurora");
 element.setAttribute("thumbnail", "");
 assert.equal(element._engineConfig().particlesEnabled, false, "catalog thumbnails should disable particle emission");
 element.removeAttribute("thumbnail");
 assert.equal(element._engineConfig().particlesEnabled, true, "normal component instances should keep full particle effects");
 assert.throws(() => element.setState("missing"), RangeError);
 assert.throws(() => element.setShape("missing"), RangeError);
+assert.throws(() => element.setMaterial("missing"), RangeError);
 await assert.rejects(element.playSequence([]), TypeError);
 
 const sequenceCalls = [];
@@ -106,6 +120,7 @@ assert.ok(demo.includes('id="preview-stage"'), "component workbench should expos
 assert.ok(demo.includes('id="component-code"'), "component workbench should expose synchronized generated code");
 assert.ok(demo.includes('id="state-grid"'), "component workbench should expose the complete visual state catalog");
 assert.ok(demo.includes('id="shape-grid"'), "component workbench should expose the complete visual shape catalog");
+assert.ok(demo.includes('id="material-tabs"') && demo.includes('id="material-presets"'), "component workbench should expose the complete material editor");
 assert.ok(demo.includes('id="sequence-list"'), "component workbench should expose a visual sequence timeline");
 assert.ok(demo.includes('id="add-sequence-step"'), "component workbench should allow adding timeline steps");
 assert.ok(demo.includes('id="sequence-loop"'), "component workbench should expose timeline looping");
@@ -125,18 +140,22 @@ assert.match(demoRuntime, /bot\.stopSequence\(/, "timeline preview should be can
 assert.ok(demo.includes(`morph-bot-element-${manifest.version}.zip`), "component workbench should link the downloadable bundle");
 assert.ok(demo.includes('href="./docs/"'), "component workbench should link the readable API site");
 assert.match(demo, /button-example"><button[^>]*disabled><morph-bot/, "button usage example should contain a visible bot inside the button");
-for (const section of ["attributes", "properties", "methods", "events", "states", "shapes", "effects", "accessibility", "lifecycle", "typescript"]) {
+for (const section of ["attributes", "properties", "methods", "events", "states", "shapes", "materials", "effects", "accessibility", "lifecycle", "typescript"]) {
   assert.ok(docs.includes(`id="${section}"`), `API site should include the ${section} section`);
 }
 assert.match(docs, /id="docs-bot"/, "API site should include an interactive live component");
 assert.match(docsRuntime, /STATE_IDS as orderedStates/, "API site should render the full shared state reference");
 assert.match(docsRuntime, /MORPH_BOT_SHAPES/, "API site should render the full exported shape reference");
 assert.match(docsRuntime, /MORPH_BOT_EFFECTS/, "API site should render the full exported morph reference");
+assert.match(docsRuntime, /GRADIENT_PRESETS/, "API site should render the shared material preset reference");
 assert.match(docs, /playSequence\(steps, options\?\)/, "API site should document sequence playback");
 assert.ok(existsSync(downloadPath), "downloadable component ZIP should exist");
 const bundledFiles = execFileSync("unzip", ["-Z1", downloadPath], { encoding: "utf8" });
 for (const file of [
   "morph-bot/catalog.js",
+  "morph-bot/materials.js",
+  "morph-bot/materials.d.ts",
+  "morph-bot/runtime/material-system.js",
   "morph-bot/runtime/math.js",
   "morph-bot/runtime/morph-system.js",
   "morph-bot/runtime/particle-system.js",

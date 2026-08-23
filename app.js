@@ -1,5 +1,6 @@
-import { EXPRESSIONS, HEAD_C, ORIGINAL_STATE_DATA, SHAPES } from "./original-data.js";
+import { EXPRESSIONS, ORIGINAL_STATE_DATA, SHAPES } from "./original-data.js";
 import { GrokBotEngine } from "./grok-bot-engine.js";
+import "./component/morph-bot.js";
 import {
   MORPH_BY_STATE,
   SHAPE_LABELS_ZH,
@@ -8,6 +9,15 @@ import {
   STATE_IDS,
   STATE_LABELS_ZH,
 } from "./component/catalog.js";
+import {
+  DEFAULT_MATERIAL,
+  GLASS_PRESETS,
+  GRADIENT_PRESETS,
+  MATERIAL_IDS,
+  MATERIAL_LABELS,
+  SOLID_PRESETS,
+  resolveMaterial,
+} from "./component/materials.js";
 
 const stateGroups = STATE_GROUPS.map((group) => ({
   label: `${group.label.en} · ${group.label.zh}`,
@@ -21,7 +31,7 @@ const morphByState = MORPH_BY_STATE;
 
 function defaultCharacter() {
   return {
-    color: "#0b0b0b",
+    ...DEFAULT_MATERIAL,
     eyeColor: "#ffffff",
     size: 390,
     flipX: false,
@@ -56,7 +66,7 @@ function defaultState(id) {
 
 function createDefaultProject() {
   return {
-    version: 5,
+    version: 6,
     shape: "blob",
     character: defaultCharacter(),
     states: Object.fromEntries(stateIds.map((id) => [id, defaultState(id)])),
@@ -64,8 +74,8 @@ function createDefaultProject() {
 }
 
 const defaultProject = createDefaultProject();
-const storageKey = "grokbot-original-state-lab-v5";
-const legacyStorageKeys = ["grokbot-original-state-lab-v4", "grokbot-original-state-lab-v3"];
+const storageKey = "grokbot-original-state-lab-v6";
+const legacyStorageKeys = ["grokbot-original-state-lab-v5", "grokbot-original-state-lab-v4", "grokbot-original-state-lab-v3"];
 const characterKeys = Object.keys(defaultCharacter());
 
 function normalizeProject(candidate) {
@@ -77,6 +87,12 @@ function normalizeProject(candidate) {
   for (const key of characterKeys) {
     if (incomingCharacter[key] !== undefined) normalized.character[key] = incomingCharacter[key];
   }
+  if (!MATERIAL_IDS.includes(normalized.character.material)) normalized.character.material = DEFAULT_MATERIAL.material;
+  if (normalized.character.gradientPreset !== "custom" && !GRADIENT_PRESETS.some(({ id }) => id === normalized.character.gradientPreset)) {
+    normalized.character.gradientPreset = DEFAULT_MATERIAL.gradientPreset;
+  }
+  if (!GLASS_PRESETS.some(({ id }) => id === normalized.character.glassPreset)) normalized.character.glassPreset = DEFAULT_MATERIAL.glassPreset;
+  normalized.character.gradientAngle = Math.min(360, Math.max(0, Number(normalized.character.gradientAngle) || DEFAULT_MATERIAL.gradientAngle));
   for (const id of stateIds) {
     const incoming = candidate.states[id];
     if (!incoming) continue;
@@ -140,6 +156,10 @@ const groupsRoot = document.querySelector("#state-groups");
 const editorRoot = document.querySelector("#editor-fields");
 const shapeLibraryRoot = document.querySelector("#shape-library");
 const shapeCurrentName = document.querySelector("#shape-current-name");
+const materialModeTabs = document.querySelector("#material-mode-tabs");
+const materialPresetGrid = document.querySelector("#material-preset-grid");
+const materialCustomControls = document.querySelector("#material-custom-controls");
+const materialCurrentName = document.querySelector("#material-current-name");
 const editorStateName = document.querySelector("#editor-state-name");
 const saveStatus = document.querySelector("#save-status");
 const autoplayButton = document.querySelector("#autoplay-button");
@@ -188,7 +208,6 @@ const editorSections = [
   {
     title: "Character · 角色",
     controls: [
-      { path: "color", label: "头部颜色", type: "color", scope: "character" },
       { path: "eyeColor", label: "眼睛颜色", type: "color", scope: "character" },
       { path: "size", label: "尺寸", min: 240, max: 460, step: 1, unit: "px", scope: "character" },
       { path: "flipX", label: "水平翻转", type: "checkbox", scope: "character" },
@@ -249,20 +268,169 @@ function eyePath(ring) {
   return `M${ring.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join("L")}Z`;
 }
 
-function centroid(ring) {
-  const sum = ring.reduce((value, point) => [value[0] + point[0], value[1] + point[1]], [0, 0]);
-  return [sum[0] / ring.length, sum[1] / ring.length];
+function applyMaterialAttributes(element, character = project.character) {
+  element.setAttribute("material", character.material);
+  element.setAttribute("color", character.color);
+  element.setAttribute("eye-color", character.eyeColor);
+  if (character.material === "gradient") {
+    if (character.gradientPreset === "custom") {
+      element.removeAttribute("gradient-preset");
+      element.setAttribute("gradient-start", character.gradientStart);
+      element.setAttribute("gradient-end", character.gradientEnd);
+      element.setAttribute("gradient-angle", String(character.gradientAngle));
+    } else {
+      element.setAttribute("gradient-preset", character.gradientPreset);
+      element.removeAttribute("gradient-start");
+      element.removeAttribute("gradient-end");
+      element.removeAttribute("gradient-angle");
+    }
+  } else {
+    element.removeAttribute("gradient-preset");
+    element.removeAttribute("gradient-start");
+    element.removeAttribute("gradient-end");
+    element.removeAttribute("gradient-angle");
+  }
+  if (character.material === "rainbow-glass") element.setAttribute("glass-preset", character.glassPreset);
+  else element.removeAttribute("glass-preset");
 }
 
-const previewEyes = EXPRESSIONS[0].map((ring) => ({ path: eyePath(ring), center: centroid(ring) }));
+function materialSwatchBackground(material, preset) {
+  if (material === "solid") return preset.color;
+  if (material === "gradient") return `linear-gradient(${preset.angle}deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+  const colors = preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ");
+  return `radial-gradient(circle at 24% 18%, rgba(255,255,255,.96) 0 5%, rgba(255,255,255,.25) 18%, transparent 38%), conic-gradient(from 205deg, ${colors})`;
+}
 
-function shapeEyeTransform(shape, index) {
-  const face = shape.face;
-  if (face.x === 0 && face.y === 0 && face.sx === 1 && face.sy === 1 && face.eye === 1) return "";
-  const [centerX, centerY] = previewEyes[index].center;
-  const x = HEAD_C + face.x + (centerX - HEAD_C) * face.sx;
-  const y = HEAD_C + face.y + (centerY - HEAD_C) * face.sy;
-  return `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${face.eye.toFixed(3)}) translate(${(-centerX).toFixed(2)} ${(-centerY).toFixed(2)})`;
+function materialPresetCatalog(material = project.character.material) {
+  if (material === "solid") return SOLID_PRESETS;
+  if (material === "gradient") return GRADIENT_PRESETS;
+  return GLASS_PRESETS;
+}
+
+function renderMaterialModes() {
+  materialModeTabs.replaceChildren();
+  for (const material of MATERIAL_IDS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.material = material;
+    button.innerHTML = `<strong>${MATERIAL_LABELS[material].zh}</strong><code>${material}</code>`;
+    button.addEventListener("click", () => {
+      stopPlaybackSequences();
+      if (project.character.material === material) return;
+      project.character.material = material;
+      renderMaterialControls();
+      persistProject();
+      commitHistory();
+    });
+    materialModeTabs.append(button);
+  }
+}
+
+function renderMaterialPresets() {
+  const material = project.character.material;
+  materialPresetGrid.replaceChildren();
+  for (const preset of materialPresetCatalog(material)) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.materialPreset = preset.id;
+    button.innerHTML = `<i style="--material-swatch:${materialSwatchBackground(material, preset)}"></i><span><strong>${preset.label.zh}</strong><code>${preset.id}</code></span>`;
+    button.addEventListener("click", () => {
+      stopPlaybackSequences();
+      if (material === "solid") project.character.color = preset.color;
+      else if (material === "gradient") project.character.gradientPreset = preset.id;
+      else project.character.glassPreset = preset.id;
+      renderMaterialControls();
+      persistProject();
+      commitHistory();
+    });
+    materialPresetGrid.append(button);
+  }
+}
+
+function materialInput(label, type, value, attributes = {}) {
+  const control = document.createElement("label");
+  control.innerHTML = `<span>${label}</span>`;
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = String(value);
+  for (const [name, setting] of Object.entries(attributes)) input.setAttribute(name, String(setting));
+  control.append(input);
+  return { control, input };
+}
+
+function renderMaterialCustomControls() {
+  const character = project.character;
+  materialCustomControls.replaceChildren();
+  if (character.material === "solid") {
+    const { control, input } = materialInput("自定义纯色", "color", character.color);
+    input.addEventListener("input", () => {
+      character.color = input.value;
+      syncMaterialView();
+      persistProject();
+    });
+    input.addEventListener("change", commitHistory);
+    materialCustomControls.append(control);
+    return;
+  }
+  if (character.material === "gradient") {
+    const resolved = resolveMaterial(character);
+    const startValue = character.gradientPreset === "custom" ? character.gradientStart : resolved.stops[0].color;
+    const endValue = character.gradientPreset === "custom" ? character.gradientEnd : resolved.stops.at(-1).color;
+    const angleValue = character.gradientPreset === "custom" ? character.gradientAngle : resolved.angle;
+    const start = materialInput("起始色", "color", startValue);
+    const end = materialInput("结束色", "color", endValue);
+    const angle = materialInput("角度", "range", angleValue, { min: 0, max: 360, step: 1 });
+    const output = document.createElement("output");
+    output.textContent = `${angleValue}°`;
+    angle.control.append(output);
+    const applyCustom = () => {
+      character.gradientPreset = "custom";
+      character.gradientStart = start.input.value;
+      character.gradientEnd = end.input.value;
+      character.gradientAngle = Number(angle.input.value);
+      output.textContent = `${angle.input.value}°`;
+      syncMaterialView();
+      persistProject();
+    };
+    for (const input of [start.input, end.input, angle.input]) {
+      input.addEventListener("input", applyCustom);
+      input.addEventListener("change", commitHistory);
+    }
+    materialCustomControls.append(start.control, end.control, angle.control);
+    return;
+  }
+  const note = document.createElement("p");
+  note.innerHTML = "玻璃预设包含彩虹基底、体积暗部、局部高光与折射感轮廓；这些层会自动贴合每一种形状。";
+  materialCustomControls.append(note);
+}
+
+function syncMaterialView() {
+  const character = project.character;
+  const resolved = resolveMaterial(character);
+  materialModeTabs.querySelectorAll("[data-material]").forEach((button) => {
+    const selected = button.dataset.material === character.material;
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  materialPresetGrid.querySelectorAll("[data-material-preset]").forEach((button) => {
+    const selected = character.material === "solid"
+      ? button.dataset.materialPreset === resolved.preset
+      : button.dataset.materialPreset === (character.material === "gradient" ? character.gradientPreset : character.glassPreset);
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  const preset = materialPresetCatalog().find(({ id }) => id === resolved.preset);
+  materialCurrentName.textContent = `${MATERIAL_LABELS[character.material].zh} · ${preset?.label.zh || "自定义"}`;
+  document.querySelectorAll(".swatch").forEach((button) => button.classList.toggle("is-selected", character.material === "solid" && button.dataset.color.toLowerCase() === character.color.toLowerCase()));
+  shapeLibraryRoot.querySelectorAll("morph-bot").forEach((preview) => applyMaterialAttributes(preview));
+  updateFidelityStatus();
+}
+
+function renderMaterialControls() {
+  renderMaterialModes();
+  renderMaterialPresets();
+  renderMaterialCustomControls();
+  syncMaterialView();
 }
 
 function renderShapeControls() {
@@ -273,8 +441,18 @@ function renderShapeControls() {
     button.className = "shape-option";
     button.dataset.shape = id;
     button.setAttribute("aria-label", `选择${shapeLabels[id]}造型（${shape.label}）`);
-    const eyes = previewEyes.map((eye, index) => `<path class="shape-option-eye" d="${eye.path}" transform="${shapeEyeTransform(shape, index)}" />`).join("");
-    button.innerHTML = `<svg viewBox="-15 -15 259 259" aria-hidden="true"><path class="shape-option-head" d="${shape.path}" />${eyes}</svg><span>${shapeLabels[id]}</span><code>${id}</code>`;
+    const preview = document.createElement("morph-bot");
+    preview.setAttribute("state", "idle");
+    preview.setAttribute("shape", id);
+    preview.setAttribute("size", "72");
+    preview.setAttribute("thumbnail", "");
+    preview.setAttribute("decorative", "");
+    applyMaterialAttributes(preview);
+    const label = document.createElement("span");
+    label.textContent = shapeLabels[id];
+    const code = document.createElement("code");
+    code.textContent = id;
+    button.append(preview, label, code);
     button.addEventListener("click", () => {
       stopPlaybackSequences();
       if (project.shape === id) return;
@@ -295,6 +473,7 @@ function updateShapeValues() {
     button.classList.toggle("is-selected", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
+  shapeLibraryRoot.querySelectorAll("morph-bot").forEach((preview) => applyMaterialAttributes(preview));
 }
 
 function renderStateControls() {
@@ -575,9 +754,9 @@ function applyActiveState(restart = false) {
   stateCount.textContent = `${String(index + 1).padStart(2, "0")} / ${stateIds.length}`;
   titleElement.textContent = `Grok Bot ${activeState} expression`;
   document.querySelectorAll(".state-button").forEach((button) => button.classList.toggle("is-active", button.dataset.state === activeState));
-  document.querySelectorAll(".swatch").forEach((button) => button.classList.toggle("is-selected", button.dataset.color.toLowerCase() === project.character.color.toLowerCase()));
   updateEditorValues();
   updateShapeValues();
+  syncMaterialView();
   updateMorphConsole();
   if (restart) engine.setState(activeState, true);
 }
@@ -792,7 +971,7 @@ function exportProject() {
   const blob = new Blob([JSON.stringify(project, null, 2)], { type: "application/json" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "grok-bot-original-states-v5.json";
+  link.download = "grok-bot-original-states-v6.json";
   link.click();
   URL.revokeObjectURL(link.href);
 }
@@ -819,6 +998,7 @@ transitionTo.value = activeState === "thinking" ? "idle" : "thinking";
 
 renderStateControls();
 renderShapeControls();
+renderMaterialControls();
 renderEditor();
 engine.setState(activeState, true);
 applyActiveState();
@@ -893,7 +1073,9 @@ document.querySelector("#import-json-input").addEventListener("change", (event) 
 
 document.querySelectorAll(".swatch").forEach((button) => button.addEventListener("click", () => {
   stopPlaybackSequences();
+  project.character.material = "solid";
   project.character.color = button.dataset.color;
+  renderMaterialControls();
   persistProject();
   commitHistory();
   applyActiveState();

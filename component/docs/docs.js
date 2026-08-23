@@ -9,6 +9,13 @@ import {
   STATE_IDS as orderedStates,
   STATE_LABELS_ZH as stateLabels,
 } from "../catalog.js";
+import {
+  GLASS_PRESETS,
+  GRADIENT_PRESETS,
+  MATERIAL_IDS,
+  MATERIAL_LABELS,
+  SOLID_PRESETS,
+} from "../materials.js";
 
 const stateGroups = STATE_GROUPS.map((group) => ({ label: group.label.zh, states: group.states }));
 
@@ -16,15 +23,45 @@ const bot = document.querySelector("#docs-bot");
 const stateSelect = document.querySelector("#docs-state");
 const shapeSelect = document.querySelector("#docs-shape");
 const effectSelect = document.querySelector("#docs-effect");
+const materialSelect = document.querySelector("#docs-material");
+const materialPresetSelect = document.querySelector("#docs-material-preset");
 const snapshotOutput = document.querySelector("#live-snapshot");
 const pauseButton = document.querySelector("#toggle-pause");
 
 for (const state of orderedStates) stateSelect.add(new Option(`${stateLabels[state]} · ${state}`, state));
 for (const shape of MORPH_BOT_SHAPES) shapeSelect.add(new Option(`${shapeLabels[shape]} · ${shape}`, shape));
 for (const effect of MORPH_BOT_EFFECTS) effectSelect.add(new Option(`${effectDescriptions[effect]} · ${effect}`, effect));
+for (const material of MATERIAL_IDS) materialSelect.add(new Option(`${MATERIAL_LABELS[material].zh} · ${material}`, material));
 stateSelect.value = "idle";
 shapeSelect.value = "blob";
 effectSelect.value = "dots";
+materialSelect.value = "solid";
+
+function materialCatalog(material = materialSelect.value) {
+  if (material === "solid") return SOLID_PRESETS;
+  if (material === "gradient") return GRADIENT_PRESETS;
+  return GLASS_PRESETS;
+}
+
+function materialBackground(material, preset) {
+  if (material === "solid") return preset.color;
+  if (material === "gradient") return `linear-gradient(${preset.angle}deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+  return `radial-gradient(circle at 24% 18%, rgba(255,255,255,.98) 0 5%, rgba(255,255,255,.28) 18%, transparent 38%), conic-gradient(from 205deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+}
+
+function fillMaterialPresetSelect(preferred = null) {
+  materialPresetSelect.replaceChildren();
+  for (const preset of materialCatalog()) materialPresetSelect.add(new Option(`${preset.label.zh} · ${preset.id}`, preset.id));
+  if (preferred && materialCatalog().some(({ id }) => id === preferred)) materialPresetSelect.value = preferred;
+}
+
+function applyPresetToBot(target, material = materialSelect.value, presetId = materialPresetSelect.value) {
+  const preset = materialCatalog(material).find(({ id }) => id === presetId) || materialCatalog(material)[0];
+  if (material === "solid") target.setMaterial("solid", { color: preset.color });
+  else target.setMaterial(material, { preset: preset.id });
+}
+
+fillMaterialPresetSelect("ink");
 
 const stateReference = document.querySelector("#state-reference");
 for (const group of stateGroups) {
@@ -71,9 +108,43 @@ for (const effect of MORPH_BOT_EFFECTS) {
   effectReference.append(button);
 }
 
+const materialReference = document.querySelector("#material-reference");
+for (const material of MATERIAL_IDS) {
+  const section = document.createElement("section");
+  section.innerHTML = `<h3>${MATERIAL_LABELS[material].zh}<code>${material}</code></h3>`;
+  const grid = document.createElement("div");
+  for (const preset of materialCatalog(material)) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.docsMaterial = material;
+    button.dataset.docsMaterialPreset = preset.id;
+    const preview = document.createElement("morph-bot");
+    preview.setAttribute("state", "idle");
+    preview.setAttribute("shape", material === "rainbow-glass" ? "gem" : "blob");
+    preview.setAttribute("size", "46");
+    preview.setAttribute("thumbnail", "");
+    preview.setAttribute("decorative", "");
+    applyPresetToBot(preview, material, preset.id);
+    const swatch = document.createElement("i");
+    swatch.style.setProperty("--material-swatch", materialBackground(material, preset));
+    const label = document.createElement("span");
+    label.innerHTML = `<strong>${preset.label.zh}</strong><code>${preset.id}</code>`;
+    button.append(preview, swatch, label);
+    grid.append(button);
+  }
+  section.append(grid);
+  materialReference.append(section);
+}
+
+function applyMaterial() {
+  applyPresetToBot(bot);
+  shapeReference.querySelectorAll("morph-bot").forEach((preview) => applyPresetToBot(preview));
+}
+
 function applyState() {
   bot.setState(stateSelect.value, { replay: true });
   bot.setShape(shapeSelect.value);
+  applyMaterial();
 }
 
 document.querySelector("#apply-state").addEventListener("click", applyState);
@@ -83,6 +154,12 @@ pauseButton.addEventListener("click", () => {
   bot.paused = !bot.paused;
   pauseButton.textContent = bot.paused ? "继续" : "暂停";
 });
+
+materialSelect.addEventListener("change", () => {
+  fillMaterialPresetSelect();
+  applyMaterial();
+});
+materialPresetSelect.addEventListener("change", applyMaterial);
 
 stateReference.addEventListener("click", (event) => {
   const button = event.target.closest("[data-docs-state]");
@@ -104,6 +181,14 @@ effectReference.addEventListener("click", (event) => {
   if (!button) return;
   effectSelect.value = button.dataset.docsEffect;
   bot.playMorph(effectSelect.value, { hold: 1200, restore: "default" });
+});
+
+materialReference.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-docs-material]");
+  if (!button) return;
+  materialSelect.value = button.dataset.docsMaterial;
+  fillMaterialPresetSelect(button.dataset.docsMaterialPreset);
+  applyMaterial();
 });
 
 document.querySelectorAll("[data-copy-code]").forEach((button) => button.addEventListener("click", async () => {

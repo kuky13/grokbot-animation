@@ -16,6 +16,7 @@ morph-bot/
 ├── grok-bot-engine.js
 ├── original-data.js
 ├── catalog.js
+├── materials.js
 ├── runtime/
 ├── morph-bot.d.ts
 └── README.md
@@ -29,7 +30,7 @@ morph-bot/
 <morph-bot state="loading" shape="blob" size="48"></morph-bot>
 ```
 
-工作台里的状态、形状、尺寸和颜色都是所见即所得的；右侧代码会与中间预览保持同步。
+工作台里的状态、形状、尺寸和材质都是所见即所得的；右侧代码会与中间预览保持同步。材质包含 8 个纯色、8 个渐变和 4 个彩虹玻璃预设。
 
 ## 2. 完整声明
 
@@ -60,6 +61,11 @@ morph-bot/
 | `shape` | `blob` | 18 种基础轮廓之一 |
 | `size` | `96` | CSS 像素尺寸，范围 12–1024 |
 | `color` | `#0b0b0b` | 身体与形变颜色 |
+| `material` | `solid` | `solid`、`gradient` 或 `rainbow-glass` |
+| `gradient-preset` | `electric-dusk` | 内置渐变预设 |
+| `gradient-start` / `gradient-end` | — | 自定义双色渐变 |
+| `gradient-angle` | `135` | 自定义渐变角度 |
+| `glass-preset` | `prism` | 彩虹玻璃预设 |
 | `eye-color` | `#ffffff` | 眼睛颜色 |
 | `speed` | `1` | 播放倍率，范围 0.1–4 |
 | `follow-pointer` | 关闭 | 跟随页面指针 |
@@ -91,6 +97,9 @@ const bot = document.querySelector("morph-bot");
 
 bot.setState("thinking");
 bot.setShape("hex");
+bot.setMaterial("gradient", { preset: "ocean-signal" });
+bot.setMaterial("gradient", { start: "#315cf5", end: "#34d399", angle: 130 });
+bot.setMaterial("rainbow-glass", { preset: "prism" });
 bot.replay();
 bot.pause();
 bot.play();
@@ -117,14 +126,14 @@ bot.stopSequence();
 
 调用 `pause()` 时，状态动画、Morph 和时间线等待会一起暂停；调用 `play()` 后从剩余时间继续。
 
-通过 `configure()` 使用编辑器导出的 v5 JSON：
+通过 `configure()` 使用编辑器导出的 v6 JSON：
 
 ```js
 const preset = await fetch("./my-bot.json").then(response => response.json());
 document.querySelector("morph-bot").configure(preset);
 ```
 
-HTML 属性优先于 preset，因此可以保留完整设计，同时在使用处覆盖状态、形状、尺寸或颜色。
+HTML 属性优先于 preset，因此可以保留完整设计，同时在使用处覆盖状态、形状、尺寸或材质。
 
 ## 5. 事件
 
