@@ -14,9 +14,9 @@
         <span>Morph Bot <small>API</small></span>
       </a>
       <div>
-        <span class="version">v0.4.1</span>
+        <span class="version">v0.5.0</span>
         <a href="../">返回组件编辑器</a>
-        <a class="download" href="../downloads/morph-bot-element-0.4.1.zip" download>下载组件 ↓</a>
+        <a class="download" href="../downloads/morph-bot-element-0.5.0.zip" download>下载组件 ↓</a>
       </div>
     </header>
 
@@ -112,6 +112,7 @@
                 <tr><td><code>glass-preset</code></td><td>string</td><td><code>iridescent-orb</code></td><td>选择彩虹玻璃预设。</td></tr>
                 <tr><td><code>eye-color</code></td><td>CSS color</td><td><code>#ffffff</code></td><td>眼睛颜色。</td></tr>
                 <tr><td><code>speed</code></td><td>number</td><td><code>1</code></td><td>播放倍率，范围 0.1–4。</td></tr>
+                <tr><td><code>rotation</code></td><td>number</td><td><code>0</code></td><td>额外旋转角度，范围 -180–180°；适合对话动作。</td></tr>
                 <tr><td><code>follow-pointer</code></td><td>boolean</td><td>关闭</td><td>让视线跟随页面指针。</td></tr>
                 <tr><td><code>flip</code></td><td>boolean</td><td>关闭</td><td>水平翻转组件。</td></tr>
                 <tr><td><code>paused</code></td><td>boolean</td><td>关闭</td><td>暂停内部仿真时钟。</td></tr>
@@ -145,6 +146,7 @@
             <article><code>bot.glassPreset</code><strong>string</strong><p>读取当前彩虹玻璃预设。</p></article>
             <article><code>bot.size</code><strong>number</strong><p>读取或设置组件尺寸。</p></article>
             <article><code>bot.speed</code><strong>number</strong><p>读取或设置播放倍率。</p></article>
+            <article><code>bot.rotation</code><strong>number</strong><p>读取或设置额外旋转角度，状态自身运动仍会叠加。</p></article>
             <article><code>bot.paused</code><strong>boolean</strong><p>读取或设置暂停状态。</p></article>
           </div>
         </section>
@@ -161,6 +163,8 @@
             <article><h3><code>playMorph(effect, options?)</code></h3><p>播放一次 Morph。<code>hold</code> 默认 2500ms；<code>restore</code> 可传状态名、<code>"default"</code> 或 <code>null</code>。返回 Promise。</p></article>
             <article><h3><code>playSequence(steps, options?)</code></h3><p>依次执行状态停留和单次 Morph。每步支持 <code>state</code>、<code>hold</code>、<code>morph</code>、<code>morphHold</code>；<code>{ loop: true }</code> 可循环。</p></article>
             <article><h3><code>stopSequence()</code></h3><p>立即取消当前时间线并退出正在播放的单次 Morph，返回当前元素。</p></article>
+            <article><h3><code>performDialogue(script, options?)</code></h3><p>播放文字、表情、旋转、Morph 和停顿组成的对话脚本。中文会按整句语境解析为拼音；<code>animalese</code> 与 <code>playful</code> 使用 animalese-tts 人声 Sprite，分别提供干净与高音跳跃配置，也支持 <code>gameboy</code>、<code>rpg</code>。</p></article>
+            <article><h3><code>pauseDialogue()</code> / <code>resumeDialogue()</code> / <code>stopDialogue()</code></h3><p>暂停、继续或停止对话及其角色音。停止会退出单次 Morph 并把额外旋转归零。</p></article>
             <article><h3><code>restoreStateMorph()</code></h3><p>结束单次 Morph 预览，恢复当前状态自带的 Morph 逻辑。</p></article>
             <article><h3><code>configure(project)</code></h3><p>加载编辑器导出的 v6 preset，并返回当前元素。</p></article>
             <article><h3><code>snapshot()</code></h3><p>返回当前引擎快照；组件尚未连接时返回 <code>null</code>。</p></article>
@@ -182,6 +186,27 @@ bot.playSequence(sequence, { loop: false });
 // 随时停止
 bot.stopSequence();</code></pre>
           </div>
+          <h3 class="subheading" id="dialogue-api">用动作标签编排对话</h3>
+          <p>对话脚本是一组有序节点。文字节点逐字播放；动作节点在当前位置改变状态或旋转、触发 Morph，或者插入精确停顿。组件编辑器的“对话导演”会通过 <code>@</code> 菜单生成同样的数据。</p>
+          <div class="code-block">
+            <div><span>本地角色对话</span><button type="button" data-copy-code>复制</button></div>
+            <pre><code>const dialogue = [
+  { type: "state", state: "idle", duration: 300 },
+  { type: "text", text: "你好，我是 Morph Bot。" },
+  { type: "state", state: "thinking", duration: 450 },
+  { type: "text", text: "让我想一下……" },
+  { type: "rotate", angle: -12, duration: 260 },
+  { type: "morph", effect: "wave", duration: 650 },
+  { type: "text", text: "有了！" },
+];
+
+await bot.performDialogue(dialogue, {
+  voice: "playful",
+  englishMode: "phonetic", // phonetic | letters
+  rate: 1,
+});</code></pre>
+          </div>
+          <p><code>playful</code> 与 <code>animalese</code> 都使用真正的 <a href="https://github.com/izure1/animalese-tts">animalese-tts</a> 人声 Sprite 合成链路。汉字按整句语境解析为拼音和声调，英文片段自动交给官方 <code>EnglishAnalyzer</code>；<code>phonetic</code> 会组合英文音素，<code>letters</code> 会逐字母拟声。整句采用单一音频时间线、统一响度和 10–12ms 交叉淡化。播放器提前约 60ms 调度音频，字幕和进度读取带设备输出延迟补偿的 AudioContext 播放头；组合英文音素仍逐字显示。首次播放会从组件包本地加载约 1.2 MB 的音频 Sprite。</p>
         </section>
 
         <section id="events" class="doc-section">
@@ -199,6 +224,12 @@ bot.stopSequence();</code></pre>
                 <tr><td><code>sequencestart</code></td><td><code>{ steps, loop }</code></td><td>时间线开始。</td></tr>
                 <tr><td><code>sequencestep</code></td><td><code>{ index, cycle, state, hold, morph, morphHold }</code></td><td>进入一个状态步骤。</td></tr>
                 <tr><td><code>sequenceend</code></td><td><code>{ cycles }</code></td><td>非循环时间线完整结束。</td></tr>
+                <tr><td><code>dialoguestart</code></td><td><code>{ script, duration, voice, rate, englishMode }</code></td><td>整句音频预渲染完成，对话开始。</td></tr>
+                <tr><td><code>dialogueaction</code></td><td><code>{ index, node }</code></td><td>进入表情、旋转、Morph 或停顿节点。</td></tr>
+                <tr><td><code>dialoguecharacter</code></td><td><code>{ character, phonetic, phoneme, pitch, audioTime, text, index, node }</code></td><td>音频 cue 到达新字符；同时给出拼音、合成音素、音高与句内音频时间。</td></tr>
+                <tr><td><code>dialogueprogress</code></td><td><code>{ elapsed, duration, progress, text, node, audioTime? }</code></td><td>采样语音播放时由 AudioContext 主时钟更新。</td></tr>
+                <tr><td><code>dialoguepause</code> / <code>dialogueresume</code></td><td><code>{ elapsed, duration }</code></td><td>对话暂停或继续。</td></tr>
+                <tr><td><code>dialogueend</code></td><td><code>{ cancelled, duration, text }</code></td><td>对话完成或被停止。</td></tr>
               </tbody>
             </table>
           </div>
@@ -297,9 +328,9 @@ document.querySelector("morph-bot")
 
         <section id="typescript" class="doc-section">
           <div class="section-title"><span>15</span><div><p>TYPESCRIPT</p><h2>类型与导出</h2></div></div>
-          <p>下载包包含 <code>morph-bot.d.ts</code>，并导出组件类、状态/形状/Morph 列表、材质列表与全部预设。</p>
+          <p>下载包包含 <code>morph-bot.d.ts</code>，并导出组件类、状态/形状/Morph 列表、材质列表、对话声音、中文语音单元分析器与全部预设。</p>
           <div class="token-list exports">
-            <code>MorphBotElement</code><code>MORPH_BOT_STATES</code><code>MORPH_BOT_SHAPES</code><code>MORPH_BOT_EFFECTS</code><code>MORPH_BOT_MATERIALS</code><code>MORPH_BOT_SOLID_PRESETS</code><code>MORPH_BOT_GRADIENT_PRESETS</code><code>MORPH_BOT_GLASS_PRESETS</code><code>MORPH_BY_STATE</code>
+            <code>MorphBotElement</code><code>MORPH_BOT_STATES</code><code>MORPH_BOT_SHAPES</code><code>MORPH_BOT_EFFECTS</code><code>MORPH_BOT_MATERIALS</code><code>MORPH_BOT_SOLID_PRESETS</code><code>MORPH_BOT_GRADIENT_PRESETS</code><code>MORPH_BOT_GLASS_PRESETS</code><code>MORPH_BOT_DIALOGUE_VOICES</code><code>MORPH_BOT_DIALOGUE_ENGLISH_MODES</code><code>compileDialogue</code><code>analyzeSpeechUnits</code><code>MORPH_BY_STATE</code>
           </div>
           <div class="code-block compact">
             <div><span>ES Module</span><button type="button" data-copy-code>复制</button></div>

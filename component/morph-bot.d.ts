@@ -4,6 +4,8 @@ export type MorphBotEffect = "dots" | "orbit" | "radar" | "progress" | "gather" 
 export type MorphBotMaterial = "solid" | "gradient" | "rainbow-glass";
 export type MorphBotGradientPreset = "electric-dusk" | "ocean-signal" | "warm-flare" | "mint-violet" | "midnight-plum" | "peach-sky" | "acid-lime" | "blue-hour";
 export type MorphBotGlassPreset = "iridescent-orb" | "prism" | "aurora" | "candy" | "opal";
+export type MorphBotDialogueVoice = "playful" | "animalese" | "gameboy" | "rpg";
+export type MorphBotDialogueEnglishMode = "phonetic" | "letters";
 
 export interface MorphBotMaterialStop { offset: number; color: string; opacity?: number; }
 export interface MorphBotSolidPresetDefinition { id: string; label: { zh: string; en: string }; color: string; }
@@ -48,6 +50,40 @@ export interface MorphBotSequenceResult {
   index?: number;
 }
 
+export type MorphBotDialogueNode =
+  | { id?: string; type: "text"; text: string }
+  | { id?: string; type: "state"; state: MorphBotState; duration?: number }
+  | { id?: string; type: "rotate"; angle: number; duration?: number }
+  | { id?: string; type: "morph"; effect: MorphBotEffect; duration?: number }
+  | { id?: string; type: "pause"; duration?: number };
+
+export interface MorphBotCompiledDialogue {
+  readonly nodes: readonly MorphBotDialogueNode[];
+  readonly duration: number;
+  readonly rate: number;
+  readonly voice: MorphBotDialogueVoice;
+  readonly englishMode: MorphBotDialogueEnglishMode;
+}
+
+export interface MorphBotSpeechUnit {
+  readonly character: string;
+  readonly phonetic: string;
+  readonly initial: string;
+  readonly final: string;
+  readonly vowel: "a" | "e" | "i" | "o" | "u";
+  readonly tone: number;
+  readonly isCjk: boolean;
+  readonly speakable: boolean;
+  readonly hash: number;
+}
+
+export interface MorphBotDialogueResult {
+  cancelled: boolean;
+  duration?: number;
+  text?: string;
+  index?: number;
+}
+
 export class MorphBotElement extends HTMLElement {
   state: MorphBotState;
   shape: MorphBotShape;
@@ -56,6 +92,7 @@ export class MorphBotElement extends HTMLElement {
   readonly glassPreset: MorphBotGlassPreset;
   size: number;
   speed: number;
+  rotation: number;
   paused: boolean;
   configure(project: MorphBotProject): this;
   setState(state: MorphBotState, options?: { replay?: boolean }): this;
@@ -71,6 +108,10 @@ export class MorphBotElement extends HTMLElement {
   playMorph(effect: MorphBotEffect, options?: { hold?: number; restore?: MorphBotState | "default" | null }): Promise<{ cancelled?: boolean; effect?: MorphBotEffect; restored?: string | null }>;
   playSequence(steps: MorphBotSequenceStep[], options?: { loop?: boolean }): Promise<MorphBotSequenceResult>;
   stopSequence(): this;
+  performDialogue(script: MorphBotDialogueNode[], options?: { voice?: MorphBotDialogueVoice; rate?: number; englishMode?: MorphBotDialogueEnglishMode }): Promise<MorphBotDialogueResult>;
+  pauseDialogue(): this;
+  resumeDialogue(): this;
+  stopDialogue(): this;
   snapshot(): Record<string, unknown> | null;
 }
 
@@ -81,7 +122,11 @@ export const MORPH_BOT_MATERIALS: readonly MorphBotMaterial[];
 export const MORPH_BOT_SOLID_PRESETS: readonly MorphBotSolidPresetDefinition[];
 export const MORPH_BOT_GRADIENT_PRESETS: readonly MorphBotGradientPresetDefinition[];
 export const MORPH_BOT_GLASS_PRESETS: readonly MorphBotGlassPresetDefinition[];
+export const MORPH_BOT_DIALOGUE_VOICES: readonly { id: MorphBotDialogueVoice; label: { zh: string; en: string }; description: { zh: string; en: string } }[];
+export const MORPH_BOT_DIALOGUE_ENGLISH_MODES: readonly MorphBotDialogueEnglishMode[];
 export const MORPH_BY_STATE: Readonly<Partial<Record<MorphBotState, MorphBotEffect>>>;
+export function compileDialogue(script: MorphBotDialogueNode[], options?: { rate?: number; voice?: MorphBotDialogueVoice; englishMode?: MorphBotDialogueEnglishMode }): MorphBotCompiledDialogue;
+export function analyzeSpeechUnits(text: string): readonly MorphBotSpeechUnit[];
 
 declare global {
   interface HTMLElementTagNameMap {

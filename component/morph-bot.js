@@ -8,6 +8,13 @@ import {
   MATERIAL_IDS,
   SOLID_PRESETS,
 } from "./materials.js";
+import {
+  compileDialogue,
+  DIALOGUE_ENGLISH_MODES,
+  DIALOGUE_VOICES,
+  DialogueDirector,
+} from "./runtime/dialogue-director.js";
+import { analyzeSpeechUnits } from "./runtime/speech-unit-analyzer.js";
 
 export const MORPH_BOT_STATES = STATE_IDS;
 export const MORPH_BOT_SHAPES = SHAPE_IDS;
@@ -16,7 +23,9 @@ export const MORPH_BOT_MATERIALS = MATERIAL_IDS;
 export const MORPH_BOT_SOLID_PRESETS = SOLID_PRESETS;
 export const MORPH_BOT_GRADIENT_PRESETS = GRADIENT_PRESETS;
 export const MORPH_BOT_GLASS_PRESETS = GLASS_PRESETS;
-export { MORPH_BY_STATE };
+export const MORPH_BOT_DIALOGUE_VOICES = DIALOGUE_VOICES;
+export const MORPH_BOT_DIALOGUE_ENGLISH_MODES = DIALOGUE_ENGLISH_MODES;
+export { analyzeSpeechUnits, compileDialogue, MORPH_BY_STATE };
 
 const DEFAULT_CHARACTER = Object.freeze({
   color: "#0b0b0b",
@@ -57,7 +66,9 @@ function defaultState(state) {
 }
 
 function numberAttribute(element, name, fallback, min, max) {
-  const value = Number(element.getAttribute(name));
+  const raw = element.getAttribute(name);
+  if (raw === null || raw === "") return fallback;
+  const value = Number(raw);
   if (!Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, value));
 }
@@ -123,7 +134,7 @@ export class MorphBotElement extends HTMLElementBase {
   static get observedAttributes() {
     return [
       "state", "shape", "size", "color", "eye-color", "speed", "follow-pointer", "flip", "paused", "decorative", "label",
-      "material", "gradient-preset", "gradient-start", "gradient-end", "gradient-angle", "glass-preset",
+      "material", "gradient-preset", "gradient-start", "gradient-end", "gradient-angle", "glass-preset", "rotation",
     ];
   }
 
@@ -135,6 +146,7 @@ export class MorphBotElement extends HTMLElementBase {
     this._intersectionObserver = null;
     this._morphMonitor = 0;
     this._sequenceToken = 0;
+    this._dialogueDirector = null;
     this._componentId = `morph-bot-${++componentCounter}`;
     if (this.attachShadow) this.attachShadow({ mode: "open" });
   }
@@ -164,6 +176,8 @@ export class MorphBotElement extends HTMLElementBase {
   disconnectedCallback() {
     this._morphMonitor += 1;
     this._sequenceToken += 1;
+    this._dialogueDirector?.stop();
+    this._dialogueDirector = null;
     this._intersectionObserver?.disconnect();
     this._intersectionObserver = null;
     this._engine?.destroy();
@@ -234,6 +248,8 @@ export class MorphBotElement extends HTMLElementBase {
   set speed(value) { this.setAttribute("speed", String(value)); }
   get paused() { return this.hasAttribute("paused"); }
   set paused(value) { this.toggleAttribute("paused", Boolean(value)); }
+  get rotation() { return numberAttribute(this, "rotation", 0, -180, 180); }
+  set rotation(value) { this.setAttribute("rotation", String(Math.min(180, Math.max(-180, Number(value) || 0)))); }
 
   configure(project) {
     this._preset = cloneConfig(project);
@@ -361,6 +377,30 @@ export class MorphBotElement extends HTMLElementBase {
     return this;
   }
 
+  performDialogue(script, options = {}) {
+    if (!this._engine) return Promise.reject(new Error("morph-bot is not connected"));
+    this.stopSequence();
+    if (!this._dialogueDirector) this._dialogueDirector = new DialogueDirector(this);
+    return this._dialogueDirector.play(script, options);
+  }
+
+  pauseDialogue() {
+    this._dialogueDirector?.pause();
+    return this;
+  }
+
+  resumeDialogue() {
+    this._dialogueDirector?.resume();
+    return this;
+  }
+
+  stopDialogue() {
+    this._dialogueDirector?.stop({ restorePause: true });
+    this.restoreStateMorph();
+    this.rotation = 0;
+    return this;
+  }
+
   _waitForSequence(duration, token) {
     if (duration <= 0) return Promise.resolve(token === this._sequenceToken);
     return new Promise((resolve) => {
@@ -400,6 +440,7 @@ export class MorphBotElement extends HTMLElementBase {
     const gradientAngle = numberAttribute(this, "gradient-angle", character.gradientAngle, 0, 360);
     const glassPreset = this.glassPreset;
     const eyeColor = this.getAttribute("eye-color") || character.eyeColor;
+    const rotation = numberAttribute(this, "rotation", stateConfig.headRotation, -180, 180);
     const pointer = this.hasAttribute("follow-pointer") ? true : Boolean(character.pointer);
     const flipX = this.hasAttribute("flip") ? true : Boolean(character.flipX);
     return {
@@ -413,6 +454,7 @@ export class MorphBotElement extends HTMLElementBase {
       gradientAngle,
       glassPreset,
       eyeColor,
+      headRotation: rotation,
       pointer,
       flipX,
       particlesEnabled: !this.hasAttribute("thumbnail"),

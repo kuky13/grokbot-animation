@@ -17,7 +17,7 @@
         <span class="component-stats">39 状态 · 18 形状</span>
         <a class="quiet-action" href="./docs/">API 文档</a>
         <a class="quiet-action" href="../">打开高级动画实验室</a>
-        <a class="download-action" href="./downloads/morph-bot-element-0.4.1.zip" download>下载组件包 <span>↓</span></a>
+        <a class="download-action" href="./downloads/morph-bot-element-0.5.0.zip" download>下载组件包 <span>↓</span></a>
       </div>
     </header>
 
@@ -70,36 +70,77 @@
             <div><h2 id="display-title">实时预览</h2><p>切换容器，检查它在真实界面里的样子。</p></div>
           </header>
 
-          <div class="context-tabs" role="group" aria-label="预览场景">
-            <button class="is-active" type="button" data-context="solo">单独</button>
-            <button type="button" data-context="button">按钮</button>
-            <button type="button" data-context="card">任务卡</button>
-            <button type="button" data-context="page">页面</button>
+          <div class="preview-mode-tabs" role="group" aria-label="预览模式">
+            <button class="is-active" type="button" data-preview-mode="sequence">状态时间线</button>
+            <button type="button" data-preview-mode="dialogue">对话导演 <span>NEW</span></button>
           </div>
 
-          <div class="sequence-builder" id="sequence-builder" aria-label="动画时间线编辑器">
-            <div class="sequence-heading">
-              <p><strong>动画时间线</strong><span>状态停留 → Morph → 下一状态</span></p>
-              <label><input id="sequence-loop" type="checkbox" /> 循环</label>
+          <div id="sequence-workspace" class="sequence-workspace">
+            <div class="context-tabs" role="group" aria-label="预览场景">
+              <button class="is-active" type="button" data-context="solo">单独</button>
+              <button type="button" data-context="button">按钮</button>
+              <button type="button" data-context="card">任务卡</button>
+              <button type="button" data-context="page">页面</button>
             </div>
-            <div class="sequence-list" id="sequence-list"></div>
-            <fieldset class="sequence-morph-picker">
-              <legend><span>所选步骤停留后播放</span><output id="selected-sequence-step">第 2 步</output></legend>
-              <div class="sequence-morph-grid" id="sequence-morph-grid"></div>
-            </fieldset>
-            <div class="sequence-action-row">
-              <button id="add-sequence-step" class="add-sequence-step" type="button">＋ 添加状态</button>
-              <span id="sequence-summary">3 步</span>
-              <button id="stop-sequence" class="stop-sequence" type="button" disabled>停止</button>
-              <button id="preview-sequence" class="preview-sequence" type="button"><span>▶</span> 播放时间线</button>
+
+            <div class="sequence-builder" id="sequence-builder" aria-label="动画时间线编辑器">
+              <div class="sequence-heading">
+                <p><strong>动画时间线</strong><span>状态停留 → Morph → 下一状态</span></p>
+                <label><input id="sequence-loop" type="checkbox" /> 循环</label>
+              </div>
+              <div class="sequence-list" id="sequence-list"></div>
+              <fieldset class="sequence-morph-picker">
+                <legend><span>所选步骤停留后播放</span><output id="selected-sequence-step">第 2 步</output></legend>
+                <div class="sequence-morph-grid" id="sequence-morph-grid"></div>
+              </fieldset>
+              <div class="sequence-action-row">
+                <button id="add-sequence-step" class="add-sequence-step" type="button">＋ 添加状态</button>
+                <span id="sequence-summary">3 步</span>
+                <button id="stop-sequence" class="stop-sequence" type="button" disabled>停止</button>
+                <button id="preview-sequence" class="preview-sequence" type="button"><span>▶</span> 播放时间线</button>
+              </div>
             </div>
           </div>
 
-          <figure class="preview-stage" id="preview-stage" data-context="solo">
+          <div id="dialogue-workspace" class="dialogue-builder" hidden aria-label="对话导演编辑器">
+            <div class="dialogue-heading">
+              <p><strong>写一句，让 Bot 演出来</strong><span>输入 <kbd>@</kbd> 插入表情、旋转、Morph 或停顿。</span></p>
+              <button id="dialogue-add-action" type="button"><b>@</b> 插入动作</button>
+            </div>
+            <div class="dialogue-editor-shell">
+              <div id="dialogue-editor" class="dialogue-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="对话文字和动作" data-placeholder="输入一句话，键入 @ 添加表情…" spellcheck="true"></div>
+              <div id="dialogue-action-menu" class="dialogue-action-menu" hidden>
+                <header><strong>选择动作</strong><span>↑↓ 选择 · Enter 插入 · Esc 关闭</span></header>
+                <div id="dialogue-action-list" class="dialogue-action-list" role="listbox"></div>
+              </div>
+            </div>
+            <div id="dialogue-action-inspector" class="dialogue-action-inspector" hidden>
+              <span id="dialogue-inspector-type">表情</span>
+              <label>动作<select id="dialogue-inspector-value"></select></label>
+              <label>过渡时间<input id="dialogue-inspector-duration" type="number" min="0" max="20" step="0.05" /><i>秒</i></label>
+              <button id="dialogue-delete-action" type="button">删除标签</button>
+            </div>
+            <div class="dialogue-score" aria-label="对话播放进度">
+              <div id="dialogue-score-markers" class="dialogue-score-markers"></div>
+              <i id="dialogue-progress-bar"></i>
+            </div>
+            <div class="dialogue-transport">
+              <label><span>角色声音</span><select id="dialogue-voice"></select></label>
+              <label><span>英文节奏</span><select id="dialogue-english-mode"><option value="phonetic" selected>组合音素</option><option value="letters">逐字母</option></select></label>
+              <label><span>说话速度</span><select id="dialogue-rate"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></label>
+              <output id="dialogue-time">0:00.0 / 0:00.0</output>
+              <button id="stop-dialogue" class="stop-dialogue" type="button" disabled>停止</button>
+              <button id="preview-dialogue" class="preview-dialogue" type="button"><span>▶</span> 播放对话</button>
+            </div>
+            <p id="dialogue-voice-hint" class="dialogue-voice-hint"></p>
+          </div>
+
+          <figure class="preview-stage" id="preview-stage" data-context="solo" data-mode="sequence">
             <div class="stage-grid" aria-hidden="true"></div>
             <div class="preview-object">
               <morph-bot id="demo-bot" state="idle" shape="blob" size="72" color="#0b0b0b" eye-color="#ffffff" label="Configured animated bot"></morph-bot>
               <div class="context-copy"><strong id="context-title">等待任务</strong><span id="context-description">状态可以随时切换</span></div>
+              <div id="dialogue-bubble" class="dialogue-bubble" hidden><span id="dialogue-caption">准备好后点击播放</span></div>
             </div>
             <figcaption>
               <strong id="demo-readout">idle · blob · 72px</strong>
@@ -117,7 +158,7 @@
           <div class="first-use">
             <span class="first-use-label">第一次使用？</span>
             <p>下载并解压到项目中，保留 <code>morph-bot/</code> 文件夹。</p>
-            <a href="./downloads/morph-bot-element-0.4.1.zip" download>下载 morph-bot.zip <span>↓</span></a>
+            <a href="./downloads/morph-bot-element-0.5.0.zip" download>下载 morph-bot.zip <span>↓</span></a>
           </div>
 
           <div class="code-card">
@@ -125,6 +166,7 @@
               <div class="code-mode-tabs" role="group" aria-label="代码类型">
                 <button class="is-active" type="button" data-code-mode="static">单状态</button>
                 <button type="button" data-code-mode="sequence">时间线</button>
+                <button type="button" data-code-mode="dialogue">对话</button>
               </div>
               <span class="sync-indicator"><i></i> 已同步</span>
             </div>
@@ -145,7 +187,8 @@
 bot.setState("thinking");
 bot.setShape("hex");
 await bot.playMorph("send");
-await bot.playSequence(sequence);</code></pre>
+await bot.playSequence(sequence);
+await bot.performDialogue(dialogue);</code></pre>
           </details>
         </section>
       </div>

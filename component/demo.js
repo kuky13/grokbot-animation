@@ -17,6 +17,7 @@ import {
   SOLID_PRESETS,
   resolveMaterial,
 } from "./materials.js";
+import { setupDialogueWorkbench } from "./dialogue-editor.js";
 const stateInput = document.querySelector("#demo-state");
 const shapeInput = document.querySelector("#demo-shape");
 const stateGrid = document.querySelector("#state-grid");
@@ -46,8 +47,12 @@ const materialTabs = document.querySelector("#material-tabs");
 const materialPresets = document.querySelector("#material-presets");
 const materialCustom = document.querySelector("#material-custom");
 const materialReadout = document.querySelector("#material-readout");
+const sequenceWorkspace = document.querySelector("#sequence-workspace");
+const dialogueWorkspace = document.querySelector("#dialogue-workspace");
 
 let codeMode = "static";
+let previewMode = "sequence";
+let dialogueWorkbench = null;
 let selectedStepIndex = 1;
 let playingStepIndex = -1;
 let sequenceRun = 0;
@@ -282,6 +287,12 @@ function sequenceCode() {
   return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<button id="start-bot-sequence">播放动画</button>\n<button id="stop-bot-sequence">停止</button>\n\n<morph-bot\n  id="status-bot"\n  ${componentAttributes(first.state)}\n  label="任务状态"\n></morph-bot>\n\n<script type="module">\n  const bot = document.querySelector("#status-bot");\n  const sequence = [\n${steps}\n  ];\n\n  document.querySelector("#start-bot-sequence")\n    .addEventListener("click", () => {\n      bot.playSequence(sequence, { loop: ${sequenceLoop.checked} });\n    });\n\n  document.querySelector("#stop-bot-sequence")\n    .addEventListener("click", () => bot.stopSequence());\n</script>`;
 }
 
+function dialogueCode() {
+  const script = JSON.stringify(dialogueWorkbench?.script || [], null, 2);
+  const indentedScript = script.split("\n").map((line, index) => index ? `  ${line}` : line).join("\n");
+  return `<script type="module" src="./morph-bot/morph-bot.js"></script>\n\n<button id="play-bot-dialogue">播放对话</button>\n\n<morph-bot\n  id="dialogue-bot"\n  ${componentAttributes(stateInput.value)}\n  label="会表演的对话角色"\n></morph-bot>\n\n<script type="module">\n  const bot = document.querySelector("#dialogue-bot");\n  const dialogue = ${indentedScript};\n\n  document.querySelector("#play-bot-dialogue")\n    .addEventListener("click", () => {\n      bot.performDialogue(dialogue, {\n        voice: "${dialogueWorkbench?.voice || "playful"}",\n        englishMode: "${dialogueWorkbench?.englishMode || "phonetic"}",\n        rate: ${dialogueWorkbench?.rate || 1}\n      });\n    });\n</script>`;
+}
+
 function contextText(state) {
   const label = stateLabels[state];
   if (state === "idle") return ["等待任务", "状态可以随时切换"];
@@ -386,6 +397,7 @@ function syncSequencePlaybackUI() {
 function stopEditorSequence({ resetSummary = true } = {}) {
   sequenceRun += 1;
   bot.stopSequence();
+  if (previewMode === "dialogue") dialogueWorkbench?.stop();
   sequencePlaying = false;
   playingStepIndex = -1;
   if (resetSummary) syncSequenceSummary();
@@ -403,7 +415,7 @@ function syncDemo() {
   sizeOutput.textContent = `${sizeInput.value}px`;
   readout.textContent = `${stateInput.value} · ${shapeInput.value} · ${MATERIAL_LABELS[materialConfig.material].zh} · ${sizeInput.value}px`;
   [contextTitle.textContent, contextDescription.textContent] = contextText(stateInput.value);
-  code.textContent = codeMode === "sequence" ? sequenceCode() : staticCode();
+  code.textContent = codeMode === "sequence" ? sequenceCode() : codeMode === "dialogue" ? dialogueCode() : staticCode();
   stateGrid.querySelectorAll("[data-state-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.stateOption === stateInput.value));
   shapeGrid.querySelectorAll("[data-shape-option]").forEach((button) => button.classList.toggle("is-active", button.dataset.shapeOption === shapeInput.value));
   syncStateMarkers();
@@ -546,9 +558,34 @@ document.querySelectorAll(".context-tabs [data-context]").forEach((button) => bu
   document.querySelectorAll(".context-tabs [data-context]").forEach((candidate) => candidate.classList.toggle("is-active", candidate === button));
 }));
 
-document.querySelectorAll("[data-code-mode]").forEach((button) => button.addEventListener("click", () => {
-  setCodeMode(button.dataset.codeMode);
+function setPreviewMode(mode) {
+  previewMode = mode === "dialogue" ? "dialogue" : "sequence";
+  document.querySelectorAll("[data-preview-mode]").forEach((button) => {
+    const selected = button.dataset.previewMode === previewMode;
+    button.classList.toggle("is-active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  sequenceWorkspace.hidden = previewMode !== "sequence";
+  dialogueWorkspace.hidden = previewMode !== "dialogue";
+  previewStage.dataset.mode = previewMode;
+  dialogueWorkbench?.setActive(previewMode === "dialogue");
+  if (previewMode === "dialogue") {
+    stopEditorSequence();
+    previewStage.dataset.context = "solo";
+    document.querySelectorAll(".context-tabs [data-context]").forEach((button) => button.classList.toggle("is-active", button.dataset.context === "solo"));
+    setCodeMode("dialogue");
+  } else {
+    dialogueWorkbench?.stop();
+    setCodeMode("sequence");
+  }
   syncDemo();
+}
+
+document.querySelectorAll("[data-preview-mode]").forEach((button) => button.addEventListener("click", () => setPreviewMode(button.dataset.previewMode)));
+
+document.querySelectorAll("[data-code-mode]").forEach((button) => button.addEventListener("click", () => {
+  if (button.dataset.codeMode === "dialogue") setPreviewMode("dialogue");
+  else { setCodeMode(button.dataset.codeMode); syncDemo(); }
 }));
 
 pauseButton.addEventListener("click", () => {
@@ -586,6 +623,14 @@ function updateRuntime(now) {
   requestAnimationFrame(updateRuntime);
 }
 
+dialogueWorkbench = setupDialogueWorkbench({
+  bot,
+  onChange: () => {
+    if (previewMode !== "dialogue") return;
+    setCodeMode("dialogue");
+    code.textContent = dialogueCode();
+  },
+});
 renderMaterialEditor();
 renderSequence();
 syncDemo();

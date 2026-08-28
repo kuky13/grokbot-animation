@@ -68,6 +68,7 @@ morph-bot/
 | `glass-preset` | `iridescent-orb` | 彩虹玻璃预设 |
 | `eye-color` | `#ffffff` | 眼睛颜色 |
 | `speed` | `1` | 播放倍率，范围 0.1–4 |
+| `rotation` | `0` | 额外旋转角度，范围 -180–180° |
 | `follow-pointer` | 关闭 | 跟随页面指针 |
 | `flip` | 关闭 | 水平翻转 |
 | `paused` | 关闭 | 暂停仿真时钟 |
@@ -126,6 +127,32 @@ bot.stopSequence();
 
 调用 `pause()` 时，状态动画、Morph 和时间线等待会一起暂停；调用 `play()` 后从剩余时间继续。
 
+### 对话导演
+
+组件工作台切到“对话导演”后，可以直接输入文字并键入 `@`，从完整菜单中插入 39 个表情状态、旋转、14 个 Morph 或停顿。编辑器会同步生成以下脚本：
+
+```js
+const dialogue = [
+  { type: "state", state: "idle", duration: 300 },
+  { type: "text", text: "你好，我是 Morph Bot。" },
+  { type: "state", state: "thinking", duration: 450 },
+  { type: "text", text: "让我想一下……" },
+  { type: "rotate", angle: -12, duration: 260 },
+  { type: "morph", effect: "wave", duration: 650 },
+  { type: "text", text: "有了！" },
+];
+
+await bot.performDialogue(dialogue, {
+  voice: "playful", // playful | animalese | gameboy | rpg
+  englishMode: "phonetic", // phonetic | letters
+  rate: 1,
+});
+```
+
+中英混排会自动分流：汉字按整句语境解析为拼音和声调，连续英文使用 `animalese-tts` 官方 `EnglishAnalyzer`，数字使用独立读法。默认 `phonetic` 会组合 `th`、`sh`、`ng` 等英文模式，`letters` 则逐字母发声。整句会预先渲染为一个音频缓冲区，统一响度，并在相邻音节间做 10–12ms 等功率交叉淡化。音频提前约 60ms 调度，字幕与进度读取带输出延迟补偿的 `AudioContext` 播放头；组合英文音素仍按字母逐个显示。`animalese` 更干净，`playful` 更高、更快、更跳跃。
+
+中文分析内置 `pinyin-pro` 3.29.3，其 MIT 许可证与署名位于 `runtime/vendor/pinyin-pro/`。采样合成内置 `animalese-tts` 1.1.3 及其英文演示 Sprite，许可证与来源说明位于 `runtime/vendor/animalese-tts/`。这些是非官方声线，并非任天堂或影视角色音频。
+
 通过 `configure()` 使用编辑器导出的 v6 JSON：
 
 ```js
@@ -145,6 +172,9 @@ bot.addEventListener("morphstart", event => console.log(event.detail.effect));
 bot.addEventListener("morphend", event => console.log(event.detail.effect));
 bot.addEventListener("sequencestep", event => console.log(event.detail.index, event.detail.state));
 bot.addEventListener("sequenceend", event => console.log(event.detail.cycles));
+bot.addEventListener("dialogueaction", event => console.log(event.detail.node));
+bot.addEventListener("dialogueprogress", event => console.log(event.detail.progress));
+bot.addEventListener("dialogueend", event => console.log(event.detail.cancelled));
 ```
 
 ## 6. Loading 使用建议

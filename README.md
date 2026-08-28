@@ -13,6 +13,19 @@
 
 ---
 
+## Changelog / 更新日志
+
+### v1.7.0 · Component v0.5.0 — 2026-08-28
+
+- Added a WYSIWYG Dialogue Director with inline `@` insertion for all states, rotations, Morphs, and pauses. / 新增所见即所得对话导演，可通过 `@` 插入全部状态、旋转、Morph 与停顿动作。
+- Added fully local sampled character speech powered by `animalese-tts`, with contextual Mandarin Pinyin, phonetic or letter-based English, automatic mixed-language routing, and clean/playful voice profiles. / 新增完全本地的采样式角色语音，支持中文上下文拼音、中英混合自动路由、英文音素或逐字母节奏，以及干净与活泼两种音色。
+- Synchronized captions, action cues, and progress to the actual `AudioContext` playback head with output-latency compensation. / 字幕、动作与进度现在由真实音频播放头驱动，并补偿设备输出延迟。
+- Published `performDialogue()`, dialogue transport controls, `englishMode`, TypeScript declarations, runtime tests, third-party notices, and an updated offline component ZIP. / 完善对话 API、播放控制、类型声明、自动化测试、第三方许可与离线组件包。
+
+Earlier milestones are available in the [commit history](https://github.com/iduu/grokbot-animation/commits/main/). / 更早版本见 [提交历史](https://github.com/iduu/grokbot-animation/commits/main/)。
+
+---
+
 ## English
 
 ### What is this?
@@ -30,6 +43,8 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 - 14 one-shot Morph effects with a complete `RESET → ENTER → HOLD → EXIT → DONE` lifecycle.
 - A visual timeline: choose a state, set how long it stays, trigger a Morph, then continue to the next state.
 - Add, remove, reorder, loop, play, pause, and stop timeline steps.
+- A dialogue director with an inline `@` action menu for all states, rotations, Morphs, and pauses.
+- Two Mandarin-aware sampled character voices powered by `animalese-tts`: clean Chinese Animalese and a higher, quicker Playful profile, plus two retro bleep presets.
 - Live previews for standalone, button, task-card, and page-loading contexts.
 - Synchronized copy-ready HTML and JavaScript.
 - A framework-free Web Component with Shadow DOM, TypeScript declarations, visibility pausing, and lifecycle cleanup.
@@ -110,6 +125,30 @@ bot.stopSequence();
 
 Calling `bot.pause()` pauses the SVG simulation, timeline wait, and active Morph together. `bot.play()` resumes from the remaining time.
 
+### Direct a dialogue
+
+Open `/component/`, switch to **Dialogue director**, then type `@` anywhere in the sentence. The menu exposes all 39 states, five rotation presets, all 14 Morphs, and precise pauses. Every inline chip can be selected again to change its value or transition time.
+
+```js
+const dialogue = [
+  { type: "state", state: "idle", duration: 300 },
+  { type: "text", text: "Hello, I am Morph Bot." },
+  { type: "state", state: "thinking", duration: 450 },
+  { type: "text", text: "Let me think..." },
+  { type: "rotate", angle: -12, duration: 260 },
+  { type: "morph", effect: "wave", duration: 650 },
+  { type: "text", text: "I found it!" },
+];
+
+await bot.performDialogue(dialogue, {
+  voice: "playful",
+  englishMode: "phonetic", // phonetic | letters
+  rate: 1,
+});
+```
+
+Mixed Chinese and English is routed automatically. Han characters use contextual Pinyin and lexical tones; Latin runs use the upstream `EnglishAnalyzer`, including grouped patterns such as `th`, `sh`, and `ng`; digits receive spoken mappings. `englishMode: "letters"` switches English back to one chirp per letter. Both sampled profiles are pre-rendered into one phrase buffer with normalized loudness and 10–12ms equal-power crossfades. Audio is scheduled 60ms ahead; subtitles and progress read the `AudioContext` playback head with output-latency compensation instead of accumulating UI timer delays. Grouped English audio keeps per-character visual cues. `animalese` is the cleaner profile; `playful` is higher, quicker, and bouncier.
+
 ### Main API
 
 | API | Purpose |
@@ -120,6 +159,8 @@ Calling `bot.pause()` pauses the SVG simulation, timeline wait, and active Morph
 | `playMorph(effect, options?)` | Play one of 14 one-shot Morph effects. |
 | `playSequence(steps, { loop? })` | Run a timed multi-state animation sequence. |
 | `stopSequence()` | Cancel the current sequence and active one-shot Morph. |
+| `performDialogue(script, options?)` | Perform text with states, rotation, Morphs, pauses, and a local character voice. |
+| `pauseDialogue()` / `resumeDialogue()` / `stopDialogue()` | Control the active dialogue performance. |
 | `pause()` / `play()` / `step()` | Control the shared simulation clock. |
 | `configure(project)` | Load an editor-exported v6 preset. |
 | `snapshot()` | Read the current expression, eye, Morph, and clock state. |
@@ -176,14 +217,16 @@ The regression suite covers:
 
 Current releases:
 
-- Animation lab: `v1.6.1`
-- Standalone component: `v0.4.1`
+- Animation lab: `v1.7.0`
+- Standalone component: `v0.5.0`
 
 ### Status and disclaimer
 
 This is an independent, unofficial research and prototyping project. It is not affiliated with, endorsed by, or maintained by xAI. `Grok`, xAI, and related marks belong to their respective owners.
 
 The repository contains geometry and behavioral data derived from a publicly delivered frontend snapshot for study and interoperability experiments. No open-source license is granted for third-party reference assets by this README. Before public redistribution or commercial use, review the relevant rights and replace or obtain permission for reference-derived assets where necessary.
+
+Mandarin phonetic analysis vendors `pinyin-pro` 3.29.3 under its MIT license. Sampled dialogue vendors `animalese-tts` 1.1.3 and its English demo voice Sprite under the project's MIT license. Licenses and attribution are retained in the component package. These are unofficial sampled styles, not Nintendo or film character audio.
 
 Contributions that improve accessibility, API design, testing, documentation, or original alternative character geometry are welcome.
 
@@ -206,6 +249,8 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 - 14 种单次 Morph，完整执行 `RESET → ENTER → HOLD → EXIT → DONE`。
 - 可视化时间线：选择状态、设置停留时间、指定 Morph，然后进入下一状态。
 - 支持添加、删除、排序、循环、播放、暂停和停止时间线步骤。
+- 对话导演支持在文字中输入 `@`，插入全部状态、旋转、Morph 和停顿。
+- 内置两种支持中文语境拼音的角色声线：干净的动森式音节与原创高音卡通拟声，并保留两种复古文字音。
 - 可在单独展示、按钮、任务卡和页面加载场景中实时预览。
 - HTML 与 JavaScript 使用代码随编辑结果同步生成。
 - 原生 Web Component：无框架依赖，提供 Shadow DOM、TypeScript 类型、离屏暂停和生命周期清理。
@@ -286,6 +331,30 @@ bot.stopSequence();
 
 调用 `bot.pause()` 会同时暂停 SVG 仿真、状态停留计时和 Morph；调用 `bot.play()` 会从剩余时间继续。
 
+### 编排角色对话
+
+打开 `/component/` 并切换到“对话导演”，在句子任意位置输入 `@`。下拉菜单会完整列出 39 个状态、5 个旋转预设、14 个 Morph 和精确停顿。插入后的标签可再次点击，修改动作与过渡时间。
+
+```js
+const dialogue = [
+  { type: "state", state: "idle", duration: 300 },
+  { type: "text", text: "你好，我是 Morph Bot。" },
+  { type: "state", state: "thinking", duration: 450 },
+  { type: "text", text: "让我想一下……" },
+  { type: "rotate", angle: -12, duration: 260 },
+  { type: "morph", effect: "wave", duration: 650 },
+  { type: "text", text: "有了！" },
+];
+
+await bot.performDialogue(dialogue, {
+  voice: "playful",
+  englishMode: "phonetic", // phonetic | letters
+  rate: 1,
+});
+```
+
+中英混排会自动分流：汉字使用整句拼音和词汇声调，连续英文交给官方 `EnglishAnalyzer`，自动组合 `th`、`sh`、`ng` 等模式，数字也有独立读法。设置 `englishMode: "letters"` 可切回英文逐字母拟声。采样声线会先把整句渲染成一个音频缓冲区，统一响度并在相邻音节间做 10–12ms 等功率交叉淡化。音频提前约 60ms 调度；字幕和进度直接读取带设备输出延迟补偿的 `AudioContext` 播放头，不再累计 UI 计时误差。英文组合音素仍会逐字显示。
+
 ### 主要 API
 
 | API | 作用 |
@@ -296,6 +365,8 @@ bot.stopSequence();
 | `playMorph(effect, options?)` | 播放 14 种单次 Morph 之一。 |
 | `playSequence(steps, { loop? })` | 运行带时间控制的多状态动画序列。 |
 | `stopSequence()` | 取消当前序列和正在播放的单次 Morph。 |
+| `performDialogue(script, options?)` | 让文字、表情、旋转、Morph、停顿和本地角色音同步表演。 |
+| `pauseDialogue()` / `resumeDialogue()` / `stopDialogue()` | 控制当前对话表演。 |
 | `pause()` / `play()` / `step()` | 控制统一的仿真时钟。 |
 | `configure(project)` | 加载编辑器导出的 v6 preset。 |
 | `snapshot()` | 读取当前表情、眼睛、Morph 和时钟状态。 |
@@ -352,13 +423,15 @@ npm run pack:component
 
 当前版本：
 
-- 动画实验室：`v1.6.1`
-- 独立组件：`v0.4.1`
+- 动画实验室：`v1.7.0`
+- 独立组件：`v0.5.0`
 
 ### 项目状态与声明
 
 这是一个独立、非官方的研究与原型项目，与 xAI 不存在隶属、背书或维护关系。`Grok`、xAI 及相关标识归其权利人所有。
 
 仓库包含从公开交付的前端快照中整理的几何和行为数据，用于学习与互操作实验。本 README 不为第三方参考素材授予开源许可。在公开再分发或商业使用前，请自行评估相关权利，并替换参考素材或取得必要授权。
+
+中文拼音分析内置 MIT 许可的 `pinyin-pro` 3.29.3；采样拟声内置 MIT 许可的 `animalese-tts` 1.1.3 及其英文演示 Sprite。两者的许可证与署名都随组件包分发。这些是非官方的采样声线，不是任天堂或影视角色音频。
 
 欢迎贡献无障碍、API 设计、测试、文档，以及完全原创的替代角色几何。
