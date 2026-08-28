@@ -8,6 +8,7 @@ import {
   STATE_IDS as orderedStates,
   STATE_LABELS_ZH as stateLabels,
 } from "./catalog.js";
+import { planDialogueActions } from "./dialogue-auto-director.js";
 
 const rotations = Object.freeze([
   { value: -24, label: "向左转 24°" },
@@ -64,6 +65,9 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
   const actionMenu = document.querySelector("#dialogue-action-menu");
   const actionList = document.querySelector("#dialogue-action-list");
   const addActionButton = document.querySelector("#dialogue-add-action");
+  const autoActionButton = document.querySelector("#dialogue-auto-action");
+  const undoAutoButton = document.querySelector("#dialogue-undo-auto");
+  const autoStatus = document.querySelector("#dialogue-auto-status");
   const inspector = document.querySelector("#dialogue-action-inspector");
   const inspectorType = document.querySelector("#dialogue-inspector-type");
   const inspectorValue = document.querySelector("#dialogue-inspector-value");
@@ -88,6 +92,8 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
   let paused = false;
   let active = false;
   let totalDuration = 0;
+  let automationSnapshot = null;
+  let automationGeneration = 0;
 
   for (const voice of MORPH_BOT_DIALOGUE_VOICES) voiceSelect.add(new Option(`${voice.label.zh} · ${voice.label.en}`, voice.id));
 
@@ -102,13 +108,15 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
 
   function createToken(action) {
     const token = document.createElement("span");
+    const value = action.value ?? action.state ?? action.angle ?? action.effect ?? "pause";
     token.className = "dialogue-token";
     token.contentEditable = "false";
     token.tabIndex = 0;
     token.dataset.actionId = action.id || `dialogue-action-${++actionCounter}`;
     token.dataset.actionType = action.type;
-    token.dataset.value = String(action.value);
+    token.dataset.value = String(value);
     token.dataset.duration = String(action.duration);
+    if (action.generated) token.dataset.generated = "true";
     updateToken(token);
     return token;
   }
@@ -135,6 +143,70 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
     for (const child of editor.childNodes) visit(child);
     if (nodes.at(-1)?.type === "text") nodes.at(-1).text = nodes.at(-1).text.replace(/\n+$/u, "");
     return nodes.filter((node) => node.type !== "text" || node.text.length);
+  }
+
+  function cloneScript(script) {
+    return script.map((node) => ({ ...node }));
+  }
+
+  function renderEditorScript(script, { generated = false } = {}) {
+    const fragment = document.createDocumentFragment();
+    for (const node of script) {
+      if (node.type === "text") fragment.append(document.createTextNode(node.text));
+      else fragment.append(createToken({ ...node, generated }));
+    }
+    editor.replaceChildren(fragment);
+  }
+
+  function setAutoStatus(message, tone = "") {
+    autoStatus.textContent = message;
+    autoStatus.classList.toggle("is-ready", tone === "ready");
+    autoStatus.classList.toggle("is-error", tone === "error");
+  }
+
+  function clearAutomationHistory(message = "文字或动作已手动调整，可以重新自动编排。") {
+    if (!automationSnapshot) return;
+    automationSnapshot = null;
+    automationGeneration = 0;
+    undoAutoButton.hidden = true;
+    autoActionButton.querySelector("span").textContent = "自动编排";
+    setAutoStatus(message);
+  }
+
+  function autoArrangeDialogue() {
+    const currentScript = editorScript();
+    const text = currentScript.filter(({ type }) => type === "text").map(({ text: value }) => value).join("");
+    if (!text.trim()) {
+      setAutoStatus("先输入一句话，再让 Bot 自动编排。", "error");
+      editor.focus();
+      return;
+    }
+    if (!automationSnapshot) automationSnapshot = cloneScript(currentScript);
+    automationGeneration += 1;
+    const plan = planDialogueActions(text, {
+      seed: `${Date.now()}:${automationGeneration}:${Math.random()}`,
+    });
+    closeActionMenu();
+    selectToken(null);
+    renderEditorScript(plan.script, { generated: true });
+    autoActionButton.querySelector("span").textContent = "换一版";
+    undoAutoButton.hidden = false;
+    setAutoStatus(`已读出 ${plan.clauseCount} 个语气片段，插入 ${plan.actionCount} 个动作；再点一次可换一版。`, "ready");
+    notifyChange();
+  }
+
+  function undoAutoArrange() {
+    if (!automationSnapshot) return;
+    const snapshot = automationSnapshot;
+    automationSnapshot = null;
+    automationGeneration = 0;
+    renderEditorScript(snapshot);
+    undoAutoButton.hidden = true;
+    autoActionButton.querySelector("span").textContent = "自动编排";
+    setAutoStatus("已恢复自动编排前的文字和动作。", "ready");
+    selectToken(null);
+    notifyChange();
+    editor.focus();
   }
 
   function nodeDuration(node, rate, voice) {
@@ -356,6 +428,7 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
   }
 
   editor.addEventListener("input", () => {
+    clearAutomationHistory();
     openActionMenu();
     notifyChange();
   });
@@ -380,6 +453,7 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
 
   editor.addEventListener("paste", (event) => {
     event.preventDefault();
+    clearAutomationHistory();
     insertAtCaret(event.clipboardData.getData("text/plain"));
     closeActionMenu();
     notifyChange();
@@ -394,6 +468,7 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
     const token = event.target.closest?.(".dialogue-token");
     if (token && ["Backspace", "Delete"].includes(event.key)) {
       event.preventDefault();
+      clearAutomationHistory();
       token.remove();
       selectToken(null);
       notifyChange();
@@ -405,16 +480,23 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
     const button = event.target.closest("[data-action-index]");
     if (button) insertAction(actionCatalog[Number(button.dataset.actionIndex)]);
   });
-  addActionButton.addEventListener("click", () => insertAtCaret("@"));
+  addActionButton.addEventListener("click", () => {
+    clearAutomationHistory();
+    insertAtCaret("@");
+  });
+  autoActionButton.addEventListener("click", autoArrangeDialogue);
+  undoAutoButton.addEventListener("click", undoAutoArrange);
 
   inspectorValue.addEventListener("change", () => {
     if (!selectedToken) return;
+    clearAutomationHistory();
     selectedToken.dataset.value = inspectorValue.value;
     updateToken(selectedToken);
     notifyChange();
   });
   inspectorDuration.addEventListener("input", () => {
     if (!selectedToken) return;
+    clearAutomationHistory();
     const milliseconds = Math.min(20000, Math.max(0, Math.round((Number(inspectorDuration.value) || 0) * 1000)));
     selectedToken.dataset.duration = String(milliseconds);
     updateToken(selectedToken);
@@ -422,6 +504,7 @@ export function setupDialogueWorkbench({ bot, onChange = () => {} } = {}) {
   });
   deleteActionButton.addEventListener("click", () => {
     if (!selectedToken) return;
+    clearAutomationHistory();
     selectedToken.remove();
     selectToken(null);
     notifyChange();

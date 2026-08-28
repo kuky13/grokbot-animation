@@ -15,6 +15,12 @@
 
 ## Changelog / 更新日志
 
+### v1.8.0 · Component v0.5.0 — 2026-08-28
+
+- Added text-aware automatic direction: one click inserts expression states, rotations, Morphs, and punctuation-timed pauses; **Another take** creates a new constrained variation and **Undo auto** restores the previous script. / 新增文本感知的自动编排：一键插入表情状态、旋转、Morph 与标点停顿；“换一版”会生成新的受控随机方案，“撤销自动”可恢复原脚本。
+- Reduced the original speech-bubble pointer for a quieter, better-proportioned connection to the Bot. / 缩小原有气泡箭头，让它与 Bot 的连接更克制、比例更协调。
+- Added deterministic planner tests for exact text preservation, mood-aware choices, action validity, variation, and density limits. / 新增确定性编排测试，覆盖原文无损、语气匹配、动作合法性、随机变化与密度上限。
+
 ### v1.7.0 · Component v0.5.0 — 2026-08-28
 
 - Added a WYSIWYG Dialogue Director with inline `@` insertion for all states, rotations, Morphs, and pauses. / 新增所见即所得对话导演，可通过 `@` 插入全部状态、旋转、Morph 与停顿动作。
@@ -44,6 +50,7 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 - A visual timeline: choose a state, set how long it stays, trigger a Morph, then continue to the next state.
 - Add, remove, reorder, loop, play, pause, and stop timeline steps.
 - A dialogue director with an inline `@` action menu for all states, rotations, Morphs, and pauses.
+- Text-aware automatic direction with constrained random variations, another-take generation, and one-click undo.
 - Two Mandarin-aware sampled character voices powered by `animalese-tts`: clean Chinese Animalese and a higher, quicker Playful profile, plus two retro bleep presets.
 - Live previews for standalone, button, task-card, and page-loading contexts.
 - Synchronized copy-ready HTML and JavaScript.
@@ -127,7 +134,7 @@ Calling `bot.pause()` pauses the SVG simulation, timeline wait, and active Morph
 
 ### Direct a dialogue
 
-Open `/component/`, switch to **Dialogue director**, then type `@` anywhere in the sentence. The menu exposes all 39 states, five rotation presets, all 14 Morphs, and precise pauses. Every inline chip can be selected again to change its value or transition time.
+Open `/component/` and switch to **Dialogue director**. Click **Auto direct** to analyze tone and punctuation, then insert a restrained random mix of expression states, rotations, Morphs, and pauses without changing the text. Click **Another take** for a different variation or **Undo auto** to restore the previous script. For precise control, type `@` anywhere in the sentence; every inline chip can be selected again to change its value or transition time.
 
 ```js
 const dialogue = [
@@ -187,6 +194,7 @@ See [component/README.md](./component/README.md) for the offline component guide
 │   ├── docs/                   Interactive API documentation
 │   ├── morph-bot.js            Web Component entry
 │   ├── morph-bot.d.ts          TypeScript declarations
+│   ├── dialogue-auto-director.js Text-aware constrained-random action planner
 │   ├── catalog.js              Shared bilingual state/shape/Morph catalog
 │   ├── materials.js            Shared solid, gradient, and glass presets
 │   ├── grok-bot-engine.js      Stable engine facade and coordinator
@@ -211,13 +219,14 @@ The regression suite covers:
 - all 1,521 ordered state-to-state transitions;
 - all 1,800 shape/expression/eye-open combinations;
 - direct entry and exit behavior for all 14 Morph effects;
+- lossless text-aware dialogue planning, mood matching, variation, and density limits;
 - restoration of both eyes after one-shot Morphs;
 - component exports, editor controls, docs, and the downloadable ZIP.
 - material preset integrity and custom gradient configuration.
 
 Current releases:
 
-- Animation lab: `v1.7.0`
+- Animation lab: `v1.8.0`
 - Standalone component: `v0.5.0`
 
 ### Status and disclaimer
@@ -250,6 +259,7 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 - 可视化时间线：选择状态、设置停留时间、指定 Morph，然后进入下一状态。
 - 支持添加、删除、排序、循环、播放、暂停和停止时间线步骤。
 - 对话导演支持在文字中输入 `@`，插入全部状态、旋转、Morph 和停顿。
+- 文本感知的自动编排会按语气和标点生成受控随机动作，并支持“换一版”和一键撤销。
 - 内置两种支持中文语境拼音的角色声线：干净的动森式音节与原创高音卡通拟声，并保留两种复古文字音。
 - 可在单独展示、按钮、任务卡和页面加载场景中实时预览。
 - HTML 与 JavaScript 使用代码随编辑结果同步生成。
@@ -333,7 +343,7 @@ bot.stopSequence();
 
 ### 编排角色对话
 
-打开 `/component/` 并切换到“对话导演”，在句子任意位置输入 `@`。下拉菜单会完整列出 39 个状态、5 个旋转预设、14 个 Morph 和精确停顿。插入后的标签可再次点击，修改动作与过渡时间。
+打开 `/component/` 并切换到“对话导演”。点击“自动编排”，编辑器会分析语气与标点，在不改动原文的前提下插入克制的随机表情、旋转、Morph 和停顿；点击“换一版”可生成不同方案，“撤销自动”会恢复编排前脚本。需要精确控制时，仍可在句子任意位置输入 `@`，从完整菜单中选择动作；插入后的标签也可再次点击修改。
 
 ```js
 const dialogue = [
@@ -393,6 +403,7 @@ await bot.performDialogue(dialogue, {
 │   ├── docs/                   交互式 API 文档
 │   ├── morph-bot.js            Web Component 入口
 │   ├── morph-bot.d.ts          TypeScript 类型声明
+│   ├── dialogue-auto-director.js 文本感知的受控随机动作编排器
 │   ├── catalog.js              状态、形状与 Morph 双语目录
 │   ├── materials.js            纯色、渐变与玻璃共享预设
 │   ├── grok-bot-engine.js      稳定引擎门面与系统编排
@@ -417,13 +428,14 @@ npm run pack:component
 - 39 × 39，共 1,521 个有序状态切换；
 - 18 种形状 × 25 种表情 × 4 档眼睛开合度，共 1,800 种组合；
 - 14 种 Morph 的进入、退出与直接切换；
+- 自动对话编排的原文无损、语气匹配、随机变化与密度上限；
 - 单次 Morph 结束后的双眼恢复；
 - 组件导出、编辑器操作、网页文档与 ZIP 下载包。
 - 材质预设完整性与自定义渐变参数。
 
 当前版本：
 
-- 动画实验室：`v1.7.0`
+- 动画实验室：`v1.8.0`
 - 独立组件：`v0.5.0`
 
 ### 项目状态与声明

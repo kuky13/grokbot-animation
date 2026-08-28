@@ -104,8 +104,12 @@
 
           <div id="dialogue-workspace" class="dialogue-builder" hidden aria-label="对话导演编辑器">
             <div class="dialogue-heading">
-              <p><strong>写一句，让 Bot 演出来</strong><span>输入 <kbd>@</kbd> 插入表情、旋转、Morph 或停顿。</span></p>
-              <button id="dialogue-add-action" type="button"><b>@</b> 插入动作</button>
+              <p><strong>写一句，让 Bot 演出来</strong><span>自动编排会读语气和标点；也可以输入 <kbd>@</kbd> 精确插入。</span></p>
+              <div class="dialogue-heading-actions">
+                <button id="dialogue-undo-auto" class="dialogue-undo-auto" type="button" hidden>撤销自动</button>
+                <button id="dialogue-auto-action" class="dialogue-auto-action" type="button"><b>✦</b><span>自动编排</span></button>
+                <button id="dialogue-add-action" class="dialogue-add-action" type="button"><b>@</b> 手动插入</button>
+              </div>
             </div>
             <div class="dialogue-editor-shell">
               <div id="dialogue-editor" class="dialogue-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="对话文字和动作" data-placeholder="输入一句话，键入 @ 添加表情…" spellcheck="true"></div>
@@ -114,6 +118,7 @@
                 <div id="dialogue-action-list" class="dialogue-action-list" role="listbox"></div>
               </div>
             </div>
+            <output id="dialogue-auto-status" class="dialogue-auto-status" aria-live="polite">输入文字后，一键生成贴合语气的动作。</output>
             <div id="dialogue-action-inspector" class="dialogue-action-inspector" hidden>
               <span id="dialogue-inspector-type">表情</span>
               <label>动作<select id="dialogue-inspector-value"></select></label>

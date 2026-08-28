@@ -148,6 +148,8 @@ assert.ok(demo.includes('id="add-sequence-step"'), "component workbench should a
 assert.ok(demo.includes('id="sequence-loop"'), "component workbench should expose timeline looping");
 assert.ok(demo.includes('id="preview-sequence"') && demo.includes('id="stop-sequence"'), "component workbench should expose timeline playback controls");
 assert.ok(demo.includes('id="dialogue-editor"') && demo.includes('id="dialogue-action-menu"'), "component workbench should expose the inline dialogue director");
+assert.ok(demo.includes('id="dialogue-auto-action"') && demo.includes('id="dialogue-undo-auto"'), "dialogue workbench should expose automatic direction with an explicit undo");
+assert.match(dialogueEditorRuntime, /planDialogueActions/, "dialogue editor should generate text-aware randomized actions");
 assert.ok(demo.includes('data-preview-mode="dialogue"'), "component workbench should make dialogue mode directly selectable");
 assert.ok(demo.includes('id="dialogue-english-mode"'), "dialogue workbench should expose mixed-language English routing");
 assert.doesNotMatch(demo, /常用状态|常用形状/, "component workbench must not hide choices behind a common subset");
