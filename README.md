@@ -15,6 +15,20 @@
 
 ## Changelog / 更新日志
 
+### v1.10.0 · Component v0.6.0 — 2026-08-30
+
+- Added four soft multi-spot gradient presets inspired by airy blurred color fields: Porcelain Bloom, Lilac Breath, Blue Milk, and Peach Haze. / 新增 4 个空气感柔焦多光团渐变：瓷雾花影、丁香呼吸、蓝调牛乳与蜜桃柔霭。
+- Added a spatial gradient renderer with four camera-anchored radial layers that remain clipped to every animated shape instead of collapsing into a linear blend. / 新增空间渐变渲染层，使用 4 个固定于镜头方向的径向色团，并在所有动画形状中保持正确裁切，而不是退化成线性混色。
+- Soft light presets now provide readable recommended eye colors while preserving explicit `eye-color` overrides. / 浅色柔焦预设会自动提供可读的深色眼睛，同时保留显式 `eye-color` 覆盖能力。
+- Fixed stale SVG overlay layers when switching from soft/linear gradients or rainbow glass back to a solid color; all material layers now use explicit SVG display state. / 修复柔焦渐变、线性渐变或彩虹玻璃切回纯色后叠加层残留的问题，所有材质层现在都使用明确的 SVG 显示状态。
+
+### v1.9.0 · Component v0.5.0 — 2026-08-28
+
+- Added a standalone `/aurora-orb/` experiment that preserves the volumetric WebGL sphere and gives it Morph Bot's 23 facial states. / 新增独立 `/aurora-orb/` 实验页，在保留 WebGL 体积液体球的基础上接入 Morph Bot 的 23 个表情状态。
+- Added a two-point inertial cursor wake: movement, speed, and press now stir the interior fluid instead of merely moving a highlight. / 新增双点惯性鼠标尾流，移动、速度与按压会真实搅动内部液体，而不只是移动高光。
+- Linked gaze, subtle face pose, press surprise, and fast-pass curiosity to the same pointer signal, with a switch to disable automatic reactions. / 使用同一鼠标信号联动视线、细微头部姿态、按压惊讶与快速掠过的好奇反应，并提供关闭自动响应的开关。
+- Added WYSIWYG eye presets plus editable color, opacity, scale, all 18 CSS blend modes, local persistence, and one-click reset. / 新增所见即所得的眼睛预设，以及颜色、透明度、尺寸、全部 18 种 CSS 混合模式、本地记忆和一键恢复默认。
+
 ### v1.8.0 · Component v0.5.0 — 2026-08-28
 
 - Added text-aware automatic direction: one click inserts expression states, rotations, Morphs, and punctuation-timed pauses; **Another take** creates a new constrained variation and **Undo auto** restores the previous script. / 新增文本感知的自动编排：一键插入表情状态、旋转、Morph 与标点停顿；“换一版”会生成新的受控随机方案，“撤销自动”可恢复原脚本。
@@ -44,7 +58,7 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 
 - 39 visual states, with `idle` first in every state picker.
 - 18 body shapes with shape-aware eye placement.
-- 21 material presets: 8 solids, 8 OKLab-smoothed gradients, and 5 layered rainbow-glass variants.
+- 25 material presets: 8 solids, 8 OKLab-smoothed linear gradients, 4 soft multi-spot gradients, and 5 layered rainbow-glass variants.
 - 25 two-eye expression rings and 1,800 verified shape/expression/open combinations.
 - 14 one-shot Morph effects with a complete `RESET → ENTER → HOLD → EXIT → DONE` lifecycle.
 - A visual timeline: choose a state, set how long it stays, trigger a Morph, then continue to the next state.
@@ -56,6 +70,7 @@ The project deliberately stays in 2D. Shape interpolation, eye placement, gaze, 
 - Synchronized copy-ready HTML and JavaScript.
 - A framework-free Web Component with Shadow DOM, TypeScript declarations, visibility pausing, and lifecycle cleanup.
 - A readable interactive API site, not only a Markdown reference.
+- A standalone WebGL Aurora Orb whose liquid volume and facial response share one inertial pointer signal.
 
 The preset data model is informed by [Open Props](https://open-props.style/) gradient tokens and the MIT-licensed [WebGradients](https://github.com/itmeo/webgradients) angle/ordered-stop format. The palettes and layered glass treatment are original additions. Gradient segments are densely sampled in OKLab before being rendered as SVG, while glass lighting remains camera-anchored during shape rotation.
 
@@ -76,6 +91,7 @@ The command prints the local development URL. Open that URL and use these routes
 | Advanced state lab | `/` |
 | Component timeline editor | `/component/` |
 | Interactive API documentation | `/component/docs/` |
+| Aurora Orb expression experiment | `/aurora-orb/` |
 
 ### Use the component
 
@@ -201,6 +217,7 @@ See [component/README.md](./component/README.md) for the offline component guide
 │   ├── original-data.js        States, expressions, and geometry
 │   ├── runtime/                Clock, physics, behavior, Morph, particle, and SVG systems
 │   └── downloads/              Versioned component bundles
+├── aurora-orb/                 WebGL liquid-orb expression experiment
 ├── scripts/                    Extraction, packaging, and regression checks
 └── ANALYSIS.md                 Reference investigation notes
 ```
@@ -226,8 +243,8 @@ The regression suite covers:
 
 Current releases:
 
-- Animation lab: `v1.8.0`
-- Standalone component: `v0.5.0`
+- Animation lab: `v1.10.0`
+- Standalone component: `v0.6.0`
 
 ### Status and disclaimer
 
@@ -253,7 +270,7 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 
 - 39 个完整状态，所有状态选择器都以 `idle` 开始。
 - 18 种身体轮廓，并针对不同形状自动适配眼睛位置。
-- 21 个材质预设：8 个纯色、8 个经过 OKLab 平滑的渐变、5 个分层彩虹玻璃。
+- 25 个材质预设：8 个纯色、8 个经过 OKLab 平滑的线性渐变、4 个柔焦多光团渐变、5 个分层彩虹玻璃。
 - 25 组双眼表情环，验证了 1,800 种形状、表情和开合度组合。
 - 14 种单次 Morph，完整执行 `RESET → ENTER → HOLD → EXIT → DONE`。
 - 可视化时间线：选择状态、设置停留时间、指定 Morph，然后进入下一状态。
@@ -265,6 +282,7 @@ Morph Bot 是一个用于研究、编辑和使用可爱 SVG 表情角色的浏�
 - HTML 与 JavaScript 使用代码随编辑结果同步生成。
 - 原生 Web Component：无框架依赖，提供 Shadow DOM、TypeScript 类型、离屏暂停和生命周期清理。
 - 完整 API 文档是可阅读、可操作的网页，而不只是 Markdown。
+- 独立 Aurora Orb 实验让 WebGL 液体体积与表情响应共享同一套惯性鼠标信号。
 
 预设数据结构参考了 [Open Props](https://open-props.style/) 的渐变 token，以及 MIT 许可的 [WebGradients](https://github.com/itmeo/webgradients) 中 angle + ordered stops 的表达。具体配色与分层玻璃效果由本项目重新设计；渐变在 OKLab 中密集采样后输出 SVG，玻璃光照在形状旋转时保持镜头方向固定。
 
@@ -285,6 +303,7 @@ npm run dev
 | 高级状态实验室 | `/` |
 | 独立组件与时间线编辑器 | `/component/` |
 | 完整交互式 API 文档 | `/component/docs/` |
+| Aurora Orb 表情实验 | `/aurora-orb/` |
 
 ### 使用独立组件
 
@@ -410,6 +429,7 @@ await bot.performDialogue(dialogue, {
 │   ├── original-data.js        状态、表情与几何数据
 │   ├── runtime/                时钟、物理、行为、Morph、粒子与 SVG 系统
 │   └── downloads/              带版本号的组件下载包
+├── aurora-orb/                 WebGL 液体球表情实验
 ├── scripts/                    数据提取、打包与回归脚本
 └── ANALYSIS.md                 参考实现分析记录
 ```
@@ -435,8 +455,8 @@ npm run pack:component
 
 当前版本：
 
-- 动画实验室：`v1.8.0`
-- 独立组件：`v0.5.0`
+- 动画实验室：`v1.10.0`
+- 独立组件：`v0.6.0`
 
 ### 项目状态与声明
 

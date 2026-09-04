@@ -16,6 +16,7 @@ import {
   MATERIAL_IDS,
   MATERIAL_LABELS,
   SOLID_PRESETS,
+  materialCssBackground,
   resolveMaterial,
 } from "./component/materials.js";
 
@@ -295,10 +296,7 @@ function applyMaterialAttributes(element, character = project.character) {
 }
 
 function materialSwatchBackground(material, preset) {
-  if (material === "solid") return preset.color;
-  if (material === "gradient") return `linear-gradient(${preset.angle}deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
-  const colors = preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ");
-  return `radial-gradient(circle at 22% 14%, rgba(255,255,255,.98) 0 4%, rgba(205,245,255,.42) 17%, transparent 39%), radial-gradient(circle at 76% 76%, ${preset.causticAccent} 0, ${preset.caustic} 24%, transparent 58%), radial-gradient(circle at 63% 71%, ${colors})`;
+  return materialCssBackground(material, preset);
 }
 
 function materialPresetCatalog(material = project.character.material) {
@@ -374,6 +372,12 @@ function renderMaterialCustomControls() {
   }
   if (character.material === "gradient") {
     const resolved = resolveMaterial(character);
+    if (resolved.kind === "soft") {
+      const note = document.createElement("p");
+      note.textContent = "柔焦预设由近白雾底和 4 个大尺度径向色团组成，色团固定在镜头方向并自动裁切到全部形状。";
+      materialCustomControls.append(note);
+      return;
+    }
     const startValue = character.gradientPreset === "custom" ? character.gradientStart : resolved.stops[0].color;
     const endValue = character.gradientPreset === "custom" ? character.gradientEnd : resolved.stops.at(-1).color;
     const angleValue = character.gradientPreset === "custom" ? character.gradientAngle : resolved.angle;

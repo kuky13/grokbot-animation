@@ -27,6 +27,12 @@ class FakeHTMLElement {
 }
 
 globalThis.HTMLElement = FakeHTMLElement;
+globalThis.CustomEvent ??= class CustomEvent {
+  constructor(type, options = {}) {
+    this.type = type;
+    this.detail = options.detail;
+  }
+};
 
 const packageRoot = resolve("component");
 const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
@@ -34,7 +40,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.5.0");
+assert.equal(manifest.version, "0.6.0");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -43,7 +49,7 @@ assert.equal(component.MORPH_BOT_SHAPES.length, 18, "component should expose all
 assert.equal(component.MORPH_BOT_EFFECTS.length, 14, "component should expose all morph effects");
 assert.equal(component.MORPH_BOT_MATERIALS.length, 3, "component should expose all material modes");
 assert.equal(component.MORPH_BOT_SOLID_PRESETS.length, 8, "component should expose all solid presets");
-assert.equal(component.MORPH_BOT_GRADIENT_PRESETS.length, 8, "component should expose all gradient presets");
+assert.equal(component.MORPH_BOT_GRADIENT_PRESETS.length, 12, "component should expose all linear and soft multi-spot gradient presets");
 assert.equal(component.MORPH_BOT_GLASS_PRESETS.length, 5, "component should expose all glass presets");
 assert.equal(component.MORPH_BOT_DIALOGUE_VOICES.length, 4, "component should expose all local dialogue voices");
 assert.equal(component.MORPH_BOT_DIALOGUE_VOICES[0].id, "playful", "playful gibberish should be the default editor voice");
@@ -85,6 +91,9 @@ assert.equal(element.paused, false);
 element.setMaterial("gradient", { preset: "ocean-signal" });
 assert.equal(element.material, "gradient");
 assert.equal(element.gradientPreset, "ocean-signal");
+const softGradientElement = new component.MorphBotElement();
+softGradientElement.setMaterial("gradient", { preset: "porcelain-bloom" });
+assert.equal(softGradientElement._engineConfig().eyeColor, "#17203c", "soft light presets should provide a readable default eye color");
 element.setMaterial("gradient", { start: "#123456", end: "#abcdef", angle: 42 });
 assert.equal(element.gradientPreset, "custom");
 assert.equal(element._engineConfig().gradientAngle, 42);

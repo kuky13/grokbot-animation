@@ -1,8 +1,10 @@
 const freezeStops = (stops) => stops ? Object.freeze(stops.map((stop) => Object.freeze(stop))) : undefined;
+const freezeSpots = (spots) => spots ? Object.freeze(spots.map((spot) => Object.freeze(spot))) : undefined;
 const defineCatalog = (entries) => Object.freeze(entries.map((entry) => Object.freeze({
   ...entry,
   label: Object.freeze(entry.label),
   stops: freezeStops(entry.stops),
+  spots: freezeSpots(entry.spots),
   rimStops: freezeStops(entry.rimStops),
 })));
 
@@ -99,6 +101,78 @@ export const GRADIENT_PRESETS = defineCatalog([
       { offset: 0, color: "#0f172a" },
       { offset: 0.55, color: "#1d4ed8" },
       { offset: 1, color: "#67e8f9" },
+    ],
+  },
+  {
+    id: "porcelain-bloom",
+    label: { zh: "瓷雾花影", en: "Porcelain bloom" },
+    kind: "soft",
+    angle: 0,
+    base: "#f5f7f7",
+    eyeColor: "#17203c",
+    stops: [
+      { offset: 0, color: "#f5f7f7" },
+      { offset: 1, color: "#f5f7f7" },
+    ],
+    spots: [
+      { x: 0.28, y: 0.82, r: 0.58, scaleX: 1.38, scaleY: 0.72, rotation: 8, color: "#5363ef", opacity: 0.86 },
+      { x: 0.55, y: 0.76, r: 0.5, scaleX: 1.24, scaleY: 0.68, rotation: -8, color: "#8a77ec", opacity: 0.48 },
+      { x: 0.83, y: 0.22, r: 0.52, scaleX: 1.06, scaleY: 0.74, rotation: 14, color: "#efa5e6", opacity: 0.62 },
+      { x: 0.06, y: 0.49, r: 0.38, scaleX: 0.9, scaleY: 1.12, rotation: 0, color: "#b7e4ff", opacity: 0.34 },
+    ],
+  },
+  {
+    id: "lilac-breath",
+    label: { zh: "丁香呼吸", en: "Lilac breath" },
+    kind: "soft",
+    angle: 0,
+    base: "#faf7fb",
+    eyeColor: "#302343",
+    stops: [
+      { offset: 0, color: "#faf7fb" },
+      { offset: 1, color: "#faf7fb" },
+    ],
+    spots: [
+      { x: 0.2, y: 0.2, r: 0.48, scaleX: 1.18, scaleY: 0.86, rotation: -18, color: "#d8b8f3", opacity: 0.62 },
+      { x: 0.72, y: 0.36, r: 0.56, scaleX: 1.12, scaleY: 0.8, rotation: 12, color: "#f0b2df", opacity: 0.66 },
+      { x: 0.4, y: 0.86, r: 0.56, scaleX: 1.42, scaleY: 0.68, rotation: 5, color: "#8d83ee", opacity: 0.64 },
+      { x: 0.92, y: 0.82, r: 0.34, scaleX: 0.9, scaleY: 1.15, rotation: 0, color: "#bde7f8", opacity: 0.36 },
+    ],
+  },
+  {
+    id: "blue-milk",
+    label: { zh: "蓝调牛乳", en: "Blue milk" },
+    kind: "soft",
+    angle: 0,
+    base: "#f2f7fa",
+    eyeColor: "#142544",
+    stops: [
+      { offset: 0, color: "#f2f7fa" },
+      { offset: 1, color: "#f2f7fa" },
+    ],
+    spots: [
+      { x: 0.14, y: 0.74, r: 0.56, scaleX: 1.16, scaleY: 0.82, rotation: -10, color: "#58a9e9", opacity: 0.68 },
+      { x: 0.55, y: 0.42, r: 0.58, scaleX: 1.38, scaleY: 0.72, rotation: 18, color: "#6f7ee9", opacity: 0.66 },
+      { x: 0.88, y: 0.14, r: 0.44, scaleX: 0.92, scaleY: 1.08, rotation: 0, color: "#b9edee", opacity: 0.54 },
+      { x: 0.86, y: 0.9, r: 0.42, scaleX: 1.15, scaleY: 0.78, rotation: -14, color: "#b6a8f1", opacity: 0.36 },
+    ],
+  },
+  {
+    id: "peach-haze",
+    label: { zh: "蜜桃柔霭", en: "Peach haze" },
+    kind: "soft",
+    angle: 0,
+    base: "#fff8f4",
+    eyeColor: "#472737",
+    stops: [
+      { offset: 0, color: "#fff8f4" },
+      { offset: 1, color: "#fff8f4" },
+    ],
+    spots: [
+      { x: 0.2, y: 0.25, r: 0.48, scaleX: 1.22, scaleY: 0.84, rotation: 12, color: "#ffc7a5", opacity: 0.68 },
+      { x: 0.78, y: 0.22, r: 0.5, scaleX: 1.18, scaleY: 0.76, rotation: -12, color: "#f3a9c5", opacity: 0.64 },
+      { x: 0.68, y: 0.82, r: 0.58, scaleX: 1.36, scaleY: 0.72, rotation: 7, color: "#f3b26f", opacity: 0.52 },
+      { x: 0.1, y: 0.86, r: 0.4, scaleX: 0.9, scaleY: 1.12, rotation: 0, color: "#c7b7ee", opacity: 0.4 },
     ],
   },
 ]);
@@ -305,8 +379,45 @@ export function resolveMaterial(config = {}) {
       };
     }
     const preset = findPreset(GRADIENT_PRESETS, config.gradientPreset);
+    if (preset.kind === "soft") {
+      return {
+        material,
+        preset: preset.id,
+        kind: "soft",
+        angle: preset.angle,
+        base: preset.base,
+        stops: preset.stops,
+        spots: preset.spots,
+        eyeColor: preset.eyeColor,
+      };
+    }
     return { material, preset: preset.id, angle: preset.angle, stops: preset.stops };
   }
   const preset = findPreset(GLASS_PRESETS, config.glassPreset);
   return { material, preset: preset.id, ...preset };
+}
+
+function cssRgba(color, opacity) {
+  const rgb = parseHexColor(color);
+  if (!rgb) return color;
+  const [red, green, blue] = rgb.map((channel) => Math.round(channel * 255));
+  return `rgba(${red}, ${green}, ${blue}, ${Math.max(0, Math.min(1, opacity))})`;
+}
+
+export function materialCssBackground(material, preset) {
+  if (material === "solid") return preset.color;
+  if (material === "gradient" && preset.kind === "soft") {
+    const spots = preset.spots.map((spot) => {
+      const width = Math.round(spot.r * spot.scaleX * 1000) / 10;
+      const height = Math.round(spot.r * spot.scaleY * 1000) / 10;
+      const x = Math.round(spot.x * 1000) / 10;
+      const y = Math.round(spot.y * 1000) / 10;
+      return `radial-gradient(ellipse ${width}% ${height}% at ${x}% ${y}%, ${cssRgba(spot.color, spot.opacity)} 0%, ${cssRgba(spot.color, spot.opacity * 0.78)} 22%, ${cssRgba(spot.color, spot.opacity * 0.26)} 54%, ${cssRgba(spot.color, 0)} 76%)`;
+    });
+    return [...spots, preset.base].join(", ");
+  }
+  if (material === "gradient") {
+    return `linear-gradient(${preset.angle}deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+  }
+  return `radial-gradient(circle at 22% 14%, rgba(255,255,255,.98) 0 4%, rgba(205,245,255,.42) 17%, transparent 39%), radial-gradient(circle at 76% 76%, ${preset.causticAccent} 0, ${preset.caustic} 24%, transparent 58%), radial-gradient(circle at 63% 71%, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
 }

@@ -2,14 +2,15 @@ export type MorphBotState = "sleeping" | "waking" | "idle" | "listening" | "thin
 export type MorphBotShape = "blob" | "pebble" | "bean" | "egg" | "squircle" | "tablet" | "capsule" | "cylinder" | "hex" | "gem" | "crystal" | "wedge" | "shield" | "dome" | "arch" | "cloud" | "teardrop" | "leaf";
 export type MorphBotEffect = "dots" | "orbit" | "radar" | "progress" | "gather" | "wave" | "send" | "receive" | "dock" | "ball" | "whirl" | "pencil" | "bang" | "standby";
 export type MorphBotMaterial = "solid" | "gradient" | "rainbow-glass";
-export type MorphBotGradientPreset = "electric-dusk" | "ocean-signal" | "warm-flare" | "mint-violet" | "midnight-plum" | "peach-sky" | "acid-lime" | "blue-hour";
+export type MorphBotGradientPreset = "electric-dusk" | "ocean-signal" | "warm-flare" | "mint-violet" | "midnight-plum" | "peach-sky" | "acid-lime" | "blue-hour" | "porcelain-bloom" | "lilac-breath" | "blue-milk" | "peach-haze";
 export type MorphBotGlassPreset = "iridescent-orb" | "prism" | "aurora" | "candy" | "opal";
 export type MorphBotDialogueVoice = "playful" | "animalese" | "gameboy" | "rpg";
 export type MorphBotDialogueEnglishMode = "phonetic" | "letters";
 
 export interface MorphBotMaterialStop { offset: number; color: string; opacity?: number; }
+export interface MorphBotGradientSpot { x: number; y: number; r: number; scaleX: number; scaleY: number; rotation: number; color: string; opacity: number; }
 export interface MorphBotSolidPresetDefinition { id: string; label: { zh: string; en: string }; color: string; }
-export interface MorphBotGradientPresetDefinition { id: MorphBotGradientPreset; label: { zh: string; en: string }; angle: number; stops: readonly MorphBotMaterialStop[]; }
+export interface MorphBotGradientPresetDefinition { id: MorphBotGradientPreset; label: { zh: string; en: string }; angle: number; stops: readonly MorphBotMaterialStop[]; kind?: "soft"; base?: string; eyeColor?: string; spots?: readonly MorphBotGradientSpot[]; }
 export interface MorphBotGlassPresetDefinition { id: MorphBotGlassPreset; label: { zh: string; en: string }; stops: readonly MorphBotMaterialStop[]; rimStops?: readonly MorphBotMaterialStop[]; shadow: string; rim: string; sheen: number; caustic: string; causticAccent: string; depth: number; }
 
 export interface MorphBotCharacterConfig {

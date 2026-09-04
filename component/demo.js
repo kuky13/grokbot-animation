@@ -15,6 +15,7 @@ import {
   MATERIAL_IDS,
   MATERIAL_LABELS,
   SOLID_PRESETS,
+  materialCssBackground,
   resolveMaterial,
 } from "./materials.js";
 import { setupDialogueWorkbench } from "./dialogue-editor.js";
@@ -115,9 +116,21 @@ function presetCatalog(material = materialConfig.material) {
 }
 
 function presetBackground(material, preset) {
-  if (material === "solid") return preset.color;
-  if (material === "gradient") return `linear-gradient(${preset.angle}deg, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
-  return `radial-gradient(circle at 22% 14%, rgba(255,255,255,.98) 0 4%, rgba(205,245,255,.42) 17%, transparent 39%), radial-gradient(circle at 76% 76%, ${preset.causticAccent} 0, ${preset.caustic} 24%, transparent 58%), radial-gradient(circle at 63% 71%, ${preset.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`;
+  return materialCssBackground(material, preset);
+}
+
+function applySuggestedEyeColor(preset = null) {
+  if (preset?.eyeColor) {
+    if (eyeColorInput.value.toLowerCase() === "#ffffff" || eyeColorInput.dataset.materialSuggested === "true") {
+      eyeColorInput.value = preset.eyeColor;
+      eyeColorInput.dataset.materialSuggested = "true";
+    }
+    return;
+  }
+  if (eyeColorInput.dataset.materialSuggested === "true") {
+    eyeColorInput.value = "#ffffff";
+    delete eyeColorInput.dataset.materialSuggested;
+  }
 }
 
 function setMaterialAttributes(element) {
@@ -188,6 +201,12 @@ function renderMaterialCustom() {
   }
   if (materialConfig.material === "gradient") {
     const resolved = resolveMaterial(materialConfig);
+    if (resolved.kind === "soft") {
+      const note = document.createElement("p");
+      note.textContent = "柔焦预设由近白雾底与 4 个大尺度径向色团组成；色团固定在镜头方向，并自动裁切到当前形状。选择其他预设即可快速更换整套配色。";
+      materialCustom.append(note);
+      return;
+    }
     const start = materialControl("起始色", "color", materialConfig.gradientPreset === "custom" ? materialConfig.gradientStart : resolved.stops[0].color);
     const end = materialControl("结束色", "color", materialConfig.gradientPreset === "custom" ? materialConfig.gradientEnd : resolved.stops.at(-1).color);
     const angle = materialControl("方向", "range", materialConfig.gradientPreset === "custom" ? materialConfig.gradientAngle : resolved.angle, { min: 0, max: 360, step: 1 });
@@ -222,6 +241,7 @@ function renderMaterialEditor() {
     button.addEventListener("click", () => {
       stopEditorSequence();
       materialConfig.material = material;
+      if (material !== "gradient") applySuggestedEyeColor();
       renderMaterialEditor();
       syncDemo();
     });
@@ -238,6 +258,7 @@ function renderMaterialEditor() {
       if (materialConfig.material === "solid") materialConfig.color = preset.color;
       else if (materialConfig.material === "gradient") materialConfig.gradientPreset = preset.id;
       else materialConfig.glassPreset = preset.id;
+      applySuggestedEyeColor(preset);
       renderMaterialEditor();
       syncDemo();
     });
@@ -422,7 +443,11 @@ function syncDemo() {
   syncThumbnailAppearance();
 }
 
-[sizeInput, eyeColorInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
+[sizeInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
+eyeColorInput.addEventListener("input", () => {
+  delete eyeColorInput.dataset.materialSuggested;
+  syncDemo();
+});
 
 stateGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-state-option]");

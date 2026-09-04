@@ -2,6 +2,7 @@ import { resolveMaterial, smoothMaterialStops } from "../materials.js";
 import { HEAD_C } from "../original-data.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const SOFT_SPOT_COUNT = 4;
 
 function svgElement(tag, attributes = {}) {
   const element = document.createElementNS(SVG_NS, tag);
@@ -21,6 +22,21 @@ function replaceStops(gradient, stops) {
   }
 }
 
+function setSvgVisible(element, visible) {
+  element.hidden = !visible;
+  if (visible) {
+    element.removeAttribute("display");
+    element.removeAttribute("hidden");
+  } else {
+    element.setAttribute("display", "none");
+    element.setAttribute("hidden", "");
+  }
+}
+
+function isSvgVisible(element) {
+  return element.getAttribute("display") !== "none";
+}
+
 function gradientVector(angle) {
   const radians = Number(angle) * Math.PI / 180;
   const dx = Math.sin(radians) * HEAD_C;
@@ -33,6 +49,23 @@ function gradientVector(angle) {
   };
 }
 
+function softSpotGeometry(spot) {
+  const diameter = HEAD_C * 2;
+  return {
+    x: spot.x * diameter,
+    y: spot.y * diameter,
+    r: spot.r * diameter,
+  };
+}
+
+function softSpotTransform(spot, rotation) {
+  const { x, y } = softSpotGeometry(spot);
+  const inverse = `rotate(${(-rotation).toFixed(3)} ${HEAD_C} ${HEAD_C})`;
+  const orient = `rotate(${Number(spot.rotation || 0).toFixed(3)} ${x.toFixed(3)} ${y.toFixed(3)})`;
+  const stretch = `translate(${x.toFixed(3)} ${y.toFixed(3)}) scale(${Number(spot.scaleX || 1).toFixed(3)} ${Number(spot.scaleY || 1).toFixed(3)}) translate(${(-x).toFixed(3)} ${(-y).toFixed(3)})`;
+  return `${inverse} ${orient} ${stretch}`;
+}
+
 export class MaterialSystem {
   constructor(svg, { head, transformGroup, idPrefix = "morph-bot" }) {
     this.svg = svg;
@@ -43,6 +76,7 @@ export class MaterialSystem {
       gradient: `${safePrefix}-material-gradient`,
       gradientLight: `${safePrefix}-gradient-light`,
       gradientShade: `${safePrefix}-gradient-shade`,
+      softSpots: Array.from({ length: SOFT_SPOT_COUNT }, (_, index) => `${safePrefix}-soft-gradient-${index + 1}`),
       glass: `${safePrefix}-glass-base`,
       shadow: `${safePrefix}-glass-shadow`,
       caustic: `${safePrefix}-glass-caustic`,
@@ -82,6 +116,11 @@ export class MaterialSystem {
       fy: 27.4,
       "color-interpolation": "sRGB",
     });
+    this.softGradients = this.ids.softSpots.map((id) => svgElement("radialGradient", {
+      id,
+      gradientUnits: "userSpaceOnUse",
+      "color-interpolation": "sRGB",
+    }));
     this.glass = svgElement("radialGradient", {
       id: this.ids.glass,
       gradientUnits: "userSpaceOnUse",
@@ -129,6 +168,7 @@ export class MaterialSystem {
       this.gradient,
       this.gradientLight,
       this.gradientShade,
+      ...this.softGradients,
       this.glass,
       this.shadow,
       this.caustic,
@@ -141,6 +181,10 @@ export class MaterialSystem {
     this.gradientShadePath = svgElement("path", { fill: `url(#${this.ids.gradientShade})` });
     this.gradientOverlayGroup.append(this.gradientLightPath, this.gradientShadePath);
 
+    this.softGradientGroup = svgElement("g", { class: "material-soft-gradient-layers", "pointer-events": "none" });
+    this.softGradientPaths = this.softGradients.map((gradient) => svgElement("path", { fill: `url(#${gradient.id})` }));
+    this.softGradientGroup.append(...this.softGradientPaths);
+
     this.overlayGroup = svgElement("g", { class: "material-glass-layers", "pointer-events": "none" });
     this.shadowPath = svgElement("path", { fill: `url(#${this.ids.shadow})` });
     this.causticPath = svgElement("path", { fill: `url(#${this.ids.caustic})`, style: "mix-blend-mode:screen" });
@@ -152,10 +196,13 @@ export class MaterialSystem {
       opacity: 0.7,
     });
     this.overlayGroup.append(this.shadowPath, this.causticPath, this.sheenPath, this.rimPath);
-    transformGroup.insertBefore(this.gradientOverlayGroup, head.nextSibling || null);
+    transformGroup.insertBefore(this.softGradientGroup, head.nextSibling || null);
+    transformGroup.insertBefore(this.gradientOverlayGroup, this.softGradientGroup.nextSibling || null);
     transformGroup.insertBefore(this.overlayGroup, this.gradientOverlayGroup.nextSibling || null);
-    this.gradientOverlayGroup.hidden = true;
-    this.overlayGroup.hidden = true;
+    setSvgVisible(this.gradientOverlayGroup, false);
+    setSvgVisible(this.softGradientGroup, false);
+    setSvgVisible(this.overlayGroup, false);
+    this.softSpots = [];
   }
 
   apply(config) {
@@ -165,9 +212,12 @@ export class MaterialSystem {
       this.signature = signature;
       this.updateDefinitions(material);
     }
-    this.gradientOverlayGroup.hidden = material.material !== "gradient";
-    this.overlayGroup.hidden = material.material !== "rainbow-glass";
+    const softGradient = material.material === "gradient" && material.kind === "soft";
+    setSvgVisible(this.gradientOverlayGroup, material.material === "gradient" && !softGradient);
+    setSvgVisible(this.softGradientGroup, softGradient);
+    setSvgVisible(this.overlayGroup, material.material === "rainbow-glass");
     if (material.material === "solid") this.svg.style.setProperty("--fg", material.color);
+    else if (softGradient) this.svg.style.setProperty("--fg", material.base);
     else if (material.material === "gradient") this.svg.style.setProperty("--fg", `url(#${this.ids.gradient})`);
     else this.svg.style.setProperty("--fg", `url(#${this.ids.glass})`);
     return material;
@@ -175,6 +225,31 @@ export class MaterialSystem {
 
   updateDefinitions(material) {
     if (material.material === "gradient") {
+      if (material.kind === "soft") {
+        this.softSpots = material.spots.slice(0, SOFT_SPOT_COUNT);
+        for (let index = 0; index < SOFT_SPOT_COUNT; index += 1) {
+          const spot = this.softSpots[index];
+          const gradient = this.softGradients[index];
+          const path = this.softGradientPaths[index];
+          setSvgVisible(path, Boolean(spot));
+          if (!spot) continue;
+          const geometry = softSpotGeometry(spot);
+          gradient.setAttribute("cx", geometry.x.toFixed(3));
+          gradient.setAttribute("cy", geometry.y.toFixed(3));
+          gradient.setAttribute("fx", geometry.x.toFixed(3));
+          gradient.setAttribute("fy", geometry.y.toFixed(3));
+          gradient.setAttribute("r", geometry.r.toFixed(3));
+          replaceStops(gradient, [
+            { offset: 0, color: spot.color, opacity: spot.opacity },
+            { offset: 0.2, color: spot.color, opacity: spot.opacity * 0.82 },
+            { offset: 0.5, color: spot.color, opacity: spot.opacity * 0.34 },
+            { offset: 0.76, color: spot.color, opacity: spot.opacity * 0.06 },
+            { offset: 1, color: spot.color, opacity: 0 },
+          ]);
+        }
+        return;
+      }
+      this.softSpots = [];
       const vector = gradientVector(material.angle);
       for (const [name, value] of Object.entries(vector)) this.gradient.setAttribute(name, value.toFixed(3));
       replaceStops(this.gradient, smoothMaterialStops(material.stops, 5));
@@ -238,11 +313,18 @@ export class MaterialSystem {
       this.sheen,
       this.rim,
     ]) gradient.setAttribute("gradientTransform", inverseRotation);
-    if (!this.gradientOverlayGroup.hidden) {
+    for (let index = 0; index < this.softGradients.length; index += 1) {
+      const spot = this.softSpots[index];
+      if (spot) this.softGradients[index].setAttribute("gradientTransform", softSpotTransform(spot, rotation));
+    }
+    if (isSvgVisible(this.gradientOverlayGroup)) {
       this.gradientLightPath.setAttribute("d", path);
       this.gradientShadePath.setAttribute("d", path);
     }
-    if (!this.overlayGroup.hidden) {
+    if (isSvgVisible(this.softGradientGroup)) {
+      for (const softPath of this.softGradientPaths) softPath.setAttribute("d", path);
+    }
+    if (isSvgVisible(this.overlayGroup)) {
       this.shadowPath.setAttribute("d", path);
       this.causticPath.setAttribute("d", path);
       this.sheenPath.setAttribute("d", path);
@@ -253,9 +335,11 @@ export class MaterialSystem {
   destroy() {
     this.overlayGroup.remove();
     this.gradientOverlayGroup.remove();
+    this.softGradientGroup.remove();
     this.gradient.remove();
     this.gradientLight.remove();
     this.gradientShade.remove();
+    for (const gradient of this.softGradients) gradient.remove();
     this.glass.remove();
     this.shadow.remove();
     this.caustic.remove();

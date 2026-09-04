@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="description" content="Aurora Orb：会被鼠标扰动、会注视并回应你的液体彩虹表情球。" />
+<title>Aurora Orb · Morph Bot</title>
+<link rel="stylesheet" href="./aurora-orb.css" />
+</head>
+<body>
+<main class="orb-stage">
+  <canvas id="gl" aria-label="可用鼠标扰动的 Aurora 液体球"></canvas>
+
+  <morph-bot
+    id="orb-face"
+    state="idle"
+    shape="blob"
+    color="transparent"
+    eye-color="#21356a"
+    follow-pointer
+    thumbnail
+    label="Aurora Orb，待机"
+  ></morph-bot>
+
+  <header class="orb-header">
+    <a class="back-link" href="../component/" aria-label="返回 Morph Bot 组件编辑器">
+      <span aria-hidden="true">&#8592;</span>
+      <span>Morph Bot</span>
+    </a>
+    <div class="state-readout" aria-live="polite">
+      <span class="state-pulse" aria-hidden="true"></span>
+      <span id="current-state-zh">待机</span>
+      <span id="current-state-en">Idle</span>
+    </div>
+  </header>
+
+  <section class="expression-dock" aria-label="Aurora Orb 表情控制">
+    <div class="dock-heading">
+      <p class="eyebrow">表情状态 · 23</p>
+      <div class="dock-actions">
+        <details id="eye-settings" class="eye-settings">
+          <summary class="utility-button">眼睛设置 <span aria-hidden="true">↗</span></summary>
+          <div class="eye-config-panel">
+            <div class="eye-config-heading">
+              <div><strong>眼睛外观</strong><small>修改会立即显示</small></div>
+              <button id="reset-eye-config" type="button">恢复默认</button>
+            </div>
+
+            <label class="eye-field eye-field-wide">
+              <span>材质预设</span>
+              <select id="eye-preset">
+                <option value="deep-glass">深海玻璃</option>
+                <option value="aurora">极光薄膜</option>
+                <option value="pearl">冰晶珍珠</option>
+                <option value="ink">墨色内嵌</option>
+                <option value="custom">自定义</option>
+              </select>
+            </label>
+
+            <label class="eye-field">
+              <span>颜色 <output id="eye-color-value">#21356A</output></span>
+              <input id="eye-color" type="color" value="#21356a" />
+            </label>
+
+            <label class="eye-field">
+              <span>透明度 <output id="eye-opacity-value">90%</output></span>
+              <input id="eye-opacity" type="range" min="30" max="100" step="1" value="90" />
+            </label>
+
+            <label class="eye-field eye-field-wide">
+              <span>尺寸 <output id="eye-scale-value">92%</output></span>
+              <input id="eye-scale" type="range" min="70" max="120" step="1" value="92" />
+            </label>
+
+            <label class="eye-field eye-field-wide">
+              <span>混合模式</span>
+              <select id="eye-blend-mode">
+                <option value="normal">正常 Normal</option>
+                <option value="multiply">正片叠底 Multiply</option>
+                <option value="screen">滤色 Screen</option>
+                <option value="overlay">叠加 Overlay</option>
+                <option value="darken">变暗 Darken</option>
+                <option value="lighten">变亮 Lighten</option>
+                <option value="color-dodge">颜色减淡 Color dodge</option>
+                <option value="color-burn">颜色加深 Color burn</option>
+                <option value="hard-light">强光 Hard light</option>
+                <option value="soft-light">柔光 Soft light</option>
+                <option value="difference">差值 Difference</option>
+                <option value="exclusion">排除 Exclusion</option>
+                <option value="hue">色相 Hue</option>
+                <option value="saturation">饱和度 Saturation</option>
+                <option value="color">颜色 Color</option>
+                <option value="luminosity" selected>明度 Luminosity</option>
+                <option value="plus-darker">加深 Plus darker</option>
+                <option value="plus-lighter">提亮 Plus lighter</option>
+              </select>
+            </label>
+          </div>
+        </details>
+        <button id="responsive-toggle" class="utility-button is-on" type="button" aria-pressed="true">鼠标响应 <span>开</span></button>
+        <button id="random-state" class="utility-button" type="button">随机表情</button>
+        <button id="autoplay-state" class="utility-button" type="button" aria-pressed="false">自动播放 <span>关</span></button>
+      </div>
+    </div>
+    <div id="expression-list" class="expression-list" role="listbox" aria-label="全部表情状态"></div>
+    <div class="interaction-hint" aria-hidden="true">
+      <span>移动 · 注视</span>
+      <i></i>
+      <span>拖动 · 搅动液体</span>
+      <i></i>
+      <span>按住 · 惊讶</span>
+    </div>
+  </section>
+
+  <p id="webgl-fallback" class="webgl-fallback" hidden>这个实验需要浏览器支持 WebGL。</p>
+</main>
+<script>
+(() => {
+  const canvas = document.getElementById('gl');
+  const gl = canvas.getContext('webgl', {
+    antialias: true,
+    alpha: false,
+    depth: false,
+    stencil: false,
+    premultipliedAlpha: false,
+    powerPreference: 'high-performance'
+  });
+
+  if (!gl) {
+    canvas.hidden = true;
+    document.getElementById('webgl-fallback').hidden = false;
+    return;
+  }
+
+  const vertexShader = `
+    attribute vec2 aPosition;
+    void main(){
+      gl_Position = vec4(aPosition, 0.0, 1.0);
+    }
+  `;
+
+  const fragmentShader = `
+    precision highp float;
+
+    uniform vec2 uResolution;
+    uniform vec2 uPointer;
+    uniform vec2 uPointerTrail;
+    uniform vec2 uPointerVelocity;
+    uniform float uPointerDown;
+    uniform float uPointerActive;
+    uniform float uTime;
+    uniform sampler2D uTexture;
+
+    const float ORB_R = 0.3010;
+    const int STEPS = 12;
+    const float PI = 3.14159265359;
+
+    float hash21(vec2 p){
+      p = fract(p * vec2(234.34, 842.21));
+      p += dot(p, p + 34.45);
+      return fract(p.x * p.y);
+    }
+
+    float noise2(vec2 p){
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      f = f * f * (3.0 - 2.0 * f);
+      float a = hash21(i);
+      float b = hash21(i + vec2(1.0, 0.0));
+      float c = hash21(i + vec2(0.0, 1.0));
+      float d = hash21(i + vec2(1.0, 1.0));
+      return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
+    }
+
+    float fbm2(vec2 p){
+      float v = 0.0;
+      float a = 0.5;
+      mat2 r = mat2(0.82, -0.57, 0.57, 0.82);
+      for(int i=0;i<5;i++){
+        v += a * noise2(p);
+        p = r * p * 1.95 + 0.23;
+        a *= 0.52;
+      }
+      return v;
+    }
+
+    vec3 angularRim(float a) {
+      vec3 cyan   = vec3(0.02, 0.76, 1.00);
+      vec3 pearl  = vec3(0.80, 0.96, 1.00);
+      vec3 pink   = vec3(1.00, 0.08, 0.70);
+      vec3 violet = vec3(0.33, 0.02, 0.98);
+      vec3 cobalt = vec3(0.00, 0.20, 1.00);
+
+      vec2 dir = vec2(cos(a), sin(a));
+      float leftW   = pow(max(0.0, -dir.x), 2.0);
+      float topW    = pow(max(0.0,  dir.y), 3.1);
+      float rightW  = pow(max(0.0,  dir.x), 2.35);
+      float bottomW = pow(max(0.0, -dir.y), 2.3);
+
+      vec3 c = cyan * leftW + pearl * topW + pink * rightW + mix(cobalt, violet, 0.60) * bottomW;
+      return c / (leftW + topW + rightW + bottomW + 1e-5);
+    }
+
+    vec3 centerA(float t){ return vec3(-0.34 + 0.10*sin(t*0.42),  0.34 + 0.08*cos(t*0.37),  0.14*sin(t*0.31)); }
+    vec3 centerB(float t){ return vec3( 0.18 + 0.12*cos(t*0.34), -0.26 + 0.10*sin(t*0.39), -0.16 + 0.12*cos(t*0.29)); }
+    vec3 centerC(float t){ return vec3( 0.46 + 0.08*sin(t*0.35), -0.16 + 0.07*cos(t*0.28),  0.02 + 0.10*sin(t*0.46)); }
+    vec3 centerD(float t){ return vec3(-0.18 + 0.11*cos(t*0.25), -0.46 + 0.08*sin(t*0.33),  0.13*cos(t*0.26)); }
+
+    vec4 metaField(vec3 p, float t){
+      vec3 c1 = centerA(t);
+      vec3 c2 = centerB(t);
+      vec3 c3 = centerC(t);
+      vec3 c4 = centerD(t);
+      float r1 = 0.48, r2 = 0.60, r3 = 0.42, r4 = 0.40;
+
+      vec3 d1 = p - c1;
+      vec3 d2 = p - c2;
+      vec3 d3 = p - c3;
+      vec3 d4 = p - c4;
+
+      float w1 = (r1*r1) / (dot(d1,d1) + 0.06);
+      float w2 = (r2*r2) / (dot(d2,d2) + 0.08);
+      float w3 = (r3*r3) / (dot(d3,d3) + 0.05);
+      float w4 = (r4*r4) / (dot(d4,d4) + 0.04);
+
+      float density = w1 + w2 + w3 + w4;
+      vec3 flow =
+        (-d1) * w1 * 0.85 +
+        (-d2) * w2 * 0.65 +
+        (-d3) * w3 * 1.00 +
+        (-d4) * w4 * 0.80;
+
+      return vec4(flow, density);
+    }
+
+    vec3 sampleReference(vec2 uv, vec2 dir, float chroma){
+      float r = texture2D(uTexture, uv + dir * chroma).r;
+      float g = texture2D(uTexture, uv).g;
+      float b = texture2D(uTexture, uv - dir * chroma).b;
+      return vec3(r, g, b);
+    }
+
+    void main(){
+      vec2 res = uResolution;
+      float scale = min(res.x, res.y);
+      vec2 q = (gl_FragCoord.xy - 0.5 * res) / scale;
+      vec2 uv = q + 0.5;
+
+      vec2 local = q / ORB_R;
+      float rr = dot(local, local);
+      float edgeR = sqrt(max(rr, 0.0));
+
+      if (rr >= 1.03) {
+        float halo = exp(-max(length(q) - ORB_R, 0.0) * scale * 0.058);
+        vec3 haloColor = vec3(0.004, 0.007, 0.019) * halo * 0.32;
+        gl_FragColor = vec4(haloColor, 1.0);
+        return;
+      }
+
+      float z = sqrt(max(1.0 - rr, 0.0));
+      vec3 n = normalize(vec3(local, z));
+      float fresnel = pow(1.0 - max(n.z, 0.0), 2.35);
+      float innerSafe = smoothstep(0.0, 0.22, 1.0 - edgeR);
+
+      // Pointer in the same square coordinate system as q/local.
+      vec2 pointerQ = (uPointer - 0.5 * res) / scale;
+      pointerQ.y *= -1.0;
+      vec2 pointerLocal = pointerQ / ORB_R;
+      vec2 trailQ = (uPointerTrail - 0.5 * res) / scale;
+      trailQ.y *= -1.0;
+      vec2 trailLocal = trailQ / ORB_R;
+      vec2 pointerVel = uPointerVelocity * vec2(1.0, -1.0);
+      float pointerSpeed = clamp(length(pointerVel) * 2.2, 0.0, 1.0);
+      float interaction = uPointerActive;
+      float t = uTime;
+
+      // A coherent slow spin around the exact center of the source image.
+      float ang = 0.030 * sin(t * 0.31) + 0.010 * sin(t * 0.13);
+      float cs = cos(ang), sn = sin(ang);
+      mat2 rot = mat2(cs, -sn, sn, cs);
+      vec2 centered = uv - 0.5;
+      vec2 sampleUV = 0.5 + rot * centered;
+
+      // 3D volumetric metaball field sampled through the sphere.
+      float accum = 0.0;
+      float accumPearl = 0.0;
+      float accumMagenta = 0.0;
+      float accumBlue = 0.0;
+      vec3 flow = vec3(0.0);
+      float stepW = 0.0;
+
+      vec3 front = vec3(local.xy * 0.84, -z * 0.85);
+      vec3 back  = vec3(local.xy * 0.84,  z * 0.85);
+
+      for (int i = 0; i < STEPS; i++) {
+        float fi = float(i);
+        float ft = (fi + 0.5) / float(STEPS);
+        vec3 p = mix(front, back, ft);
+
+        float wNoise = fbm2(p.xy * 1.9 + vec2(0.24 * t, -0.17 * t) + p.z * 2.4);
+        float wNoise2 = fbm2((p.xy + 2.7) * 1.4 + vec2(-0.15 * t, 0.20 * t) - p.z * 1.8);
+        p.xy += vec2(wNoise - 0.5, wNoise2 - 0.5) * 0.15;
+        p.z += sin((p.x + p.y) * 2.8 + t * 0.78) * 0.070;
+
+        // Cursor behaves like a magnetic stirrer inside the sphere.
+        vec2 rel = p.xy - pointerLocal;
+        float pointerInfluence = exp(-dot(rel, rel) * 2.8) * interaction;
+        vec2 trailRel = p.xy - trailLocal;
+        float trailInfluence = exp(-dot(trailRel, trailRel) * 3.8) * interaction * pointerSpeed;
+        vec2 swirl = vec2(-rel.y, rel.x);
+        vec2 trailSwirl = vec2(trailRel.y, -trailRel.x);
+        p.xy -= pointerLocal * 0.055 * interaction;
+        p.xy += swirl * pointerInfluence * (0.045 + 0.15 * pointerSpeed + 0.070 * uPointerDown);
+        p.xy += trailSwirl * trailInfluence * (0.035 + 0.095 * uPointerDown);
+        p.xy -= pointerVel * (pointerInfluence * 0.070 + trailInfluence * 0.035);
+
+        vec4 mf = metaField(p, t);
+        float d = smoothstep(1.20, 2.35, mf.w);
+        float w = 0.85 + 0.55 * sin(ft * PI);
+
+        accum += d * w;
+        flow += mf.xyz * d * w;
+        stepW += w;
+
+        accumPearl += d * smoothstep(0.05, 0.72, p.y + 0.25) * smoothstep(-0.55, 0.10, -p.x) * w;
+        accumMagenta += d * smoothstep(0.08, 0.60, p.x) * smoothstep(0.10, -0.62, p.y) * w;
+        accumBlue += d * smoothstep(-0.02, 0.70, -p.y) * w;
+      }
+
+      accum /= max(stepW, 1e-5);
+      flow /= max(stepW, 1e-5);
+      accumPearl /= max(stepW, 1e-5);
+      accumMagenta /= max(stepW, 1e-5);
+      accumBlue /= max(stepW, 1e-5);
+
+      // Stronger globe tilt + local lensing. This is intentionally visible.
+      vec2 tilt = clamp(pointerLocal, vec2(-1.25), vec2(1.25));
+      vec2 parallax = tilt * (0.013 + 0.026 * (1.0 - z)) * interaction;
+      vec2 autoDrift = vec2(
+        0.0080 * sin(t * 0.62) + 0.0030 * sin(t * 0.27 + 1.7),
+        0.0062 * cos(t * 0.54) + 0.0028 * sin(t * 0.33)
+      );
+      vec2 volumeOffset = (flow.xy * 0.0145 + vec2(flow.z, -flow.z) * 0.0065) * innerSafe;
+      vec2 cavityBias = local * (-0.0075 * accum) * innerSafe;
+
+      vec2 cursorRel = local - pointerLocal;
+      float cursorDist2 = dot(cursorRel, cursorRel);
+      float lens = exp(-cursorDist2 * 4.2) * interaction;
+      vec2 lensDir = normalize(cursorRel + vec2(0.0001));
+      vec2 lensOffset = lensDir * lens * (0.010 + 0.020 * pointerSpeed + 0.018 * uPointerDown);
+      vec2 velocityShear = pointerVel * lens * (0.012 + 0.020 * pointerSpeed);
+
+      sampleUV += (parallax + autoDrift) * innerSafe + volumeOffset + cavityBias;
+      sampleUV += (lensOffset - velocityShear) * innerSafe;
+
+      // Main sample from the supplied reference image.
+      vec2 chromaDir = normalize(local + vec2(0.0001));
+      float chroma = 0.00105 + 0.00155 * fresnel;
+      vec3 col = sampleReference(sampleUV, chromaDir, chroma * 0.75);
+
+      // Refracted secondary taps aligned with the 3D fluid field.
+      vec2 softDir = normalize(volumeOffset + vec2(0.0001, -0.0001));
+      vec3 soft1 = texture2D(uTexture, sampleUV + softDir * (0.0065 + 0.0040 * accum)).rgb;
+      vec3 soft2 = texture2D(uTexture, sampleUV - softDir * (0.0050 + 0.0030 * accum)).rgb;
+      col = mix(col, 0.55 * soft1 + 0.45 * soft2, 0.30 + 0.20 * accum);
+
+      // Volume tints: broad masses, not noisy clouds.
+      vec3 deepBlue = vec3(0.015, 0.022, 0.17);
+      vec3 violet = vec3(0.26, 0.02, 0.80);
+      vec3 pearl = vec3(0.68, 0.88, 0.96);
+      vec3 magenta = vec3(0.94, 0.06, 0.62);
+      vec3 cyan = vec3(0.00, 0.73, 1.00);
+
+      vec3 volumeTint = vec3(0.0);
+      volumeTint += mix(deepBlue, violet, 0.55 + 0.35 * sin(t * 0.18)) * accumBlue * 0.16;
+      volumeTint += pearl * accumPearl * 0.13;
+      volumeTint += magenta * accumMagenta * 0.18;
+      volumeTint += cyan * (accum * 0.11) * smoothstep(-0.68, -0.12, local.x);
+      col += volumeTint;
+
+      // Keep the center darker, closer to the reference's deep cavity.
+      vec2 cavityP = local - vec2(0.08 + 0.028 * sin(t * 0.16), 0.07 + 0.015*cos(t*0.14));
+      float cavity = exp(-(cavityP.x*cavityP.x/0.62 + cavityP.y*cavityP.y/0.42) * 2.4);
+      col *= 1.0 - cavity * (0.10 + 0.08 * accum);
+
+      // Upper-left pearl highlight, stretched and animated.
+      vec2 sheenCenter = vec2(-0.24 + 0.028 * sin(t * 0.29), 0.54 + 0.022 * cos(t * 0.25));
+      vec2 sd = local - sheenCenter;
+      float sheen = exp(-(sd.x*sd.x/0.68 + sd.y*sd.y/0.17) * 2.4);
+      sheen *= smoothstep(0.18, 0.90, local.y + 0.35);
+      col += vec3(0.14, 0.19, 0.22) * sheen * (0.32 + 0.12 * sin(t * 0.52));
+
+      // Interactive specular: the glass visibly reacts under the cursor.
+      float cursorSpot = exp(-cursorDist2 * 5.4) * interaction;
+      float cursorEdge = smoothstep(0.12, 0.95, edgeR);
+      vec3 cursorHue = mix(vec3(0.05, 0.56, 0.95), vec3(0.86, 0.08, 0.65), smoothstep(-0.75, 0.75, pointerLocal.x));
+      col += cursorHue * cursorSpot * (0.055 + 0.18 * pointerSpeed + 0.10 * uPointerDown) * (0.45 + 0.55 * cursorEdge);
+
+      // Rim and shell lighting.
+      float rimBand = smoothstep(0.70, 0.975, edgeR) * (1.0 - smoothstep(0.985, 1.016, edgeR));
+      float a = atan(local.y, local.x);
+      vec3 rimColor = angularRim(a);
+      float rimPulse = 0.78 + 0.22 * sin(t * 0.88 + a * 1.8 + 0.35*sin(t*0.34));
+      col += rimColor * rimBand * (0.10 + 0.18 * fresnel) * rimPulse;
+
+      vec2 localDir = normalize(local + vec2(0.0001));
+      vec2 pointerDir = normalize(pointerLocal + vec2(0.0001));
+      float pointerRim = pow(max(dot(localDir, pointerDir), 0.0), 10.0) * rimBand * interaction;
+      col += mix(vec3(0.04,0.56,1.0), vec3(1.0,0.05,0.62), smoothstep(-0.5,0.5,pointerLocal.x))
+           * pointerRim * (0.12 + 0.22 * pointerSpeed + 0.10 * uPointerDown);
+
+      // Characteristic lower-right magenta crescent.
+      vec2 crescentP = local - vec2(0.44, -0.35);
+      float crescentRing = exp(-pow((length(crescentP) - 0.40) / 0.065, 2.0));
+      float crescentMask = smoothstep(-0.04, 0.52, local.x) * smoothstep(0.16, -0.78, local.y);
+      float crescent = crescentRing * crescentMask * (0.66 + 0.34 * sin(t * 0.58 + 1.0));
+      col += vec3(0.22, 0.01, 0.30) * crescent * 0.26;
+
+      // A soft blue left edge and bottom glow to match the source distribution.
+      col += vec3(0.00, 0.18, 0.95) * smoothstep(-1.0, -0.24, -local.x) * smoothstep(0.10, 1.0, 1.0 - abs(local.y)) * 0.075;
+      col += vec3(0.04, 0.03, 0.70) * smoothstep(-1.0, -0.18, -local.y) * 0.06;
+
+      // Subtle breathing, keeping it alive without visibly pulsing.
+      col *= 0.976 + 0.040 * sin(t * 0.50);
+      col = clamp(col, 0.0, 1.0);
+
+      float silhouette = 1.0 - smoothstep(0.996, 1.02, edgeR);
+      col *= silhouette;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  function compile(type, source) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      throw new Error(gl.getShaderInfoLog(s));
+    }
+    return s;
+  }
+
+  const program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexShader));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentShader));
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    throw new Error(gl.getProgramInfoLog(program));
+  }
+  gl.useProgram(program);
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+
+  const aPosition = gl.getAttribLocation(program, 'aPosition');
+  gl.enableVertexAttribArray(aPosition);
+  gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+
+  const uResolution = gl.getUniformLocation(program, 'uResolution');
+  const uPointer = gl.getUniformLocation(program, 'uPointer');
+  const uPointerTrail = gl.getUniformLocation(program, 'uPointerTrail');
+  const uPointerVelocity = gl.getUniformLocation(program, 'uPointerVelocity');
+  const uPointerDown = gl.getUniformLocation(program, 'uPointerDown');
+  const uPointerActive = gl.getUniformLocation(program, 'uPointerActive');
+  const uTime = gl.getUniformLocation(program, 'uTime');
+  const uTexture = gl.getUniformLocation(program, 'uTexture');
+
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,255]));
+  gl.uniform1i(uTexture, 0);
+
+  const img = new Image();
+  img.decoding = 'async';
+  img.onload = () => {
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+  };
+  img.src = 'data:image/webp;base64,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';
+
+  let pointerX = innerWidth * 0.5;
+  let pointerY = innerHeight * 0.5;
+  let trailX = pointerX;
+  let trailY = pointerY;
+  let targetX = pointerX;
+  let targetY = pointerY;
+  let velocityX = 0;
+  let velocityY = 0;
+  let press = 0;
+  let pressTarget = 0;
+  let active = 0;
+  let activeTarget = 0;
+
+  const onPointer = (e) => {
+    const p = e.touches ? e.touches[0] : e;
+    if (!p) return;
+    targetX = p.clientX;
+    targetY = p.clientY;
+    activeTarget = 1;
+  };
+
+  canvas.addEventListener('pointerenter', () => { activeTarget = 1; });
+  canvas.addEventListener('pointermove', onPointer, {passive:true});
+  canvas.addEventListener('pointerdown', (e) => {
+    onPointer(e);
+    pressTarget = 1;
+    canvas.style.cursor = 'grabbing';
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  canvas.addEventListener('pointerup', (e) => {
+    pressTarget = 0;
+    canvas.style.cursor = 'grab';
+    try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  canvas.addEventListener('pointercancel', () => { pressTarget = 0; canvas.style.cursor = 'grab'; });
+  canvas.addEventListener('pointerleave', () => {
+    activeTarget = 0;
+    pressTarget = 0;
+    targetX = innerWidth * 0.5;
+    targetY = innerHeight * 0.5;
+    canvas.style.cursor = 'grab';
+  });
+  addEventListener('touchmove', onPointer, {passive:true});
+
+  function resize(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round(innerWidth * dpr));
+    const h = Math.max(1, Math.round(innerHeight * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
+    }
+  }
+  addEventListener('resize', resize, {passive:true});
+  resize();
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const start = performance.now();
+
+  let prevPointerX = pointerX;
+  let prevPointerY = pointerY;
+
+  function render(now){
+    resize();
+
+    // Faster spring response than V4. The velocity becomes part of the shader,
+    // so quick cursor gestures visibly stir the interior fluid.
+    prevPointerX = pointerX;
+    prevPointerY = pointerY;
+    pointerX += (targetX - pointerX) * 0.16;
+    pointerY += (targetY - pointerY) * 0.16;
+    trailX += (pointerX - trailX) * 0.055;
+    trailY += (pointerY - trailY) * 0.055;
+
+    const minSide = Math.max(1, Math.min(innerWidth, innerHeight));
+    const instantaneousVX = ((pointerX - prevPointerX) / minSide) * 60;
+    const instantaneousVY = ((pointerY - prevPointerY) / minSide) * 60;
+    velocityX += (instantaneousVX - velocityX) * 0.22;
+    velocityY += (instantaneousVY - velocityY) * 0.22;
+    velocityX *= 0.94;
+    velocityY *= 0.94;
+    press += (pressTarget - press) * 0.20;
+    active += (activeTarget - active) * 0.14;
+
+    const sx = canvas.width / innerWidth;
+    const sy = canvas.height / innerHeight;
+
+    gl.useProgram(program);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform2f(uResolution, canvas.width, canvas.height);
+    gl.uniform2f(uPointer, pointerX * sx, pointerY * sy);
+    gl.uniform2f(uPointerTrail, trailX * sx, trailY * sy);
+    gl.uniform2f(uPointerVelocity, velocityX, velocityY);
+    gl.uniform1f(uPointerDown, press);
+    gl.uniform1f(uPointerActive, active);
+    gl.uniform1f(uTime, ((now - start) / 1000.0) * (reduceMotion ? 0.70 : 1.75));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    const orbRadius = minSide * 0.301;
+    const normalizedX = (pointerX - innerWidth * 0.5) / orbRadius;
+    const normalizedY = (pointerY - innerHeight * 0.5) / orbRadius;
+    window.dispatchEvent(new CustomEvent('aurora-pointer', { detail: {
+      x: normalizedX,
+      y: normalizedY,
+      speed: Math.min(1, Math.hypot(velocityX, velocityY) * 2.2),
+      pressed: press > 0.35,
+      active: active > 0.08,
+      inside: Math.hypot(normalizedX, normalizedY) < 1.04
+    }}));
+
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+</script>
+<script type="module" src="./aurora-orb.js"></script>
+</body>
+</html>

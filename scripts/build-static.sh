@@ -23,5 +23,6 @@ cp \
   "$repo_dir/README.md" \
   "$output_dir/"
 cp -R "$repo_dir/component" "$output_dir/component"
+cp -R "$repo_dir/aurora-orb" "$output_dir/aurora-orb"
 
 echo "$output_dir"

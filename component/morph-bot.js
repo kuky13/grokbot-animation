@@ -7,6 +7,7 @@ import {
   GRADIENT_PRESETS,
   MATERIAL_IDS,
   SOLID_PRESETS,
+  resolveMaterial,
 } from "./materials.js";
 import {
   compileDialogue,
@@ -439,7 +440,19 @@ export class MorphBotElement extends HTMLElementBase {
     const gradientEnd = this.getAttribute("gradient-end") || character.gradientEnd;
     const gradientAngle = numberAttribute(this, "gradient-angle", character.gradientAngle, 0, 360);
     const glassPreset = this.glassPreset;
-    const eyeColor = this.getAttribute("eye-color") || character.eyeColor;
+    const resolvedMaterial = resolveMaterial({
+      material,
+      color,
+      gradientPreset,
+      gradientStart,
+      gradientEnd,
+      gradientAngle,
+      glassPreset,
+    });
+    const eyeColor = this.getAttribute("eye-color")
+      || this._preset?.character?.eyeColor
+      || resolvedMaterial.eyeColor
+      || character.eyeColor;
     const rotation = numberAttribute(this, "rotation", stateConfig.headRotation, -180, 180);
     const pointer = this.hasAttribute("follow-pointer") ? true : Boolean(character.pointer);
     const flipX = this.hasAttribute("flip") ? true : Boolean(character.flipX);

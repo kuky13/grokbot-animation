@@ -14,9 +14,9 @@
         <span>Morph Bot <small>API</small></span>
       </a>
       <div>
-        <span class="version">v0.5.0</span>
+        <span class="version">v0.6.0</span>
         <a href="../">返回组件编辑器</a>
-        <a class="download" href="../downloads/morph-bot-element-0.5.0.zip" download>下载组件 ↓</a>
+        <a class="download" href="../downloads/morph-bot-element-0.6.0.zip" download>下载组件 ↓</a>
       </div>
     </header>
 
@@ -36,7 +36,7 @@
         <p>动画参考</p>
         <a href="#states">39 个状态</a>
         <a href="#shapes">18 个形状</a>
-        <a href="#materials">21 个材质预设</a>
+        <a href="#materials">25 个材质预设</a>
         <a href="#effects">14 个 Morph</a>
         <p>工程化</p>
         <a href="#configuration">Preset 配置</a>
@@ -262,13 +262,14 @@ await bot.performDialogue(dialogue, {
         </section>
 
         <section id="materials" class="doc-section">
-          <div class="section-title"><span>10</span><div><p>MATERIAL REFERENCE</p><h2>21 个材质预设</h2></div></div>
-          <p>纯色提供 8 个基础色；渐变提供 8 个带明确角度与有序色标的预设，并通过 OKLab 采样生成平滑过渡；彩虹玻璃提供 5 个由基底、暗部、固定环境高光、边缘色散和内部焦散组成的多层预设。点击任意卡片即可应用到右侧 Live API。</p>
+          <div class="section-title"><span>10</span><div><p>MATERIAL REFERENCE</p><h2>25 个材质预设</h2></div></div>
+          <p>纯色提供 8 个基础色；渐变包含 8 个经过 OKLab 平滑的线性预设，以及 4 个由雾底和多个柔焦径向色团组成的空间预设；彩虹玻璃提供 5 个由基底、暗部、固定环境高光、边缘色散和内部焦散组成的多层预设。点击任意卡片即可应用到右侧 Live API。</p>
           <p class="tip"><strong>设计依据：</strong>预设结构参考 <a href="https://open-props.style/" target="_blank" rel="noreferrer">Open Props</a> 的可移植渐变 token 与 <a href="https://github.com/itmeo/webgradients" target="_blank" rel="noreferrer">WebGradients</a> 的 angle + ordered stops 表达；具体配色与玻璃分层为本项目设计。</p>
           <div id="material-reference" class="material-reference"></div>
           <div class="code-block compact">
             <div><span>材质切换</span><button type="button" data-copy-code>复制</button></div>
             <pre><code>bot.setMaterial("gradient", { preset: "electric-dusk" });
+bot.setMaterial("gradient", { preset: "porcelain-bloom" });
 bot.setMaterial("gradient", {
   start: "#315cf5",
   end: "#34d399",

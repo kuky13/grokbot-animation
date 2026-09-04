@@ -1,6 +1,7 @@
 import type {
   MorphBotGlassPresetDefinition,
   MorphBotGradientPresetDefinition,
+  MorphBotGradientSpot,
   MorphBotMaterial,
   MorphBotMaterialStop,
   MorphBotSolidPresetDefinition,
@@ -27,9 +28,14 @@ export function resolveMaterial(config?: Record<string, unknown>): {
   color?: string;
   angle?: number;
   stops?: readonly MorphBotMaterialStop[];
+  kind?: "soft";
+  base?: string;
+  spots?: readonly MorphBotGradientSpot[];
+  eyeColor?: string;
   shadow?: string;
   rim?: string;
   sheen?: number;
 };
 
 export function smoothMaterialStops(stops: readonly MorphBotMaterialStop[], subdivisions?: number): MorphBotMaterialStop[];
+export function materialCssBackground(material: MorphBotMaterial, preset: MorphBotSolidPresetDefinition | MorphBotGradientPresetDefinition | MorphBotGlassPresetDefinition): string;
