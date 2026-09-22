@@ -19,6 +19,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 cd "$REPO_DIR"
+npm run pack:component
 npm test
 
 mkdir -p "$PACKAGE_ROOT/runtime" "$RELEASE_DIR"
@@ -31,6 +32,7 @@ cp \
   "$COMPONENT_DIR/catalog.js" \
   "$COMPONENT_DIR/materials.js" \
   "$COMPONENT_DIR/materials.d.ts" \
+  "$COMPONENT_DIR/package.json" \
   "$PACKAGE_ROOT/"
 cp -a "$COMPONENT_DIR/runtime/." "$PACKAGE_ROOT/runtime/"
 

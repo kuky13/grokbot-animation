@@ -14,6 +14,7 @@ const required = [
   "catalog.js",
   "materials.js",
   "materials.d.ts",
+  "package.json",
   "runtime/drippy-character.js",
   "runtime/character-interaction.js",
   "runtime/speech-meter.js",
