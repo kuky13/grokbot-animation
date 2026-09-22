@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0d0d0f" />
+  <title>Status Kuky</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main>
+    <header><img src="https://onedrip.com.br/drippy-v2/1a46823fe0b530406f0f7b3402e935906e4d0db96daeb18b73e043dfb6f4183d/drippy-idle.png" alt="Drippy" /><div><p>KUKY SOLUTIONS</p><h1>Status dos serviços</h1></div><button id="refresh" type="button">Atualizar</button></header>
+    <section class="summary" aria-live="polite"><span id="indicator"></span><div><h2 id="headline">Verificando serviços…</h2><p id="checked">Aguarde um instante</p></div></section>
+    <section id="services" class="services" aria-label="Serviços monitorados"></section>
+    <footer>Monitoramento automático a cada 60 segundos.</footer>
+  </main>
+  <script>
+    const labels = { operational: 'Todos os sistemas operacionais', degraded: 'Alguns serviços estão instáveis', outage: 'Interrupção de serviço detectada' };
+    const serviceLabels = { operational: 'Operacional', down: 'Indisponível' };
+    async function refresh() {
+      const button = document.querySelector('#refresh'); button.disabled = true;
+      try {
+        const response = await fetch('/api/status', { cache: 'no-store' });
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        document.body.dataset.status = data.overall;
+        document.querySelector('#headline').textContent = labels[data.overall];
+        document.querySelector('#checked').textContent = `Atualizado ${new Date(data.checkedAt).toLocaleString('pt-BR')}`;
+        document.querySelector('#services').innerHTML = data.services.map(service => `<article><span class="dot ${service.status}"></span><div><h3>${service.name}</h3><p>${serviceLabels[service.status]}</p></div><strong>${service.latencyMs} ms</strong></article>`).join('');
+      } catch { document.body.dataset.status = 'outage'; document.querySelector('#headline').textContent = 'Não foi possível consultar o monitoramento'; }
+      finally { button.disabled = false; }
+    }
+    document.querySelector('#refresh').addEventListener('click', refresh);
+    refresh(); setInterval(refresh, 60000);
+  </script>
+</body>
+</html>
