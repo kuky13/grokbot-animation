@@ -22,7 +22,7 @@ function replaceStops(gradient, stops) {
   }
 }
 
-function setSvgVisible(element, visible) {
+export function setSvgVisible(element, visible) {
   element.hidden = !visible;
   if (visible) {
     element.removeAttribute("display");

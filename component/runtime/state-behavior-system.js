@@ -233,9 +233,9 @@ export function startBounce(now) {
 
 export function updateGestures(now) {
   const output = this.emptyGesture();
-  if (["idle", "happy", "excited", "curious", "playful"].includes(this.state) && now >= this.winkNext) {
+  if (["idle", "happy", "excited", "curious", "playful"].includes(this.state) && now >= this.winkNext && !this.blinkQueue.length && this.eyeOpen.x > 0.98) {
     this.winkAt = now;
-    this.winkEye = Math.random() < 0.5 ? 0 : 1;
+    this.winkEye = 1 - this.winkEye;
     this.winkNext = now + random(4500, 10000);
   }
   if (now >= this.behaviorNext && !this.gesture && !this.spinSpring) {

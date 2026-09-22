@@ -1,4 +1,5 @@
 import { MORPH_IDS, STATE_IDS } from "../catalog.js";
+import { createSpeechMeter } from "./speech-meter.js";
 import {
   ChineseAnimaleseVoice,
   DIALOGUE_ENGLISH_MODES,
@@ -96,7 +97,12 @@ class CharacterVoice {
     }
     const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
     if (!AudioContextClass) return null;
-    if (!this.context) this.context = new AudioContextClass();
+    if (!this.context) {
+      this.context = new AudioContextClass();
+      this.output = this.context.createGain();
+      this.output.connect(this.context.destination);
+      this.speechLevel = createSpeechMeter(this.context, this.output);
+    }
     if (this.context.state === "suspended") await this.context.resume();
     return this.context;
   }
@@ -147,7 +153,7 @@ class CharacterVoice {
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.exponentialRampToValueAtTime(preset.gain, now + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + preset.length);
-    oscillator.connect(gain).connect(this.context.destination);
+    oscillator.connect(gain).connect(this.output);
     oscillator.addEventListener("ended", () => this.active.delete(oscillator), { once: true });
     this.active.add(oscillator);
     oscillator.start(now);
@@ -169,6 +175,7 @@ export class DialogueDirector {
   }
 
   _dispatch(type, detail = {}) {
+    if (type === "dialoguecharacter" && this.bot._engine) this.bot._engine.speechPhoneme = detail.phoneme || detail.phonetic || "";
     this.bot.dispatchEvent(new CustomEvent(type, { detail }));
   }
 
@@ -201,6 +208,7 @@ export class DialogueDirector {
 
   async _followSpeechClock(speech, playback, token, activeNode, onCue) {
     if (!playback) return false;
+    if (this.bot._engine) this.bot._engine.internalSpeech = () => this.paused || playback.ended ? 0 : (playback.speechLevel?.() || 0);
     const cues = speech.visualCues || speech.cues;
     const startingElapsed = this.elapsed;
     return new Promise((resolve) => {
@@ -252,6 +260,7 @@ export class DialogueDirector {
     this.initialPaused = this.bot.paused;
     if (this.initialPaused) this.bot.play();
     await this.voice.resume(voiceId);
+    if (this.bot._engine) this.bot._engine.internalSpeech = () => this.paused || !this.playing ? 0 : (this.voice.speechLevel?.() || 0);
     const speechPlans = new Map();
     if (isSampledDialogueVoice(voiceId)) {
       for (let index = 0; index < compiled.nodes.length; index += 1) {
@@ -336,6 +345,7 @@ export class DialogueDirector {
     if (token !== this.token) return { cancelled: true };
     this.playing = false;
     if (this.initialPaused) this.bot.pause();
+    if (this.bot._engine) { this.bot._engine.internalSpeech = null; this.bot._engine.speechPhoneme = ""; }
     this._dispatch("dialogueend", { cancelled: false, duration: this.elapsed, text: this.spokenText });
     return { cancelled: false, duration: this.elapsed, text: this.spokenText };
   }
@@ -364,6 +374,7 @@ export class DialogueDirector {
     this.playing = false;
     this.paused = false;
     this.voice.stop();
+    if (this.bot._engine) { this.bot._engine.internalSpeech = null; this.bot._engine.speechPhoneme = ""; }
     if (restorePause && wasPlaying) {
       if (this.initialPaused) this.bot.pause();
       else this.bot.play();

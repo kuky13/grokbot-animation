@@ -1,3 +1,4 @@
+import { createSpeechMeter } from "./speech-meter.js";
 import {
   AnimaleseEngine,
   EnglishAnalyzer,
@@ -175,12 +176,14 @@ export class ScheduledWebPlayer extends WebPlayer {
     source.playbackRate.value = 1;
     gain.gain.value = this.volume;
     source.connect(gain).connect(context.destination);
+    const speechLevel = createSpeechMeter(context, gain);
     const startTime = context.currentTime + Math.max(0.04, Math.min(0.12, Number(leadIn) || 0.06));
     const fallbackLatency = (Number(context.baseLatency) || 0) + (Number(context.outputLatency) || 0);
     const duration = buffer.length / (this.sampleRate || context.sampleRate) * 1000;
     let lastPosition = (context.currentTime - startTime - fallbackLatency) * 1000;
     const playback = {
       context,
+      speechLevel,
       source,
       startTime,
       duration,
@@ -209,6 +212,7 @@ export class ScheduledWebPlayer extends WebPlayer {
     };
     source.addEventListener("ended", () => {
       playback.ended = true;
+      speechLevel.disconnect?.();
       this.activeSources.delete(source);
     }, { once: true });
     this.activeSources.add(source);

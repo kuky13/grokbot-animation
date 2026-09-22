@@ -35,6 +35,7 @@ const DEFAULT_CHARACTER = Object.freeze({
   size: 96,
   flipX: false,
   pointer: false,
+  halo: "soft",
   badgeColor: "#1d9bf0",
   badgeScale: 1,
 });
@@ -52,7 +53,7 @@ function defaultState(state) {
     blinkEnabled: Boolean(blink),
     blinkMin: blink?.[0] ?? 3000,
     blinkMax: blink?.[1] ?? 7000,
-    morph: MORPH_BY_STATE[id] || "none",
+    morph: ["thinking", "dictating"].includes(id) ? "none" : MORPH_BY_STATE[id] || "none",
     headX: 0,
     headY: 0,
     headRotation: 0,
@@ -102,8 +103,26 @@ function svgTemplate(id) {
       }
       .grok-bot-mark__head,
       .morph-part { fill: var(--fg); }
+      /* Drippy character layer: clean dot eyes, reactive inner ears and animated mouth. */
       .grok-bot-mark__eye { fill: var(--bg); }
-      .eye-path { transform-origin: 0 0; }
+      .eye-path { display: none; }
+      .drippy-eye { fill: var(--bg); }
+      .drippy-ear {
+        fill: none;
+        stroke: var(--bg);
+        stroke-width: 3.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .drippy-mouth {
+        fill: none;
+        stroke: var(--bg);
+        stroke-width: 4;
+        stroke-linecap: round;
+      }
+      .drippy-mouth-open {
+        fill: var(--bg);
+      }
       .morph-ring { fill: none; stroke: var(--fg); }
       .morph-glyph { fill: var(--fg); }
       [hidden] { display: none !important; }
@@ -122,8 +141,14 @@ function svgTemplate(id) {
       <g id="bot-transform">
         <path id="head-path" class="grok-bot-mark__head"></path>
         <g clip-path="url(#${clipId})">
+          <path class="drippy-ear drippy-ear--left" d="M 73 78 Q 76 72 78 69 Q 80 72 83 78"></path>
+          <path class="drippy-ear drippy-ear--right" d="M 145.54 78 Q 148.54 72 150.54 69 Q 152.54 72 155.54 78"></path>
           <path class="grok-bot-mark__eye eye-path"></path>
           <path class="grok-bot-mark__eye eye-path"></path>
+          <ellipse class="drippy-eye drippy-eye--left" cx="78" cy="108" rx="7" ry="7"></ellipse>
+          <ellipse class="drippy-eye drippy-eye--right" cx="150.54" cy="108" rx="7" ry="7"></ellipse>
+          <path class="drippy-mouth" d="M 96 150 Q 114.27 158 132.5 150"></path>
+          <ellipse class="drippy-mouth-open" cx="114.27" cy="153" rx="6" ry="3" opacity="0"></ellipse>
         </g>
         <circle id="notify-badge" cx="114.2705" cy="114.2705" r="0" hidden></circle>
       </g>
@@ -136,6 +161,7 @@ export class MorphBotElement extends HTMLElementBase {
     return [
       "state", "shape", "size", "color", "eye-color", "speed", "follow-pointer", "flip", "paused", "decorative", "label",
       "material", "gradient-preset", "gradient-start", "gradient-end", "gradient-angle", "glass-preset", "rotation",
+      "halo", "interactive",
     ];
   }
 
@@ -300,6 +326,18 @@ export class MorphBotElement extends HTMLElementBase {
   }
 
   pause() { this.paused = true; return this; }
+
+  async connectAudio(mediaElement) {
+    if (!this._engine) throw new Error("Connect morph-bot to the document before connecting audio");
+    await this._engine.connectAudio(mediaElement);
+    return this;
+  }
+  disconnectAudio() { this._engine?.disconnectAudio(); return this; }
+  setSpeechLevel(level) {
+    if (!this._engine) throw new Error("Connect morph-bot to the document before setting speech level");
+    this._engine.setSpeechLevel(level);
+    return this;
+  }
   play() { this.paused = false; return this; }
   step() { this._engine?.stepFrame(); this.paused = true; return this; }
 
@@ -471,6 +509,8 @@ export class MorphBotElement extends HTMLElementBase {
       pointer,
       flipX,
       particlesEnabled: !this.hasAttribute("thumbnail"),
+      halo: this.getAttribute("halo") || character.halo,
+      interactive: this.hasAttribute("interactive") && !this.hasAttribute("thumbnail"),
       size: this.size,
       shape: this.shape,
       blinkCadence: stateConfig.blinkEnabled

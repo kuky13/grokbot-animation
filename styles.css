@@ -310,6 +310,34 @@ figcaption {
   transition: fill 600ms ease;
 }
 
+/* Drippy character layer */
+.eye-path {
+  display: none;
+}
+
+.drippy-eye {
+  fill: var(--bg, var(--surface));
+}
+
+.drippy-ear {
+  fill: none;
+  stroke: var(--bg, var(--surface));
+  stroke-width: 3.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.drippy-mouth {
+  fill: none;
+  stroke: var(--bg, var(--surface));
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.drippy-mouth-open {
+  fill: var(--bg, var(--surface));
+}
+
 .motion-layer,
 .bot-rig,
 .eye-gaze,
@@ -2161,3 +2189,24 @@ footer a:hover {
     grid-column: 1 / -1;
   }
 }
+
+
+.halo-control {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 180px);
+  gap: 6px 12px;
+  align-items: center;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.halo-control label { font-weight: 700; color: var(--ink); }
+.halo-control select {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: inherit;
+  background: var(--surface, #fff);
+}
+.halo-control small { grid-column: 1 / -1; opacity: .72; }

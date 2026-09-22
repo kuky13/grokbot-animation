@@ -37,6 +37,7 @@ function defaultCharacter() {
     size: 390,
     flipX: false,
     pointer: true,
+    halo: "soft",
     badgeColor: "#1d9bf0",
     badgeScale: 1,
   };
@@ -51,7 +52,7 @@ function defaultState(id) {
     blinkEnabled: Boolean(blink),
     blinkMin: blink?.[0] ?? 3000,
     blinkMax: blink?.[1] ?? 7000,
-    morph: morphByState[id] || "none",
+    morph: ["thinking", "dictating"].includes(id) ? "none" : morphByState[id] || "none",
     headX: 0,
     headY: 0,
     headRotation: 0,
@@ -188,6 +189,7 @@ function activeEngineConfig() {
   return {
     ...project.character,
     ...state,
+    interactive: true,
     expressionPool: previewExpressionIndex === null ? state.expressionPool : [previewExpressionIndex],
     expressionCadence: previewExpressionIndex === null ? state.expressionCadence : [3600000, 3600000],
     shape: project.shape,
@@ -196,6 +198,11 @@ function activeEngineConfig() {
 }
 
 const engine = new GrokBotEngine(svg, activeEngineConfig);
+document.querySelector("#halo-mode").addEventListener("change", event => {
+  project.character.halo = event.target.value;
+  persistProject();
+  commitHistory();
+});
 
 const editorSections = [
   {
@@ -270,6 +277,7 @@ function eyePath(ring) {
 }
 
 function applyMaterialAttributes(element, character = project.character) {
+  element.setAttribute("halo", character.halo || "soft");
   element.setAttribute("material", character.material);
   element.setAttribute("color", character.color);
   element.setAttribute("eye-color", character.eyeColor);
@@ -431,6 +439,7 @@ function syncMaterialView() {
 }
 
 function renderMaterialControls() {
+  document.querySelector("#halo-mode").value = project.character.halo || "soft";
   renderMaterialModes();
   renderMaterialPresets();
   renderMaterialCustomControls();

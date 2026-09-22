@@ -428,3 +428,24 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: 1ms !important; }
 }
+
+
+.halo-control {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 180px);
+  gap: 6px 12px;
+  align-items: center;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.halo-control label { font-weight: 700; color: var(--ink); }
+.halo-control select {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: inherit;
+  background: var(--surface, #fff);
+}
+.halo-control small { grid-column: 1 / -1; opacity: .72; }

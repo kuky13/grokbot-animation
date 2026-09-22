@@ -25,6 +25,8 @@ export interface MorphBotCharacterConfig {
   size?: number;
   flipX?: boolean;
   pointer?: boolean;
+  halo?: "soft" | "off";
+  interactive?: boolean;
   badgeColor?: string;
   badgeScale?: number;
   [key: string]: unknown;
@@ -103,6 +105,9 @@ export class MorphBotElement extends HTMLElement {
   setMaterial(material: "rainbow-glass", options?: { preset?: MorphBotGlassPreset }): this;
   replay(): this;
   pause(): this;
+  connectAudio(mediaElement: HTMLMediaElement): Promise<this>;
+  disconnectAudio(): this;
+  setSpeechLevel(level: number): this;
   play(): this;
   step(): this;
   restoreStateMorph(): this;
