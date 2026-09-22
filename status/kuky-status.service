@@ -1,0 +1,19 @@
+[Unit]
+Description=Kuky public status page
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/grokbot-animation
+EnvironmentFile=-/opt/onedripV/.env
+Environment=HOST=127.0.0.1
+Environment=PORT=4174
+ExecStart=/usr/bin/node /opt/grokbot-animation/status/server.mjs
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

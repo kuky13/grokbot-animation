@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "status:start": "node status/server.mjs",
+    "status:test": "node --test status/server.test.mjs",
     "build:static": "sh scripts/build-static.sh",
     "dev": "node server.mjs",
     "start": "node server.mjs",
