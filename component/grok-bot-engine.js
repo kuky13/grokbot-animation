@@ -163,6 +163,9 @@ export class GrokBotEngine {
     const now = this.clockTime;
     this.state = state;
     this.stateStartedAt = now;
+    this.reactionAt = -Infinity;
+    this.ambientNext = now + random(600, 950);
+    this.winkAt = -Infinity;
     this.stateVersion += 1;
     const config = this.getConfig();
     this.expressionCursor = 0;
@@ -218,14 +221,17 @@ export class GrokBotEngine {
 
   scheduleBlink(now) {
     if (now >= this.winkAt && now < this.winkAt + 400) return;
+    if (now < (this.reactionAt ?? -Infinity) + 700 || this.blinkQueue.length) return;
+    const sleepy = this.state === "drowsy" || this.state === "sleeping";
+    const duration = sleepy ? 1.8 : 1;
     this.blinkTarget = this.eyeOpen.target;
     this.blinkQueue.push(
       { at: now, value: 0.05 },
-      { at: now + 70, value: 0.05 },
-      { at: now + 150, value: 1.08 },
-      { at: now + 300, value: 1 },
+      { at: now + 70 * duration, value: 0.05 },
+      { at: now + 150 * duration, value: sleepy ? 0.4 : 1.03 },
+      { at: now + 300 * duration, value: sleepy ? 0.34 : 1 },
     );
-    if (Math.random() < 0.14) this.blinkQueue.push({ at: now + 370, value: 0.05 }, { at: now + 480, value: 1 });
+    if (!sleepy && Math.random() < 0.1) this.blinkQueue.push({ at: now + 370, value: 0.05 }, { at: now + 480, value: 1 });
   }
 
   frame(realNow) {
@@ -266,7 +272,7 @@ export class GrokBotEngine {
   }
 
   setPaused(paused) {
-    if (paused && this.drippySprings?.mouthOpen) {
+    if (paused && !this.paused && (this.internalSpeech || this.externalSpeech || this.manualSpeech != null || this.state === "dictating") && this.drippySprings?.mouthOpen) {
       this.drippySprings.mouthOpen.x = 0;
       this.drippySprings.mouthOpen.v = 0;
       this.speechLevel = 0;

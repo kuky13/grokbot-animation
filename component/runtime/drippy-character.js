@@ -1,5 +1,6 @@
 import { clamp, FIXED_STEP, springValue, stepSpring, smoothstep } from "./math.js";
 import { resolveMaterial } from "../materials.js";
+import { expressionPulse } from "./state-behavior-system.js";
 
 let visualId = 0;
 function svgNode(tag, attrs = {}) {
@@ -59,6 +60,8 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   const config = engine.getConfig?.() || {};
   const phase = reducedMotion ? 0 : now * 0.001;
   const motion = reducedMotion ? 0 : 1;
+  const reaction = reducedMotion ? 0 : expressionPulse(engine, now);
+  const mouthReaction = reducedMotion ? 0 : expressionPulse(engine, now, 160);
   const fade = clamp(1 - Math.max(0, engine.morph?.x || 0) * 2.25, 0, 1);
   const source = engine.internalSpeech || engine.externalSpeech;
   const hasSpeech = Boolean(source) || engine.manualSpeech != null;
@@ -111,7 +114,7 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     node.textContent = thinking ? "●" : happy ? "✦" : index % 2 ? "Z" : "z";
     node.setAttribute("x", thinking ? 158 + index * 10 : 25 + index * 90);
     node.setAttribute("y", thinking ? 38 : sleepy ? 45 - cycle * 24 : 42 + (index % 2) * 125);
-    node.style.opacity = String(fade * (thinking ? 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(phase * 4 - index)) : happy || sleepy ? (reducedMotion ? 0.6 : Math.sin(cycle * Math.PI)) : 0));
+    node.style.opacity = String(fade * (thinking ? 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(phase * 3 - index)) : happy ? reaction * 0.65 : sleepy ? (reducedMotion ? 0.6 : Math.sin(cycle * Math.PI)) : 0));
   });
 
   // Drippy keeps a deliberately simple face: two centered points. We preserve
@@ -119,12 +122,14 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   if (engine.dotEyes?.length === 2) {
     const config = engine.getConfig?.() || {};
     const autonomousWeight = config.pointer && engine.pointer?.active ? 0.22 : 1;
-    const gazeX = settle("gazeX", clamp((engine.pointer?.x || 0) + (engine.aimX?.x || 0) * autonomousWeight + (engine.directGazeX || 0), -5.5, 5.5), 18, 1);
-    const gazeY = settle("gazeY", clamp((engine.pointer?.y || 0) + (engine.aimY?.x || 0) * autonomousWeight + (engine.directGazeY || 0), -4, 4), 18, 1);
+    const glance = state === "curious" ? reaction * 1.2 : state === "confused" ? -reaction : 0;
+    const gazeX = settle("gazeX", clamp((engine.pointer?.x || 0) + (engine.aimX?.x || 0) * autonomousWeight + (engine.directGazeX || 0) + glance, -5.5, 5.5), 18, 1);
+    const gazeY = settle("gazeY", clamp((engine.pointer?.y || 0) + (engine.aimY?.x || 0) * autonomousWeight + (engine.directGazeY || 0) + (state === "shy" ? 2 : state === "proud" ? -1 : state === "thinking" ? -reaction : 0), -4, 4), 18, 1);
     const eyeScale = clamp(engine.eyeScale?.x ?? 1, 0.82, 1.28);
     const baseX = [78, 150.54];
     const sleepOpen = settle("sleepOpen", state === "sleeping" ? 0.07 : state === "drowsy" ? 0.35 : state === "angry" ? 0.55 : 1, 16, 1);
-    const joy = settle("joyEyes", ["happy", "laughing", "celebrate"].includes(state) ? 1 : 0, 16, 1);
+    const joy = clamp(settle("joyEyes", state === "laughing" ? 1 : ["happy", "celebrate"].includes(state) ? reaction : 0, 24, 1), 0, 1);
+    const arcOpacity = clamp(joy * 2, 0, 1);
     for (let index = 0; index < engine.dotEyes.length; index += 1) {
       let winkScale = 1;
       if (!reducedMotion && index === engine.winkEye && now >= engine.winkAt && now < engine.winkAt + 320) {
@@ -133,33 +138,37 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
       }
       const speakingSoftness = state === "dictating" ? 1 - friendlySpeech * 0.13 : 1;
       const open = clamp((Math.min(sleepOpen, engine.eyeOpen?.x ?? 1)) * winkScale * speakingSoftness, 0.12, 1.08);
-      const radius = 7 * eyeScale * settle(`eyeAsymmetry${index}`, state === "confused" ? (index === 0 ? 0.8 : 1.15) : 1);
+      const radius = 7 * eyeScale * settle(`eyeAsymmetry${index}`, state === "confused" ? (index === 0 ? 0.9 : 1.08) : 1);
       const eye = engine.dotEyes[index];
       eye.setAttribute("cx", (baseX[index] + gazeX).toFixed(2));
       eye.setAttribute("cy", (108 + gazeY).toFixed(2));
       eye.setAttribute("rx", radius.toFixed(2));
       eye.setAttribute("ry", (radius * open).toFixed(2));
-      eye.style.opacity = String(fade * (1 - joy));
+      eye.style.opacity = String(fade * (1 - arcOpacity));
       eye.style.display = fade > 0.03 ? "" : "none";
       const arc = engine.happyEyes[index];
       const x = baseX[index] + gazeX, y = 108 + gazeY;
       arc.setAttribute("d", `M ${x - radius} ${y + 2} Q ${x} ${y + 2 - 13 * open} ${x + radius} ${y + 2}`);
-      arc.style.opacity = String(fade * joy);
+      arc.style.opacity = String(fade * arcOpacity);
     }
   }
 
   if (engine.drippyEars?.length === 2) {
     let left = 0, right = 0, lift = 0, height = 9;
     const breath = Math.sin(phase * 1.5) * 0.5 * motion;
-    if (state === "listening") { lift = -3; height = 11; left = Math.sin(phase * 2.5) * motion; right = Math.sin(phase * 2.5 + 1.1) * motion; }
+    const leftReaction = reducedMotion ? 0 : expressionPulse(engine, now, 60);
+    const rightReaction = reducedMotion ? 0 : expressionPulse(engine, now, 120);
+    if (state === "listening") { lift = -1; height = 10; left = -1.8 * leftReaction; right = -1.8 * rightReaction; }
     else if (["curious", "confused", "thinking"].includes(state)) {
       left = 5; right = -2; height = 8;
       if (state === "confused") [left, right] = [right, left];
     } else if (["happy", "excited", "celebrate", "playful", "laughing"].includes(state)) {
-      lift = -2; height = 11;
-      left = Math.sin(phase * 5) * 1.5 * motion;
-      right = Math.sin(phase * 5 + 0.7) * 1.5 * motion;
-    } else if (["surprised", "scared", "alerting"].includes(state)) { lift = -5; height = 12; }
+      lift = -1; height = 9.5;
+      left = -2 * leftReaction;
+      right = -2 * rightReaction;
+    } else if (state === "shy") { left = 4 + leftReaction; right = 1; height = 7; }
+    else if (state === "proud") { left = -1; right = -2 - rightReaction; height = 9; }
+    else if (["surprised", "scared", "alerting"].includes(state)) { lift = -3; height = 10.5; }
     else if (["angry", "suspicious"].includes(state)) { left = 3; right = state === "suspicious" ? -3 : 3; height = 5; }
     else if (SAD_STATES.has(state)) { lift = 5; height = 3; }
     else if (state === "dictating") {
@@ -193,7 +202,7 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   if (SAD_STATES.has(state)) {
     y = 153;
     width = 15;
-    curve = -7.5;
+    curve = state === "sad" ? -5 : -2;
   } else if (["angry", "suspicious"].includes(state)) {
     width = 16;
     curve = -1.5;
@@ -206,11 +215,16 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     width = 13 + Math.sin(phase * 2.2) * 1.5;
     curve = 2.5;
     tilt = -3;
-  } else if (["happy", "proud", "playful"].includes(state)) {
-    width = 19;
-    curve = 10 + Math.sin(phase * 3.0) * 1.2;
+  } else if (state === "shy") {
+    width = 12; curve = 5 + mouthReaction; tilt = 2;
+  } else if (state === "proud") {
+    width = 16; curve = 7; tilt = -3 - mouthReaction;
+  } else if (["happy", "playful"].includes(state)) {
+    width = 18 + mouthReaction;
+    curve = 8 + 2 * mouthReaction;
   } else if (OPEN_STATES.has(state)) {
-    open = state === "surprised" || state === "scared" ? 1 : 0.78 + Math.abs(Math.sin(phase * 7.2)) * 0.22;
+    open = state === "surprised" || state === "scared" ? 0.55 : 0;
+    width = 17; curve = 8;
   } else if (state === "dictating") {
     y = 150.5;
     width = 15;
@@ -273,16 +287,23 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   engine.drippyMouth.style.fill = "none";
   engine.drippyMouth.style.fillOpacity = "0";
   engine.drippyMouth.style.strokeWidth = "";
-  const lineOpacity = fade * (1 - clamp(open * 1.35, 0, 1));
-  engine.drippyMouth.setAttribute("d", `M ${(cx - width).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${(y + curve).toFixed(2)} ${(cx + width).toFixed(2)} ${y.toFixed(2)}`);
+  const grin = clamp(settle("grin", ["laughing", "excited", "celebrate"].includes(state) ? (state === "laughing" ? 0.5 : 0.2) + 0.25 * mouthReaction : 0, 20, 1), 0, 1);
+  const lineOpacity = fade * (1 - clamp(open / 0.45, 0, 1));
+  const upper = y + curve * (1 - grin * 0.8);
+  const lower = y + curve + grin * 14;
+  const smilePath = `M ${(cx - width).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${upper.toFixed(2)} ${(cx + width).toFixed(2)} ${y.toFixed(2)}`;
+  engine.drippyMouth.setAttribute("d", smilePath + (grin > 0.001 ? ` Q ${cx.toFixed(2)} ${lower.toFixed(2)} ${(cx - width).toFixed(2)} ${y.toFixed(2)} Z` : ""));
   engine.drippyMouth.setAttribute("transform", `rotate(${tilt.toFixed(2)} ${cx} ${y})`);
   engine.drippyMouth.style.opacity = lineOpacity.toFixed(3);
 
   const openPulse = clamp(open, 0, 1);
   engine.drippyMouthOpen.setAttribute("cx", String(cx));
   engine.drippyMouthOpen.setAttribute("cy", String(y + 3));
-  const mouthRadius = settle("mouthRadius", ["excited", "laughing", "celebrate"].includes(state) ? 14 : 7.5);
+  const mouthRadius = settle("mouthRadius", 6);
   engine.drippyMouthOpen.setAttribute("rx", (mouthRadius * (0.7 + openPulse * 0.3)).toFixed(2));
   engine.drippyMouthOpen.setAttribute("ry", (2.0 + openPulse * 6.0).toFixed(2));
-  engine.drippyMouthOpen.style.opacity = (fade * clamp(open * 1.4, 0, 1)).toFixed(3);
+  engine.drippyMouthOpen.style.fill = "none";
+  engine.drippyMouthOpen.style.stroke = "var(--bg)";
+  engine.drippyMouthOpen.style.strokeWidth = "2.6";
+  engine.drippyMouthOpen.style.opacity = (fade * clamp(open / 0.45, 0, 1)).toFixed(3);
 }

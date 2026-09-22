@@ -34,8 +34,9 @@ createServer((request, response) => {
     return;
   }
 
+  const immutableRelease = /^component\/releases\/[0-9a-f]{64}\//.test(safePath);
   response.writeHead(200, {
-    "cache-control": "no-store",
+    "cache-control": immutableRelease ? "public, max-age=31536000, immutable" : "no-store",
     "content-type": contentTypes[extname(filePath)] || "application/octet-stream"
   });
   createReadStream(filePath).pipe(response);
