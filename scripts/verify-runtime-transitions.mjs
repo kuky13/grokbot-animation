@@ -32,6 +32,10 @@ class FakeElement {
 }
 
 const nodes = {
+  dotEyes: [new FakeElement(), new FakeElement()],
+  ears: [new FakeElement(), new FakeElement()],
+  mouth: new FakeElement(),
+  mouthOpen: new FakeElement(),
   head: new FakeElement(),
   clip: new FakeElement(),
   transform: new FakeElement(),
@@ -48,6 +52,8 @@ const nodes = {
 const svg = new FakeElement();
 svg.dataset = {};
 svg.querySelector = (selector) => ({
+  ".drippy-mouth": nodes.mouth,
+  ".drippy-mouth-open": nodes.mouthOpen,
   "#head-path": nodes.head,
   "#head-clip-path": nodes.clip,
   "#bot-transform": nodes.transform,
@@ -56,6 +62,8 @@ svg.querySelector = (selector) => ({
   "#particles-front": nodes.particlesFront,
 })[selector];
 svg.querySelectorAll = (selector) => ({
+  ".drippy-eye": nodes.dotEyes,
+  ".drippy-ear": nodes.ears,
   ".eye-path": nodes.eyes,
   ".morph-head": nodes.morphHeads,
   ".morph-ring": nodes.rings,
@@ -241,18 +249,12 @@ const sampleDrowsy = (seconds) => {
   };
 };
 
-const nodBottom = sampleDrowsy(1.7);
-near(nodBottom.y, 25, 0.0001, "drowsy should sink to the source nod depth");
-near(nodBottom.rotation, 10, 0.0001, "drowsy should reach the source nod angle");
-near(nodBottom.eyeOpen, 0.04, 0.0001, "drowsy eyes should nearly close at the nod bottom");
-
-const reboundPeak = sampleDrowsy(1.85);
-near(reboundPeak.y, 18, 0.0001, "drowsy should rebound by the source amount");
-near(reboundPeak.rotation, 6, 0.0001, "drowsy should rebound to the source angle");
-near(reboundPeak.eyeOpen, 0.46, 0.0001, "drowsy eyes should reopen during the rebound");
-
-const sleepyBlink = sampleDrowsy(2.55);
-near(sleepyBlink.eyeOpen, 0.05, 0.0001, "drowsy should keep the source recovery blink");
+for (let seconds = 0; seconds < 12; seconds += 0.1) {
+  const sleepy = sampleDrowsy(seconds);
+  assert.ok(sleepy.y >= 3.8 && sleepy.y <= 8.2, "drowsy breathing stays shallow without a large drop");
+  assert.ok(Math.abs(sleepy.rotation) <= 2.5, "drowsy keeps a gentle tilt");
+  assert.ok(sleepy.eyeOpen < 0.5, "drowsy eyes remain sleepy");
+}
 
 engine.pointer.active = false;
 
@@ -480,6 +482,17 @@ for (const [shapeId, shape] of Object.entries(SHAPES)) {
   assert.equal(nodes.head.getAttribute("d"), shape.path, `${shapeId} should finish on its exact source path`);
   assert.ok(nodes.eyes.every((eye) => eye.style.display !== "none"), `${shapeId} should keep both eyes visible after settling`);
 
+  for (const eye of nodes.dotEyes) {
+    const x = Number(eye.getAttribute("cx"));
+    const y = Number(eye.getAttribute("cy"));
+    const rx = Number(eye.getAttribute("rx"));
+    const ry = Number(eye.getAttribute("ry"));
+    for (const edgeY of [y - ry, y, y + ry]) {
+      const [left, right] = spanAt(shape.ring, edgeY);
+      assert.ok(x - rx >= left && x + rx <= right, `${shapeId} keeps Drippy dot eyes inside its silhouette`);
+    }
+  }
+
   for (let expressionIndex = 0; expressionIndex < EXPRESSIONS.length; expressionIndex += 1) {
     engine.expressionFrom = EXPRESSIONS[expressionIndex];
     engine.expressionTo = EXPRESSIONS[expressionIndex];
@@ -504,6 +517,93 @@ for (const [shapeId, shape] of Object.entries(SHAPES)) {
   }
 }
 
+// Exercise the visible face, not just the original hidden eye geometry.
+const { renderDrippyCharacter } = await import("../component/runtime/drippy-character.js");
+engine.state = "idle";
+engine.delta = 1 / 60;
+engine.reactionAt = -Infinity;
+engine.morph.x = 0;
+engine.eyeOpen.x = 1;
+engine.winkAt = 1000;
+for (const side of [0, 1]) {
+  engine.winkEye = side;
+  renderDrippyCharacter(engine, 1102.4);
+  assert.ok(Number(nodes.dotEyes[side].getAttribute("ry")) < 1, "wink should close only the selected eye");
+  assert.ok(Number(nodes.dotEyes[1 - side].getAttribute("ry")) > 5, "other eye stays open");
+}
+engine.winkAt = -Infinity;
+engine.eyeOpen.x = 0;
+renderDrippyCharacter(engine, 1500);
+assert.ok(nodes.dotEyes.every(eye => Number(eye.getAttribute("ry")) < 1), "zero openness must not reopen eyes");
+engine.eyeOpen.x = 1;
+engine.blinkQueue = [];
+engine.winkNext = 0;
+const firstSide = engine.winkEye;
+engine.updateGestures(2000);
+assert.equal(engine.winkEye, 1 - firstSide, "successive winks alternate sides");
+engine.scheduleBlink(2100);
+assert.equal(engine.blinkQueue.length, 0, "blink cannot overlap wink");
+engine.winkNext = 0;
+engine.updateGestures(2500);
+assert.equal(engine.winkEye, firstSide);
+engine.winkAt = -Infinity;
+engine.state = "idle";
+renderDrippyCharacter(engine, 3000, true);
+const initialY = engine.drippySprings.earY0.x;
+engine.state = "curious";
+renderDrippyCharacter(engine, 3000);
+assert.ok(engine.drippySprings.earY0.x > initialY && engine.drippySprings.earY0.x < 83, "ear eases toward its new pose");
+for (let i = 0; i < 120; i++) renderDrippyCharacter(engine, 3000 + i * 1000 / 60);
+assert.ok(engine.drippySprings.earY0.x - engine.drippySprings.earY1.x > 6, "curious ears move independently");
+engine.delta = 0;
+const pausedFace = JSON.stringify([...nodes.ears, nodes.mouth].map(node => [...node.attributes]));
+renderDrippyCharacter(engine, 3000 + 119 * 1000 / 60);
+assert.equal(JSON.stringify([...nodes.ears, nodes.mouth].map(node => [...node.attributes])), pausedFace, "pause freezes face springs");
+renderDrippyCharacter(engine, 6000, true);
+const reducedFace = JSON.stringify([...nodes.ears, nodes.mouth].map(node => [...node.attributes]));
+renderDrippyCharacter(engine, 8000, true);
+assert.equal(JSON.stringify([...nodes.ears, nodes.mouth].map(node => [...node.attributes])), reducedFace, "reduced motion has no decorative oscillation");
+engine.morph.x = 1;
+renderDrippyCharacter(engine, 8000, true);
+assert.ok([...nodes.dotEyes, ...nodes.ears, nodes.mouth, nodes.mouthOpen].every(node => Number(node.style.opacity) === 0), "morph hides the whole face");
+console.log("Drippy verified: independent ears, both winks, blink exclusion, zero openness, easing, pause, reduced motion and morph fade.");
+engine.morph.x = 0;
+engine.spinSpring = engine.gesture = null;
+engine.bounceStartedAt = -1;
+engine.manualSpeech = null;
+engine.internalSpeech = engine.externalSpeech = null;
+for (const state of ["happy", "excited", "proud", "playful", "curious", "confused", "listening", "laughing", "celebrate"]) {
+  engine.state = state;
+  engine.reactionAt = -Infinity;
+  engine.ambientNext = 0;
+  engine.eyeOpen.x = 1;
+  engine.winkAt = -Infinity;
+  engine.winkNext = Infinity;
+  engine.blinkQueue = [];
+  engine.updateGestures(10000);
+  assert.equal(engine.reactionAt, 10000, `${state} starts a short reaction`);
+  assert.ok(engine.ambientNext >= 13700 && engine.ambientNext <= 17700, "reactions have 3–7 seconds of rest");
+  engine.scheduleBlink(10200);
+  assert.equal(engine.blinkQueue.length, 0, "reaction excludes blinking");
+  engine.winkNext = 0;
+  engine.updateGestures(10300);
+  assert.equal(engine.winkAt, -Infinity, "reaction excludes winking");
+  engine.updateStateTargets(10300, baseConfig, 1 / 60);
+  assert.ok(Math.abs(engine.rotation.target) <= 5 * Math.PI / 180, `${state} keeps its body tilt subtle`);
+  assert.equal(engine.spinSpring, null, `${state} never spins spontaneously`);
+  assert.equal(engine.gesture, null, `${state} never starts a wild gesture`);
+}
+engine.state = "laughing";
+engine.delta = 1 / 60;
+for (let i = 0; i < 60; i++) renderDrippyCharacter(engine, 11000 + i * 1000 / 60);
+assert.match(nodes.mouth.getAttribute("d"), / Q .* Q .* Z$/, "laughter uses a curved open smile");
+assert.equal(Number(nodes.mouthOpen.style.opacity), 0, "laughter never displays the separate oval");
+engine.state = "happy";
+engine.reactionAt = -Infinity;
+for (let i = 0; i < 120; i++) renderDrippyCharacter(engine, 13000 + i * 1000 / 60);
+assert.ok(engine.happyEyes.every(eye => Number(eye.style.opacity) < 0.01), "happy returns to dot eyes between reactions");
+assert.ok(nodes.dotEyes.every(eye => Number(eye.style.opacity) > 0.99), "happy dot eyes remain visible at rest");
+console.log("Subtle expressions verified: bounded reactions, natural rests, blink/wink exclusion, no spontaneous spins and a curved laugh.");
 engine.destroy();
 const slowestEyeReturn = Math.max(...eyeReturnTimes);
 console.log(`Runtime transitions verified: all ${allStates.length ** 2} ordered state pairs switch cleanly; all ${Object.keys(SHAPES).length * EXPRESSIONS.length * 4} shape/expression/open combinations fit; ${Object.keys(morphStates).length} morph states restore both eyes in <=${slowestEyeReturn.toFixed(1)}ms; source loops plus RESET/ENTER/HOLD/EXIT/DONE single shots pass.`);

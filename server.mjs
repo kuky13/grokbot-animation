@@ -2,7 +2,7 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 
-const host = "127.0.0.1";
+const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 4173);
 const root = new URL(".", import.meta.url).pathname;
 
@@ -34,8 +34,9 @@ createServer((request, response) => {
     return;
   }
 
+  const immutableRelease = /^component\/releases\/[0-9a-f]{64}\//.test(safePath);
   response.writeHead(200, {
-    "cache-control": "no-store",
+    "cache-control": immutableRelease ? "public, max-age=31536000, immutable" : "no-store",
     "content-type": contentTypes[extname(filePath)] || "application/octet-stream"
   });
   createReadStream(filePath).pipe(response);

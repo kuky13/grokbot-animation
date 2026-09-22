@@ -57,8 +57,8 @@
                 role="img"
                 aria-labelledby="bot-svg-title bot-svg-desc"
               >
-                <title id="bot-svg-title">Grok Bot idle expression</title>
-                <desc id="bot-svg-desc">The source-aligned animated Grok Bot mark.</desc>
+                <title id="bot-svg-title">Drippy animated assistant</title>
+                <desc id="bot-svg-desc">Drippy, a round animated assistant with dot eyes, expressive ears and a reactive mouth.</desc>
                 <defs>
                   <clipPath id="head-clip"><path id="head-clip-path" /></clipPath>
                 </defs>
@@ -81,8 +81,14 @@
                 <g id="bot-transform">
                   <path id="head-path" class="grok-bot-mark__head" />
                   <g clip-path="url(#head-clip)">
+                    <path class="drippy-ear drippy-ear--left" d="M 73 78 Q 76 72 78 69 Q 80 72 83 78" />
+                    <path class="drippy-ear drippy-ear--right" d="M 145.54 78 Q 148.54 72 150.54 69 Q 152.54 72 155.54 78" />
                     <path class="grok-bot-mark__eye eye-path" />
                     <path class="grok-bot-mark__eye eye-path" />
+                    <ellipse class="drippy-eye drippy-eye--left" cx="78" cy="108" rx="7" ry="7" />
+                    <ellipse class="drippy-eye drippy-eye--right" cx="150.54" cy="108" rx="7" ry="7" />
+                    <path class="drippy-mouth" d="M 96 150 Q 114.27 158 132.5 150" />
+                    <ellipse class="drippy-mouth-open" cx="114.27" cy="153" rx="6" ry="3" opacity="0" />
                   </g>
                   <circle id="notify-badge" cx="114.2705" cy="114.2705" r="0" hidden />
                 </g>
@@ -136,6 +142,11 @@
                   <output id="material-current-name">纯色 · 墨黑</output>
                 </div>
                 <div id="material-mode-tabs" class="material-mode-tabs" role="group" aria-label="材质类型"></div>
+                <div class="halo-control">
+                  <label for="halo-mode">Anel externo</label>
+                  <select id="halo-mode"><option value="soft">Suave</option><option value="off">Desligado</option></select>
+                  <small>Em <code>dictating</code> sem áudio, a boca usa uma demonstração sintética.</small>
+                </div>
                 <div id="material-preset-grid" class="material-preset-grid" role="group" aria-label="材质预设"></div>
                 <div id="material-custom-controls" class="material-custom-controls"></div>
               </section>

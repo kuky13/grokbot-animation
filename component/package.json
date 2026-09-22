@@ -1,7 +1,7 @@
 {
   "name": "morph-bot-element",
-  "version": "0.6.0",
-  "description": "A framework-free SVG character state and loading animation Web Component.",
+  "version": "0.7.2",
+  "description": "A framework-free SVG Drippy character Web Component with expressions, morphs, materials, audio-reactive speech and physical interaction.",
   "type": "module",
   "types": "./morph-bot.d.ts",
   "exports": {
@@ -15,7 +15,10 @@
     "./materials": {
       "types": "./materials.d.ts",
       "import": "./materials.js"
-    }
+    },
+    "./drippy-character": "./runtime/drippy-character.js",
+    "./speech-meter": "./runtime/speech-meter.js",
+    "./interaction": "./runtime/character-interaction.js"
   },
   "files": [
     "morph-bot.js",
@@ -26,7 +29,8 @@
     "materials.d.ts",
     "runtime",
     "morph-bot.d.ts",
-    "README.md"
+    "README.md",
+    "DRIPPY-COMPONENTS.md"
   ],
   "sideEffects": [
     "./morph-bot.js"

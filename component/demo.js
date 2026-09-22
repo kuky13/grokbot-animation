@@ -134,6 +134,7 @@ function applySuggestedEyeColor(preset = null) {
 }
 
 function setMaterialAttributes(element) {
+  element.setAttribute("halo", document.querySelector("#halo-mode").value);
   element.setAttribute("material", materialConfig.material);
   element.setAttribute("color", materialConfig.color);
   if (materialConfig.material === "gradient") {
@@ -270,6 +271,7 @@ function renderMaterialEditor() {
 
 function componentAttributes(state) {
   const attributes = [
+    `halo="${document.querySelector("#halo-mode").value}"`,
     `state="${escapeAttribute(state)}"`,
     `shape="${escapeAttribute(shapeInput.value)}"`,
     `size="${sizeInput.value}"`,
@@ -426,6 +428,7 @@ function stopEditorSequence({ resetSummary = true } = {}) {
 }
 
 function syncDemo() {
+  bot.setAttribute("interactive", "");
   bot.state = stateInput.value;
   bot.shape = shapeInput.value;
   bot.size = Number(sizeInput.value);
@@ -444,6 +447,7 @@ function syncDemo() {
 }
 
 [sizeInput, speedSelect, pointerInput].forEach((input) => input.addEventListener("input", syncDemo));
+document.querySelector("#halo-mode").addEventListener("change", syncDemo);
 eyeColorInput.addEventListener("input", () => {
   delete eyeColorInput.dataset.materialSuggested;
   syncDemo();

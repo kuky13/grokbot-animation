@@ -12,6 +12,9 @@ import * as simulationClock from "./runtime/simulation-clock.js";
 import * as stateBehavior from "./runtime/state-behavior-system.js";
 import * as svgRenderer from "./runtime/svg-renderer.js";
 import { MORPH_SIZES } from "./runtime/svg-renderer.js";
+import { bindDrippyCharacter, renderDrippyCharacter } from "./runtime/drippy-character.js";
+import { connectSpeechAudio } from "./runtime/speech-meter.js";
+import { bindCharacterInteraction } from "./runtime/character-interaction.js";
 
 const REDUCE_MOTION = typeof globalThis.matchMedia === "function"
   ? globalThis.matchMedia("(prefers-reduced-motion: reduce)")
@@ -43,6 +46,7 @@ export class GrokBotEngine {
       idPrefix: svg.id || "grok-bot",
     });
     this.badge = svg.querySelector("#notify-badge");
+    bindDrippyCharacter(this);
     this.currentBeltRadius = SHAPES.blob.beltRadius;
     this.particleSpinAngle = 0;
     this.particles = new ParticleSystem(svg.querySelector("#particles-back"), svg.querySelector("#particles-front"), {
@@ -139,11 +143,14 @@ export class GrokBotEngine {
     this.pointerLeave = () => { this.pointer.active = false; };
     window.addEventListener("pointermove", this.pointerMove, { passive: true });
     document.documentElement.addEventListener("mouseleave", this.pointerLeave);
+    bindCharacterInteraction(this);
     this.setState("idle", true);
     this.frameId = requestAnimationFrame(this.boundFrame);
   }
 
   destroy() {
+    this.disconnectAudio();
+    this.releaseInteraction?.();
     cancelAnimationFrame(this.frameId);
     window.removeEventListener("pointermove", this.pointerMove);
     document.documentElement.removeEventListener("mouseleave", this.pointerLeave);
@@ -156,6 +163,9 @@ export class GrokBotEngine {
     const now = this.clockTime;
     this.state = state;
     this.stateStartedAt = now;
+    this.reactionAt = -Infinity;
+    this.ambientNext = now + random(600, 950);
+    this.winkAt = -Infinity;
     this.stateVersion += 1;
     const config = this.getConfig();
     this.expressionCursor = 0;
@@ -210,14 +220,18 @@ export class GrokBotEngine {
   }
 
   scheduleBlink(now) {
+    if (now >= this.winkAt && now < this.winkAt + 400) return;
+    if (now < (this.reactionAt ?? -Infinity) + 700 || this.blinkQueue.length) return;
+    const sleepy = this.state === "drowsy" || this.state === "sleeping";
+    const duration = sleepy ? 1.8 : 1;
     this.blinkTarget = this.eyeOpen.target;
     this.blinkQueue.push(
       { at: now, value: 0.05 },
-      { at: now + 70, value: 0.05 },
-      { at: now + 150, value: 1.08 },
-      { at: now + 300, value: 1 },
+      { at: now + 70 * duration, value: 0.05 },
+      { at: now + 150 * duration, value: sleepy ? 0.4 : 1.03 },
+      { at: now + 300 * duration, value: sleepy ? 0.34 : 1 },
     );
-    if (Math.random() < 0.14) this.blinkQueue.push({ at: now + 370, value: 0.05 }, { at: now + 480, value: 1 });
+    if (!sleepy && Math.random() < 0.1) this.blinkQueue.push({ at: now + 370, value: 0.05 }, { at: now + 480, value: 1 });
   }
 
   frame(realNow) {
@@ -232,6 +246,8 @@ export class GrokBotEngine {
     this.updateStateTargets(now, config, delta);
     stepPhysics.call(this, delta, REDUCE_MOTION.matches);
     const rendered = this.render(now, config);
+    renderDrippyCharacter(this, now, REDUCE_MOTION.matches);
+    this.renderInteraction(delta, REDUCE_MOTION.matches);
     this.materials.syncHeadPath(rendered?.headPath || this.head.getAttribute("d"), rendered?.rotation || 0);
     if (this.spinSpring && Math.abs(this.spinSpring.target - this.spinSpring.x) < 0.004 && Math.abs(this.spinSpring.v) < 0.015) {
       this.spinSpring = null;
@@ -256,7 +272,26 @@ export class GrokBotEngine {
   }
 
   setPaused(paused) {
+    if (paused && !this.paused && (this.internalSpeech || this.externalSpeech || this.manualSpeech != null || this.state === "dictating") && this.drippySprings?.mouthOpen) {
+      this.drippySprings.mouthOpen.x = 0;
+      this.drippySprings.mouthOpen.v = 0;
+      this.speechLevel = 0;
+    }
     return simulationClock.setPaused.call(this, paused);
+  }
+
+  connectAudio(element) { return connectSpeechAudio(this, element); }
+
+  disconnectAudio() {
+    this.releaseSpeechAudio?.();
+    this.releaseSpeechAudio = null;
+    this.externalSpeech = null;
+    this.manualSpeech = null;
+  }
+
+  setSpeechLevel(level) {
+    if (!Number.isFinite(level) || level < 0 || level > 1) throw new RangeError("Speech level must be a finite number from 0 to 1");
+    this.manualSpeech = level;
   }
 
   togglePaused() {

@@ -40,7 +40,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.6.0");
+assert.equal(manifest.version, "0.7.2");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 
@@ -56,6 +56,8 @@ assert.equal(component.MORPH_BOT_DIALOGUE_VOICES[0].id, "playful", "playful gibb
 assert.deepEqual(component.MORPH_BOT_DIALOGUE_ENGLISH_MODES, ["phonetic", "letters"], "component should expose both English rhythm modes");
 assert.ok(component.MorphBotElement.observedAttributes.includes("state"));
 assert.ok(component.MorphBotElement.observedAttributes.includes("shape"));
+assert.ok(component.MorphBotElement.observedAttributes.includes("halo"));
+assert.ok(component.MorphBotElement.observedAttributes.includes("interactive"));
 assert.equal(typeof component.MorphBotElement.prototype.configure, "function");
 assert.equal(typeof component.MorphBotElement.prototype.playMorph, "function");
 assert.equal(typeof component.MorphBotElement.prototype.playSequence, "function");
@@ -65,6 +67,9 @@ assert.equal(typeof component.MorphBotElement.prototype.pauseDialogue, "function
 assert.equal(typeof component.MorphBotElement.prototype.resumeDialogue, "function");
 assert.equal(typeof component.MorphBotElement.prototype.stopDialogue, "function");
 assert.equal(typeof component.MorphBotElement.prototype.setMaterial, "function");
+assert.equal(typeof component.MorphBotElement.prototype.connectAudio, "function");
+assert.equal(typeof component.MorphBotElement.prototype.disconnectAudio, "function");
+assert.equal(typeof component.MorphBotElement.prototype.setSpeechLevel, "function");
 assert.equal(typeof component.MorphBotElement.prototype.snapshot, "function");
 assert.equal(typeof component.analyzeSpeechUnits, "function", "component should expose its local Mandarin analyzer");
 assert.deepEqual(component.analyzeSpeechUnits("重庆").map(({ phonetic }) => phonetic), ["chong", "qing"]);
@@ -184,7 +189,8 @@ assert.match(animaleseRuntime, /getOutputTimestamp/, "sampled dialogue should us
 assert.match(animaleseRuntime, /outputLatency/, "sampled dialogue should compensate device output latency");
 assert.match(dialogueRuntime, /_followSpeechClock/, "dialogue captions should follow the audio master clock");
 assert.match(audioTimelineRuntime, /expandDialogueVisualCues/, "grouped English audio should retain per-character visual cues");
-assert.ok(demo.includes(`morph-bot-element-${manifest.version}.zip`), "component workbench should link the downloadable bundle");
+assert.ok(demo.includes("drippy-complete-latest.zip"), "component workbench should link the complete Drippy bundle");
+assert.match(demo, /Baixar Drippy completa/, "component workbench should expose a clear Drippy download action");
 assert.ok(demo.includes('href="./docs/"'), "component workbench should link the readable API site");
 assert.match(demo, /button-example"><button[^>]*disabled><morph-bot/, "button usage example should contain a visible bot inside the button");
 for (const section of ["attributes", "properties", "methods", "events", "states", "shapes", "materials", "effects", "accessibility", "lifecycle", "typescript"]) {
@@ -197,13 +203,21 @@ assert.match(docsRuntime, /MORPH_BOT_EFFECTS/, "API site should render the full 
 assert.match(docsRuntime, /GRADIENT_PRESETS/, "API site should render the shared material preset reference");
 assert.match(docs, /playSequence\(steps, options\?\)/, "API site should document sequence playback");
 assert.match(docs, /performDialogue\(script, options\?\)/, "API site should document dialogue playback");
+assert.match(docs, /connectAudio\(mediaElement\)/, "API site should document audio-reactive Drippy speech");
+assert.match(docs, /setSpeechLevel\(level\)/, "API site should document manual speech energy");
 assert.ok(existsSync(downloadPath), "downloadable component ZIP should exist");
+const latestDownloadPath = resolve(packageRoot, "downloads/drippy-complete-latest.zip");
+assert.ok(existsSync(latestDownloadPath), "stable complete Drippy ZIP should exist");
 const bundledFiles = execFileSync("unzip", ["-Z1", downloadPath], { encoding: "utf8" });
 for (const file of [
   "morph-bot/catalog.js",
   "morph-bot/materials.js",
   "morph-bot/materials.d.ts",
   "morph-bot/runtime/material-system.js",
+  "morph-bot/runtime/drippy-character.js",
+  "morph-bot/runtime/character-interaction.js",
+  "morph-bot/runtime/speech-meter.js",
+  "morph-bot/DRIPPY-COMPONENTS.md",
   "morph-bot/runtime/dialogue-director.js",
   "morph-bot/runtime/chinese-animalese.js",
   "morph-bot/runtime/dialogue-audio-timeline.js",
@@ -219,6 +233,14 @@ for (const file of [
   "morph-bot/runtime/state-behavior-system.js",
   "morph-bot/runtime/svg-renderer.js",
 ]) assert.match(bundledFiles, new RegExp(`^${file}$`, "m"), `download bundle should include ${file}`);
+const bundledDrippyCharacter = execFileSync("unzip", ["-p", downloadPath, "morph-bot/runtime/drippy-character.js"], { encoding: "utf8" });
+assert.match(bundledDrippyCharacter, /drippyEars/, "download bundle should include Drippy ears");
+assert.match(bundledDrippyCharacter, /speechLevel/, "download bundle should include Drippy speech animation");
+assert.match(bundledDrippyCharacter, /haloGradient/, "download bundle should include Drippy halo");
+const bundledInteraction = execFileSync("unzip", ["-p", downloadPath, "morph-bot/runtime/character-interaction.js"], { encoding: "utf8" });
+assert.match(bundledInteraction, /pointerdown/, "download bundle should include physical pointer interaction");
+const bundledSpeechMeter = execFileSync("unzip", ["-p", downloadPath, "morph-bot/runtime/speech-meter.js"], { encoding: "utf8" });
+assert.match(bundledSpeechMeter, /createAnalyser/, "download bundle should include audio energy analysis");
 const bundledMaterialSystem = execFileSync("unzip", ["-p", downloadPath, "morph-bot/runtime/material-system.js"], { encoding: "utf8" });
 assert.match(bundledMaterialSystem, /smoothMaterialStops/, "download bundle should contain perceptually smoothed gradients");
 assert.match(bundledMaterialSystem, /userSpaceOnUse/, "download bundle should contain camera-anchored material lighting");

@@ -1,3 +1,4 @@
+import { setSvgVisible } from "./material-system.js";
 import { CIRCLE_RING, EYE_HALF, HEAD_C } from "../original-data.js";
 import {
   ALERT_GLYPH,
@@ -105,10 +106,10 @@ export function render(now, config) {
   this.transformGroup.style.opacity = effectPose.opacity.toFixed(3);
 
   const badgeAmount = clamp(this.notify.x, 0, 1.4);
-  if (badgeAmount <= 0.01) this.badge.hidden = true;
+  if (badgeAmount <= 0.01) setSvgVisible(this.badge, false);
   else {
     const badgeAnchor = shapeRing[Math.round(7 * shapeRing.length / 8) % shapeRing.length];
-    this.badge.hidden = false;
+    setSvgVisible(this.badge, true);
     this.badge.setAttribute("fill", config.badgeColor);
     this.badge.setAttribute("stroke", config.eyeColor);
     this.badge.setAttribute("stroke-width", "10");
@@ -244,7 +245,7 @@ export function createMorphLayer(effect) {
       element.setAttribute("cy", HEAD_C);
       element.setAttribute("r", 0);
     }
-    element.hidden = true;
+    setSvgVisible(element, false);
     group.appendChild(element);
     return element;
   });
@@ -255,7 +256,7 @@ export function createMorphLayer(effect) {
     parts: create("circle", "grok-bot-mark__head morph-part", 5),
     glyphs: create("path", "morph-glyph", 3),
   };
-  this.svg.insertBefore(group, this.transformGroup);
+  (this.interactionGroup || this.svg).insertBefore(group, this.transformGroup);
   this.morphLayers.set(effect, layer);
   return layer;
 }
@@ -268,7 +269,7 @@ export function useMorphLayer(layer) {
 }
 
 export function hideMorphElements() {
-  for (const element of [...this.morphHeads, ...this.rings, ...this.parts, ...this.glyphs]) element.hidden = true;
+  for (const element of [...this.morphHeads, ...this.rings, ...this.parts, ...this.glyphs]) setSvgVisible(element, false);
 }
 
 export function renderHummingMarkers(shape) {
@@ -279,7 +280,7 @@ export function renderHummingMarkers(shape) {
     const angle = 0.85 * this.spinAngle + index * Math.PI;
     const radius = 1.3 * shape.radius;
     const depth = 0.55 + 0.45 * clamp((Math.cos(angle) + 1) / 2, 0, 1);
-    element.hidden = false;
+    setSvgVisible(element, true);
     element.setAttribute("cx", (HEAD_C + radius * Math.sin(angle)).toFixed(1));
     element.setAttribute("cy", (HEAD_C - 0.38 * radius * Math.cos(angle) - 8).toFixed(1));
     element.setAttribute("r", (7.5 * depth * amount).toFixed(2));
@@ -290,7 +291,7 @@ export function renderHummingMarkers(shape) {
 export function renderMorphEffects(morphAmount, morphBlend, previousMorphEffect, morphSize, now) {
   this.useMorphLayer(this.baseMorphLayer);
   this.hideMorphElements();
-  for (const layer of this.morphLayers.values()) layer.group.hidden = true;
+  for (const layer of this.morphLayers.values()) setSvgVisible(layer.group, false);
   const pose = { x: 0, y: 0, rotation: 0, scale: 1, opacity: 1 };
   if (!this.morphEffect || morphAmount <= 0.004) return pose;
 
@@ -305,7 +306,7 @@ export function renderMorphEffects(morphAmount, morphBlend, previousMorphEffect,
     const amount = effectAmount(effect);
     if (amount <= 0.004) continue;
     const layer = this.morphLayers.get(effect) || this.createMorphLayer(effect);
-    layer.group.hidden = false;
+    setSvgVisible(layer.group, true);
     this.useMorphLayer(layer);
     this.hideMorphElements();
     switch (effect) {
@@ -388,7 +389,7 @@ export function renderDots(amount, now) {
     const lift = REDUCE_MOTION.matches ? 0 : 9 * pulse * amount;
     const pop = REDUCE_MOTION.matches ? 1 : 0.84 + 0.22 * pulse;
     const scale = 22 * grow * pop / HEAD_C * 1.02;
-    element.hidden = false;
+    setSvgVisible(element, true);
     element.setAttribute("d", CIRCLE_PATH);
     element.setAttribute("transform", `translate(${(HEAD_C + (anchors[index] - HEAD_C) * enter).toFixed(1)} ${(HEAD_C - lift).toFixed(1)}) scale(${scale.toFixed(4)}) translate(${-HEAD_C} ${-HEAD_C})`);
     element.setAttribute("opacity", (grow * (1 - 0.5 * (1 - pulse))).toFixed(3));
@@ -402,7 +403,7 @@ export function renderOrbit(amount, now) {
     const phase = 0.0017 * now + index * Math.PI * 2 / 5;
     const cosine = Math.cos(phase);
     const depth = 0.5 + 0.5 * clamp(cosine, 0, 1);
-    element.hidden = false;
+    setSvgVisible(element, true);
     element.setAttribute("cx", (HEAD_C + radius * Math.sin(phase)).toFixed(1));
     element.setAttribute("cy", (HEAD_C - 0.42 * radius * Math.cos(phase)).toFixed(1));
     element.setAttribute("r", Math.max(12 * depth * cubicOut(amount), 0.3).toFixed(2));
@@ -414,7 +415,7 @@ export function renderRadar(amount, now, baseRadius) {
   for (let index = 0; index < 3; index += 1) {
     const element = this.rings[index];
     const phase = ((now / 1300 + index / 3) % 1 + 1) % 1;
-    element.hidden = false;
+    setSvgVisible(element, true);
     element.setAttribute("fill", "none");
     element.setAttribute("stroke", "var(--fg)");
     element.setAttribute("r", (baseRadius + (104 - baseRadius) * phase).toFixed(1));
@@ -427,11 +428,11 @@ export function renderProgress(amount, now) {
   const radius = 62 * backOut(amount);
   const track = this.rings[3];
   const value = this.rings[4];
-  track.hidden = false;
+  setSvgVisible(track, true);
   track.setAttribute("fill", "none"); track.setAttribute("stroke", "var(--fg)"); track.setAttribute("r", radius.toFixed(1)); track.setAttribute("stroke-width", "5"); track.setAttribute("opacity", (0.16 * cubicOut(amount)).toFixed(3));
   const progress = clamp((now - this.morphShotStartedAt) / 2500 / 0.85, 0, 1);
   const circumference = 2 * Math.PI * radius;
-  value.hidden = false;
+  setSvgVisible(value, true);
   value.setAttribute("fill", "none"); value.setAttribute("stroke", "var(--fg)"); value.setAttribute("r", radius.toFixed(1)); value.setAttribute("stroke-width", "5"); value.setAttribute("stroke-dasharray", circumference.toFixed(1)); value.setAttribute("stroke-dashoffset", (circumference * (1 - progress)).toFixed(1)); value.setAttribute("transform", `rotate(-90 ${HEAD_C} ${HEAD_C})`); value.setAttribute("opacity", cubicOut(amount).toFixed(3));
 }
 
@@ -443,7 +444,7 @@ export function renderGather(amount, now) {
     const settle = 1 - (1 - phase) ** 3;
     const angle = 2.4 * index + 2.2 * phase;
     const radius = 96 * (1 - settle);
-    element.hidden = false;
+    setSvgVisible(element, true);
     element.setAttribute("cx", (HEAD_C + radius * Math.cos(angle)).toFixed(1));
     element.setAttribute("cy", (HEAD_C + radius * Math.sin(angle) * 0.8).toFixed(1));
     element.setAttribute("r", (9 * (0.5 + 0.5 * settle) * cubicOut(amount)).toFixed(2));
@@ -461,7 +462,7 @@ export function renderWave(amount, now) {
     const energy = (0.42 + 0.29 * Math.sin(0.0021 * now) * Math.sin(0.0034 * now) + 0.29 * Math.sin(0.0013 * now + 1.7)) * (0.55 + 0.45 * Math.sin(0.012 * now - 1.05 * Math.abs(offset)));
     const size = (7 + 9 * clamp(energy, 0.08, 1)) * cubicOut(phase);
     const lift = 6 * clamp(energy, 0, 1) * phase;
-    element.hidden = false;
+    setSvgVisible(element, true);
     if (index < 2) {
       const scale = size / HEAD_C * 1.02;
       element.setAttribute("d", CIRCLE_PATH);
@@ -479,13 +480,13 @@ export function renderSend(amount, now) {
   const eased = travel ** 2 * (0.4 + 0.6 * travel);
   const distance = 108 * eased;
   const first = this.parts[0];
-  if (travel > 0 && travel < 1) { first.hidden = false; first.setAttribute("cx", (HEAD_C + 0.74 * distance).toFixed(1)); first.setAttribute("cy", (HEAD_C - 0.62 * distance).toFixed(1)); first.setAttribute("r", (10 * (1 - 0.55 * eased) * cubicOut(amount)).toFixed(2)); first.setAttribute("opacity", (cubicOut(amount) * (1 - eased ** 2)).toFixed(3)); }
+  if (travel > 0 && travel < 1) { setSvgVisible(first, true); first.setAttribute("cx", (HEAD_C + 0.74 * distance).toFixed(1)); first.setAttribute("cy", (HEAD_C - 0.62 * distance).toFixed(1)); first.setAttribute("r", (10 * (1 - 0.55 * eased) * cubicOut(amount)).toFixed(2)); first.setAttribute("opacity", (cubicOut(amount) * (1 - eased ** 2)).toFixed(3)); }
   const secondTravel = clamp((phase - 0.26) / 0.55, 0, 1);
   const secondEase = secondTravel ** 2 * (0.4 + 0.6 * secondTravel);
   const second = this.parts[1];
-  if (travel > 0 && secondTravel > 0 && secondTravel < 1) { const secondDistance = 108 * secondEase; second.hidden = false; second.setAttribute("cx", (HEAD_C + 0.74 * secondDistance).toFixed(1)); second.setAttribute("cy", (HEAD_C - 0.62 * secondDistance).toFixed(1)); second.setAttribute("r", (5 * (1 - 0.6 * secondEase) * cubicOut(amount)).toFixed(2)); second.setAttribute("opacity", (0.3 * cubicOut(amount) * (1 - secondEase)).toFixed(3)); }
+  if (travel > 0 && secondTravel > 0 && secondTravel < 1) { const secondDistance = 108 * secondEase; setSvgVisible(second, true); second.setAttribute("cx", (HEAD_C + 0.74 * secondDistance).toFixed(1)); second.setAttribute("cy", (HEAD_C - 0.62 * secondDistance).toFixed(1)); second.setAttribute("r", (5 * (1 - 0.6 * secondEase) * cubicOut(amount)).toFixed(2)); second.setAttribute("opacity", (0.3 * cubicOut(amount) * (1 - secondEase)).toFixed(3)); }
   const ringPhase = clamp((phase - 0.18) / 0.3, 0, 1);
-  if (ringPhase > 0 && ringPhase < 1) { const ring = this.rings[0]; ring.hidden = false; ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "var(--fg)"); ring.setAttribute("r", (20 + 34 * cubicOut(ringPhase)).toFixed(1)); ring.setAttribute("stroke-width", (2.8 * (1 - ringPhase)).toFixed(2)); ring.setAttribute("opacity", (cubicOut(amount) * (1 - ringPhase) * 0.8).toFixed(3)); }
+  if (ringPhase > 0 && ringPhase < 1) { const ring = this.rings[0]; setSvgVisible(ring, true); ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "var(--fg)"); ring.setAttribute("r", (20 + 34 * cubicOut(ringPhase)).toFixed(1)); ring.setAttribute("stroke-width", (2.8 * (1 - ringPhase)).toFixed(2)); ring.setAttribute("opacity", (cubicOut(amount) * (1 - ringPhase) * 0.8).toFixed(3)); }
 }
 
 export function renderReceive(amount, now) {
@@ -500,9 +501,9 @@ export function renderReceive(amount, now) {
   const cosine = Math.cos(this.receiveAngle || 0);
   const sine = Math.sin(this.receiveAngle || 0);
   const part = this.parts[0];
-  if (travel < 1) { part.hidden = false; part.setAttribute("cx", (HEAD_C + cosine * radius - sine * orbit).toFixed(1)); part.setAttribute("cy", (HEAD_C + sine * radius + cosine * orbit).toFixed(1)); part.setAttribute("r", (3.5 + 6.5 * eased).toFixed(2)); part.setAttribute("opacity", (cubicOut(amount) * clamp(3.5 * travel, 0, 1) * (0.3 + 0.7 * eased)).toFixed(3)); }
+  if (travel < 1) { setSvgVisible(part, true); part.setAttribute("cx", (HEAD_C + cosine * radius - sine * orbit).toFixed(1)); part.setAttribute("cy", (HEAD_C + sine * radius + cosine * orbit).toFixed(1)); part.setAttribute("r", (3.5 + 6.5 * eased).toFixed(2)); part.setAttribute("opacity", (cubicOut(amount) * clamp(3.5 * travel, 0, 1) * (0.3 + 0.7 * eased)).toFixed(3)); }
   const ringPhase = clamp((phase - 0.58) / 0.32, 0, 1);
-  if (ringPhase > 0 && ringPhase < 1) { const ring = this.rings[1]; ring.hidden = false; ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "var(--fg)"); ring.setAttribute("r", (20 + 26 * cubicOut(ringPhase)).toFixed(1)); ring.setAttribute("stroke-width", (2.8 * (1 - ringPhase)).toFixed(2)); ring.setAttribute("opacity", (cubicOut(amount) * (1 - ringPhase) * 0.8).toFixed(3)); }
+  if (ringPhase > 0 && ringPhase < 1) { const ring = this.rings[1]; setSvgVisible(ring, true); ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "var(--fg)"); ring.setAttribute("r", (20 + 26 * cubicOut(ringPhase)).toFixed(1)); ring.setAttribute("stroke-width", (2.8 * (1 - ringPhase)).toFixed(2)); ring.setAttribute("opacity", (cubicOut(amount) * (1 - ringPhase) * 0.8).toFixed(3)); }
 }
 
 export function renderDock(amount, now) {
@@ -517,7 +518,7 @@ export function renderDock(amount, now) {
     const targetY = HEAD_C + 21 * Math.cos(angle) + 2 * Math.sin(0.003 * now + index);
     const startX = HEAD_C - 120 + 30 * index;
     const startY = HEAD_C + 95;
-    part.hidden = false; part.setAttribute("cx", (startX + (targetX - startX) * eased).toFixed(1)); part.setAttribute("cy", (startY + (targetY - startY) * eased).toFixed(1)); part.setAttribute("r", ((7 + 3 * eased) * cubicOut(amount)).toFixed(2)); part.setAttribute("opacity", (cubicOut(amount) * clamp(4 * phase, 0, 1)).toFixed(3));
+    setSvgVisible(part, true); part.setAttribute("cx", (startX + (targetX - startX) * eased).toFixed(1)); part.setAttribute("cy", (startY + (targetY - startY) * eased).toFixed(1)); part.setAttribute("r", ((7 + 3 * eased) * cubicOut(amount)).toFixed(2)); part.setAttribute("opacity", (cubicOut(amount) * clamp(4 * phase, 0, 1)).toFixed(3));
   }
 }
 
@@ -535,7 +536,7 @@ export function renderPencil(amount, now) {
   const angle = (pose.rotation - 90) * Math.PI / 180;
   const offsetX = 68 * Math.cos(angle);
   const offsetY = 68 * Math.sin(angle);
-  glyph.hidden = false; glyph.setAttribute("d", PENCIL_GLYPH); glyph.setAttribute("fill", "var(--fg)"); glyph.setAttribute("transform", `translate(${(HEAD_C + (pose.x + offsetX) * amount).toFixed(1)} ${(HEAD_C + (pose.y + 0.15 * pose.wiggle + offsetY) * amount).toFixed(1)}) rotate(${(pose.rotation * amount).toFixed(1)}) scale(${cubicOut(amount).toFixed(3)}) translate(${-HEAD_C} ${-HEAD_C})`); glyph.setAttribute("opacity", clamp(1.6 * amount - 0.3, 0, 1).toFixed(3));
+  setSvgVisible(glyph, true); glyph.setAttribute("d", PENCIL_GLYPH); glyph.setAttribute("fill", "var(--fg)"); glyph.setAttribute("transform", `translate(${(HEAD_C + (pose.x + offsetX) * amount).toFixed(1)} ${(HEAD_C + (pose.y + 0.15 * pose.wiggle + offsetY) * amount).toFixed(1)}) rotate(${(pose.rotation * amount).toFixed(1)}) scale(${cubicOut(amount).toFixed(3)}) translate(${-HEAD_C} ${-HEAD_C})`); glyph.setAttribute("opacity", clamp(1.6 * amount - 0.3, 0, 1).toFixed(3));
   if (amount > 0.6 && !pose.lift) {
     const point = [HEAD_C + pose.x, HEAD_C + pose.y + pose.wiggle + 19];
     const last = this.writingTrail.at(-1);
@@ -566,7 +567,7 @@ export function renderPencil(amount, now) {
         path += `C${control1X.toFixed(1)} ${control1Y.toFixed(1)} ${control2X.toFixed(1)} ${control2Y.toFixed(1)} ${next[0].toFixed(1)} ${next[1].toFixed(1)}`;
       }
     }
-    trail.hidden = false;
+    setSvgVisible(trail, true);
     trail.setAttribute("fill", "none");
     trail.setAttribute("stroke", "var(--fg)");
     trail.setAttribute("stroke-width", "6");
@@ -583,13 +584,13 @@ export function renderBang(amount, now) {
   const elapsed = (now - this.stateStartedAt) / 1000;
   const enter = cubicOut(clamp(1.1 * amount, 0, 1));
   const shake = 2.2 * Math.sin(42 * elapsed) * Math.exp(-((elapsed % 2.2) * 5.5));
-  glyph.hidden = false; glyph.setAttribute("d", ALERT_GLYPH); glyph.setAttribute("fill", "var(--fg)"); glyph.setAttribute("transform", `translate(0 ${(-26 - (1 - enter) * 70).toFixed(1)}) rotate(${shake.toFixed(2)} ${HEAD_C} ${(HEAD_C - 74).toFixed(1)}) translate(${HEAD_C} ${HEAD_C}) scale(${clamp(1.2 * amount, 0, 1).toFixed(3)}) translate(${-HEAD_C} ${-HEAD_C})`); glyph.setAttribute("opacity", clamp(1.5 * amount - 0.2, 0, 1).toFixed(3));
+  setSvgVisible(glyph, true); glyph.setAttribute("d", ALERT_GLYPH); glyph.setAttribute("fill", "var(--fg)"); glyph.setAttribute("transform", `translate(0 ${(-26 - (1 - enter) * 70).toFixed(1)}) rotate(${shake.toFixed(2)} ${HEAD_C} ${(HEAD_C - 74).toFixed(1)}) translate(${HEAD_C} ${HEAD_C}) scale(${clamp(1.2 * amount, 0, 1).toFixed(3)}) translate(${-HEAD_C} ${-HEAD_C})`); glyph.setAttribute("opacity", clamp(1.5 * amount - 0.2, 0, 1).toFixed(3));
   return { x: 0, y: 58, rotation: 0, scale: 1, opacityLoss: 0 };
 }
 
 export function renderStandby(amount, now) {
   const glow = this.parts[4];
   const pulse = 0.5 + 0.5 * Math.sin(0.0016 * now);
-  glow.hidden = false; glow.setAttribute("cx", HEAD_C); glow.setAttribute("cy", HEAD_C); glow.setAttribute("r", (26 + 7 * pulse).toFixed(1)); glow.setAttribute("opacity", (cubicOut(amount) * (0.06 + 0.1 * pulse)).toFixed(3));
-  if (amount < 0.995) { const ring = this.rings[2]; ring.hidden = false; ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "var(--fg)"); ring.setAttribute("r", (104 - 88 * cubicOut(amount)).toFixed(1)); ring.setAttribute("stroke-width", "2.4"); ring.setAttribute("opacity", ((1 - cubicOut(amount)) * 0.5).toFixed(3)); }
+  setSvgVisible(glow, true); glow.setAttribute("cx", HEAD_C); glow.setAttribute("cy", HEAD_C); glow.setAttribute("r", (26 + 7 * pulse).toFixed(1)); glow.setAttribute("opacity", (cubicOut(amount) * (0.06 + 0.1 * pulse)).toFixed(3));
+  if (amount < 0.995) { const ring = this.rings[2]; setSvgVisible(ring, true); ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "var(--fg)"); ring.setAttribute("r", (104 - 88 * cubicOut(amount)).toFixed(1)); ring.setAttribute("stroke-width", "2.4"); ring.setAttribute("opacity", ((1 - cubicOut(amount)) * 0.5).toFixed(3)); }
 }
