@@ -63,9 +63,21 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   const source = engine.internalSpeech || engine.externalSpeech;
   const hasSpeech = Boolean(source) || engine.manualSpeech != null;
   const speechTarget = engine.paused ? 0 : clamp(source ? source() : (engine.manualSpeech ?? 0), 0, 1);
-  engine.speechLevel = clamp(settle("speechLevel", speechTarget, speechTarget > (engine.speechLevel || 0) ? 35 : 18, 1), 0, 1);
-  const speaking = hasSpeech ? engine.speechLevel : state === "dictating" ? 0.35 : 0;
-  const haloSpeed = settle("haloSpeed", 45 + 135 * Math.min(1, speaking * 3), 8, 1);
+  engine.speechLevel = clamp(settle("speechLevel", speechTarget, speechTarget > (engine.speechLevel || 0) ? 38 : 15, 1), 0, 1);
+
+  // Match the desktop Drippy's voice feel: real audio gets a quick attack and
+  // a softer release; dictating without audio uses irregular syllable pulses
+  // instead of a metronomic open/close loop.
+  const demoSpeech = state === "dictating" && !hasSpeech && !engine.paused
+    ? Math.abs(Math.sin(phase * 15) * Math.cos(phase * 22)) * ((Math.sin(phase * 4) + 1) * 0.5)
+    : 0;
+  const speechRaw = hasSpeech ? engine.speechLevel : demoSpeech;
+  const previousEnvelope = engine.drippySprings?.speechEnvelope?.x || 0;
+  const speaking = clamp(settle("speechEnvelope", speechRaw, speechRaw > previousEnvelope ? 36 : 11, 1), 0, 1);
+  const talking = hasSpeech || state === "dictating";
+
+  // Desktop widget: the outer ring takes ~4s at rest and ~1.6s while talking.
+  const haloSpeed = settle("haloSpeed", talking ? 225 : 90, 8, 1);
   engine.haloAngle = (engine.haloAngle + (engine.delta || 0) * haloSpeed * motion) % 360;
   engine.haloGradient.setAttribute("gradientTransform", `rotate(${reducedMotion ? 0 : engine.haloAngle} 114.27 114.27)`);
   const material = resolveMaterial(config);
@@ -76,7 +88,17 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   });
   engine.halo.setAttribute("d", engine.head.getAttribute("d") || "");
   engine.halo.setAttribute("transform", "translate(114.27 114.27) scale(1.025) translate(-114.27 -114.27)");
-  engine.halo.style.opacity = String(config.halo === "off" ? 0 : fade * (0.5 + 0.16 * Math.sin(phase * 2) + speaking * 0.3));
+  engine.halo.setAttribute("stroke-width", talking ? "3.6" : "3");
+  engine.halo.style.filter = talking
+    ? "drop-shadow(0 0 6px var(--fg))"
+    : "drop-shadow(0 0 3px var(--fg))";
+  engine.halo.style.opacity = String(
+    config.halo === "off"
+      ? 0
+      : talking
+        ? fade * (0.68 + speaking * 0.2)
+        : fade * (0.48 + 0.12 * Math.sin(phase * 2))
+  );
   engine.adornments.forEach((node, index) => {
     const thinking = state === "thinking", happy = ["happy", "celebrate"].includes(state), sleepy = ["sleeping", "drowsy"].includes(state);
     const cycle = (phase * 0.45 + index / 3) % 1;
@@ -177,7 +199,7 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   } else if (OPEN_STATES.has(state)) {
     open = state === "surprised" || state === "scared" ? 1 : 0.78 + Math.abs(Math.sin(phase * 7.2)) * 0.22;
   } else if (state === "dictating") {
-    open = 0.35 + Math.abs(Math.sin(phase * 9.5)) * 0.65;
+    open = speaking;
   } else if (["loading", "working", "searching", "writing", "sending", "receiving", "uploading", "humming", "progress"].includes(state)) {
     width = 15 + Math.sin(phase * 2.2) * 0.6;
     curve = 4 + Math.sin(phase * 1.8) * 0.6;
@@ -189,13 +211,36 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     curve += Math.sin(phase * 1.7 + 0.4) * 0.8;
   }
 
-  if (hasSpeech) open = engine.paused ? 0 : engine.speechLevel;
+  if (talking) open = engine.paused ? 0 : speaking;
   y = settle("mouthY", y);
   width = settle("mouthWidth", width);
   curve = settle("mouthCurve", curve);
   tilt = settle("mouthTilt", tilt);
-  open = clamp(settle("mouthOpen", open, 22, 1), 0, 1);
+  open = clamp(settle("mouthOpen", open, 26, 1), 0, 1);
 
+  if (talking) {
+    // Same visual grammar as the desktop bubble: one continuous mouth shape
+    // grows from a thin line into a modest open mouth following voice energy.
+    const roundPhoneme = /[ouɔʊ]/i.test(engine.speechPhoneme || "");
+    const half = (18 + open * 7) * (roundPhoneme ? 0.84 : 1);
+    const top = y - open * 16;
+    const bottom = y + 1.2 + open * 18;
+    engine.drippyMouth.setAttribute(
+      "d",
+      `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${top.toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${bottom.toFixed(2)} ${(cx - half).toFixed(2)} ${y.toFixed(2)}`
+    );
+    engine.drippyMouth.setAttribute("transform", `rotate(${tilt.toFixed(2)} ${cx} ${y})`);
+    engine.drippyMouth.style.opacity = fade.toFixed(3);
+    engine.drippyMouth.style.fill = open < 0.08 ? "none" : "var(--bg)";
+    engine.drippyMouth.style.fillOpacity = open < 0.08 ? "0" : "0.9";
+    engine.drippyMouth.style.strokeWidth = "4.2";
+    engine.drippyMouthOpen.style.opacity = "0";
+    return;
+  }
+
+  engine.drippyMouth.style.fill = "none";
+  engine.drippyMouth.style.fillOpacity = "0";
+  engine.drippyMouth.style.strokeWidth = "";
   const lineOpacity = fade * (1 - clamp(open * 1.35, 0, 1));
   engine.drippyMouth.setAttribute("d", `M ${(cx - width).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${(y + curve).toFixed(2)} ${(cx + width).toFixed(2)} ${y.toFixed(2)}`);
   engine.drippyMouth.setAttribute("transform", `rotate(${tilt.toFixed(2)} ${cx} ${y})`);
@@ -204,8 +249,7 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   const openPulse = clamp(open, 0, 1);
   engine.drippyMouthOpen.setAttribute("cx", String(cx));
   engine.drippyMouthOpen.setAttribute("cy", String(y + 3));
-  const round = /[ouɔʊ]/i.test(engine.speechPhoneme || "");
-  const mouthRadius = settle("mouthRadius", hasSpeech ? (round ? 5 : 9) : ["excited", "laughing", "celebrate"].includes(state) ? 14 : 7.5);
+  const mouthRadius = settle("mouthRadius", ["excited", "laughing", "celebrate"].includes(state) ? 14 : 7.5);
   engine.drippyMouthOpen.setAttribute("rx", (mouthRadius * (0.7 + openPulse * 0.3)).toFixed(2));
   engine.drippyMouthOpen.setAttribute("ry", (2.0 + openPulse * 6.0).toFixed(2));
   engine.drippyMouthOpen.style.opacity = (fade * clamp(open * 1.4, 0, 1)).toFixed(3);

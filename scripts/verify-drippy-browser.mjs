@@ -38,18 +38,33 @@ try {
     bot.state = "idle"; step(180);
     const visibleLayers = [...e.morphLayers.values()].filter(l => getComputedStyle(l.group).display !== "none").length;
     const hiddenParts = [...bot.shadowRoot.querySelectorAll('[hidden]')].every(node => getComputedStyle(node).display === "none");
-    bot.play(); bot.setSpeechLevel(0.8); step(40);
-    const speaking = e.drippyMouthOpen.getAttribute("ry");
-    bot.setSpeechLevel(0); step(70);
-    const silence = e.drippyMouthOpen.style.opacity;
+    bot.play(); bot.state = "dictating"; bot.setSpeechLevel(0.8); step(40);
+    const speaking = {
+      openness: e.drippySprings.mouthOpen?.x || 0,
+      path: e.drippyMouth.getAttribute("d") || "",
+      fill: e.drippyMouth.style.fill,
+      auxiliaryOpacity: Number(e.drippyMouthOpen.style.opacity),
+      haloStroke: Number(e.halo.getAttribute("stroke-width")),
+    };
+    bot.setSpeechLevel(0); step(120);
+    const silence = {
+      openness: e.drippySprings.mouthOpen?.x || 0,
+      path: e.drippyMouth.getAttribute("d") || "",
+    };
     let rejected = false; try { bot.setSpeechLevel(NaN); } catch { rejected = true; }
-    return { visibleLayers, hiddenParts, speaking: Number(speaking), silence: Number(silence), rejected };
+    return { visibleLayers, hiddenParts, speaking, silence, rejected };
   });
   assert.equal(result.visibleLayers, 0);
   assert.equal(result.hiddenParts, true);
-  assert.ok(result.speaking > 5);
-  assert.ok(result.silence < 0.02);
+  assert.ok(result.speaking.openness > 0.45);
+  assert.match(result.speaking.path, / Q /);
+  assert.notEqual(result.speaking.fill, "none");
+  assert.equal(result.speaking.auxiliaryOpacity, 0);
+  assert.equal(result.speaking.haloStroke, 3.6);
+  assert.ok(result.silence.openness < 0.12);
+  assert.notEqual(result.speaking.path, result.silence.path);
   assert.ok(result.rejected);
+  await page.evaluate(() => window.bot.disconnectAudio());
   for (const material of ["solid", "gradient", "rainbow-glass"]) {
     await page.evaluate(material => window.bot.setAttribute("material", material), material);
     await page.waitForTimeout(100);
