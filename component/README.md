@@ -6,6 +6,10 @@
 
 > 这是非官方的动画研究项目，与 xAI 没有隶属或背书关系。公开分发精确参考几何或用于商业项目之前，请自行确认相关授权。
 
+## Drippy completa
+
+O botão **Baixar Drippy completa** em `/component/` entrega o pacote standalone v0.7.0. Ele inclui o rosto novo, olhos e piscadelas, orelhas independentes, boca e fala reativa, halo, interação de pressionar/arrastar, os 39 estados, 18 formas, 14 morphs, materiais, partículas, diálogo, tipos TypeScript e todo o runtime/vendor necessário. Consulte `DRIPPY-COMPONENTS.md` dentro do ZIP para o mapa dos arquivos.
+
 ## 1. 最快使用
 
 打开组件工作台，先点“下载组件包”。解压后把完整的 `morph-bot/` 文件夹放到项目的公开资源目录：
@@ -17,7 +21,8 @@ morph-bot/
 ├── original-data.js
 ├── catalog.js
 ├── materials.js
-├── runtime/
+├── runtime/                  # inclui Drippy, interação, fala, morphs e materiais
+├── DRIPPY-COMPONENTS.md
 ├── morph-bot.d.ts
 └── README.md
 ```
@@ -70,6 +75,8 @@ morph-bot/
 | `speed` | `1` | 播放倍率，范围 0.1–4 |
 | `rotation` | `0` | 额外旋转角度，范围 -180–180° |
 | `follow-pointer` | 关闭 | 跟随页面指针 |
+| `halo` | `soft` | `soft` 显示 Drippy 外环，`off` 关闭 |
+| `interactive` | 关闭 | 启用按压、拖拽、倾斜和弹簧回位 |
 | `flip` | 关闭 | 水平翻转 |
 | `paused` | 关闭 | 暂停仿真时钟 |
 | `decorative` | 关闭 | 标记为纯装饰 |
@@ -106,6 +113,11 @@ bot.replay();
 bot.pause();
 bot.play();
 bot.step();
+bot.setAttribute("halo", "soft");
+bot.setAttribute("interactive", "");
+bot.setSpeechLevel(0.5);
+await bot.connectAudio(document.querySelector("audio"));
+bot.disconnectAudio();
 
 await bot.playMorph("send", {
   hold: 1200,

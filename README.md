@@ -244,7 +244,7 @@ The regression suite covers:
 Current releases:
 
 - Animation lab: `v1.10.0`
-- Standalone component: `v0.6.0`
+- Standalone component: `v0.7.0`
 
 ### Status and disclaimer
 
@@ -456,7 +456,7 @@ npm run pack:component
 当前版本：
 
 - 动画实验室：`v1.10.0`
-- 独立组件：`v0.6.0`
+- 独立组件：`v0.7.0`
 
 ### 项目状态与声明
 

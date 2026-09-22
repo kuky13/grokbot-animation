@@ -14,9 +14,9 @@
         <span>Morph Bot <small>API</small></span>
       </a>
       <div>
-        <span class="version">v0.6.0</span>
+        <span class="version">v0.7.0</span>
         <a href="../">返回组件编辑器</a>
-        <a class="download" href="../downloads/morph-bot-element-0.6.0.zip" download>下载组件 ↓</a>
+        <a class="download" href="../downloads/drippy-complete-latest.zip" download="drippy-complete-0.7.0.zip">Baixar Drippy completa ↓</a>
       </div>
     </header>
 
@@ -114,6 +114,8 @@
                 <tr><td><code>speed</code></td><td>number</td><td><code>1</code></td><td>播放倍率，范围 0.1–4。</td></tr>
                 <tr><td><code>rotation</code></td><td>number</td><td><code>0</code></td><td>额外旋转角度，范围 -180–180°；适合对话动作。</td></tr>
                 <tr><td><code>follow-pointer</code></td><td>boolean</td><td>关闭</td><td>让视线跟随页面指针。</td></tr>
+                <tr><td><code>halo</code></td><td><code>soft | off</code></td><td><code>soft</code></td><td>Controla o anel externo reativo da Drippy.</td></tr>
+                <tr><td><code>interactive</code></td><td>boolean</td><td>关闭</td><td>Ativa pressão, arrasto, inclinação e retorno por mola.</td></tr>
                 <tr><td><code>flip</code></td><td>boolean</td><td>关闭</td><td>水平翻转组件。</td></tr>
                 <tr><td><code>paused</code></td><td>boolean</td><td>关闭</td><td>暂停内部仿真时钟。</td></tr>
                 <tr><td><code>decorative</code></td><td>boolean</td><td>关闭</td><td>作为纯装饰并从无障碍树隐藏。</td></tr>
@@ -131,6 +133,8 @@
   eye-color="#ffffff"
   speed="1"
   follow-pointer
+  halo="soft"
+  interactive
   label="正在思考"
 &gt;&lt;/morph-bot&gt;</code></pre>
           </div>
@@ -159,6 +163,9 @@
             <article><h3><code>setMaterial(material, options?)</code></h3><p>切换材质。纯色传 <code>{ color }</code>，渐变传 <code>{ preset }</code> 或 <code>{ start, end, angle }</code>，玻璃传 <code>{ preset }</code>。</p></article>
             <article><h3><code>replay()</code></h3><p>从头重播当前状态。</p></article>
             <article><h3><code>pause()</code> / <code>play()</code></h3><p>暂停或恢复动画，均返回当前元素。</p></article>
+            <article><h3><code>connectAudio(mediaElement)</code></h3><p>Conecta um <code>&lt;audio&gt;</code> ou <code>&lt;video&gt;</code> à boca da Drippy. A energia real do áudio passa a controlar a abertura; não inicia a reprodução automaticamente.</p></article>
+            <article><h3><code>disconnectAudio()</code></h3><p>Desconecta a análise de áudio externo e devolve a fala ao comportamento normal do estado.</p></article>
+            <article><h3><code>setSpeechLevel(level)</code></h3><p>Define manualmente a energia da fala entre <code>0</code> e <code>1</code>, útil para integrações de voz que já calculam amplitude.</p></article>
             <article><h3><code>step()</code></h3><p>前进一帧并保持暂停，适合逐帧检查。</p></article>
             <article><h3><code>playMorph(effect, options?)</code></h3><p>播放一次 Morph。<code>hold</code> 默认 2500ms；<code>restore</code> 可传状态名、<code>"default"</code> 或 <code>null</code>。返回 Promise。</p></article>
             <article><h3><code>playSequence(steps, options?)</code></h3><p>依次执行状态停留和单次 Morph。每步支持 <code>state</code>、<code>hold</code>、<code>morph</code>、<code>morphHold</code>；<code>{ loop: true }</code> 可循环。</p></article>

@@ -449,3 +449,26 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   background: var(--surface, #fff);
 }
 .halo-control small { grid-column: 1 / -1; opacity: .72; }
+
+.drippy-download-card { align-items: flex-start; }
+.drippy-download-card > p { max-width: 62ch; }
+.bundle-contents { width: 100%; margin-top: 10px; }
+.bundle-contents summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--ink);
+}
+.bundle-contents > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+.bundle-contents code {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  font-size: 10px;
+}
