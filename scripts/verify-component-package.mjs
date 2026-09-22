@@ -40,7 +40,7 @@ const component = await import("../component/morph-bot.js");
 const downloadPath = resolve(packageRoot, `downloads/morph-bot-element-${manifest.version}.zip`);
 
 assert.equal(manifest.name, "morph-bot-element");
-assert.equal(manifest.version, "0.7.1");
+assert.equal(manifest.version, "0.7.2");
 assert.equal(manifest.types, "./morph-bot.d.ts");
 for (const file of manifest.files) assert.ok(existsSync(resolve(packageRoot, file)), `package file should exist: ${file}`);
 

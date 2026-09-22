@@ -106,6 +106,15 @@ export function updateStateTargets(now, config, delta) {
       }
       case "dragging": { const phase = (elapsed % 3.4) / 3.4; const cycle = Math.floor(elapsed / 3.4); if (phase < 0.12) { x = -16; y = -22; rotation = -5; } else if (phase < 0.62) { x = -16 + 32 * cubicInOut((phase - 0.12) / 0.5); y = -22 + 2 * Math.sin(1.4 * runtime); rotation = 6 * Math.sin(2.6 * runtime); eyeScale = 1.06; } else { if (cycle !== this.dragCycle) { this.dragCycle = cycle; this.headY.v += 90; } x = 16; } break; }
       case "humming": rotation = 2 * Math.sin(0.4 * runtime); x = 1.5 * Math.sin(0.3 * runtime); y = 1.5 * Math.sin(0.7 * runtime); break;
+      case "dictating": {
+        const voice = clamp(this.speechLevel || 0, 0, 1);
+        const cadence = Math.sin(runtime * 5.2);
+        rotation = 0.7 * cadence * voice;
+        y = -0.8 * voice + 0.45 * Math.sin(runtime * 2.2);
+        scaleY = 1 + 0.004 * voice;
+        eyeOpen = 1 - 0.035 * voice;
+        break;
+      }
       case "notifying": if (!this.notifyTriggered && elapsed > 0.12) { this.notifyTriggered = true; this.headY.v -= 26; this.scheduleBlink(now); } eyeScale = 1 + 0.05 * Math.exp(-3 * elapsed); rotation = 3; x = 2; y = -1; break;
       default: break;
     }
@@ -203,6 +212,7 @@ export function updateAim(now, config) {
     case "laughing": x = 15 * random(-0.5, 0.5); y = -9 * random(0.2, 0.6); min = 800; max = 1700; break;
     case "scared": x = direction() * random(0.7, 1) * 15; y = 9 * random(-0.6, 0.6); min = 450; max = 1050; break;
     case "playful": x = direction() * random(0.5, 1) * 15; y = -9 * random(0, 0.6); min = 900; max = 1800; break;
+    case "dictating": x = 15 * random(-0.18, 0.18); y = -9 * random(-0.08, 0.18); min = 2200; max = 4200; break;
     case "notifying": { const focused = Math.random() < 0.72; x = (focused ? 0.45 : 0.1) * 15; y = -9 * (focused ? 0.3 : 0.05); min = 1200; max = 2400; break; }
     default: x = 15 * random(-0.4, 0.4); y = 9 * random(-0.3, 0.3);
   }

@@ -73,11 +73,17 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     : 0;
   const speechRaw = hasSpeech ? engine.speechLevel : demoSpeech;
   const previousEnvelope = engine.drippySprings?.speechEnvelope?.x || 0;
-  const speaking = clamp(settle("speechEnvelope", speechRaw, speechRaw > previousEnvelope ? 36 : 11, 1), 0, 1);
+  const speaking = clamp(settle("speechEnvelope", speechRaw, speechRaw > previousEnvelope ? 34 : 10, 1), 0, 1);
   const talking = hasSpeech || state === "dictating";
 
-  // Desktop widget: the outer ring takes ~4s at rest and ~1.6s while talking.
-  const haloSpeed = settle("haloSpeed", talking ? 225 : 90, 8, 1);
+  // Remove tiny noise-floor chatter and compress loud peaks. The desktop
+  // Drippy reads as friendly because her mouth articulates rather than gapes.
+  const normalizedSpeech = clamp((speaking - 0.045) / (0.9 - 0.045), 0, 1);
+  const voiceEnergy = talking ? smoothstep(normalizedSpeech) : 0;
+  const friendlySpeech = clamp(Math.pow(voiceEnergy, 0.84) * 0.58, 0, 0.58);
+
+  // Keep the lively desktop ring, but avoid an ominous high-intensity aura.
+  const haloSpeed = settle("haloSpeed", talking ? 180 : 90, 8, 1);
   engine.haloAngle = (engine.haloAngle + (engine.delta || 0) * haloSpeed * motion) % 360;
   engine.haloGradient.setAttribute("gradientTransform", `rotate(${reducedMotion ? 0 : engine.haloAngle} 114.27 114.27)`);
   const material = resolveMaterial(config);
@@ -88,15 +94,15 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   });
   engine.halo.setAttribute("d", engine.head.getAttribute("d") || "");
   engine.halo.setAttribute("transform", "translate(114.27 114.27) scale(1.025) translate(-114.27 -114.27)");
-  engine.halo.setAttribute("stroke-width", talking ? "3.6" : "3");
+  engine.halo.setAttribute("stroke-width", talking ? "3.2" : "3");
   engine.halo.style.filter = talking
-    ? "drop-shadow(0 0 6px var(--fg))"
+    ? "drop-shadow(0 0 3.8px var(--fg))"
     : "drop-shadow(0 0 3px var(--fg))";
   engine.halo.style.opacity = String(
     config.halo === "off"
       ? 0
       : talking
-        ? fade * (0.68 + speaking * 0.2)
+        ? fade * (0.58 + voiceEnergy * 0.12)
         : fade * (0.48 + 0.12 * Math.sin(phase * 2))
   );
   engine.adornments.forEach((node, index) => {
@@ -125,7 +131,8 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
         const winkPhase = (now - engine.winkAt) / 320;
         winkScale = 0.06 + 0.94 * (winkPhase < 0.32 ? 1 - smoothstep(winkPhase / 0.32) : smoothstep((winkPhase - 0.32) / 0.68));
       }
-      const open = clamp((Math.min(sleepOpen, engine.eyeOpen?.x ?? 1)) * winkScale, 0.12, 1.08);
+      const speakingSoftness = state === "dictating" ? 1 - friendlySpeech * 0.13 : 1;
+      const open = clamp((Math.min(sleepOpen, engine.eyeOpen?.x ?? 1)) * winkScale * speakingSoftness, 0.12, 1.08);
       const radius = 7 * eyeScale * settle(`eyeAsymmetry${index}`, state === "confused" ? (index === 0 ? 0.8 : 1.15) : 1);
       const eye = engine.dotEyes[index];
       eye.setAttribute("cx", (baseX[index] + gazeX).toFixed(2));
@@ -155,6 +162,12 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     } else if (["surprised", "scared", "alerting"].includes(state)) { lift = -5; height = 12; }
     else if (["angry", "suspicious"].includes(state)) { left = 3; right = state === "suspicious" ? -3 : 3; height = 5; }
     else if (SAD_STATES.has(state)) { lift = 5; height = 3; }
+    else if (state === "dictating") {
+      lift = -1; height = 8.5;
+      const talkTwitch = friendlySpeech * Math.sin(phase * 7.5) * 0.8 * motion;
+      left = talkTwitch;
+      right = -talkTwitch * 0.75;
+    }
     else if (FOCUSED_STATES.has(state)) { left = 2; right = -1; height = 7; }
     const inertia = clamp(-(engine.headY?.v ?? 0) * 0.018, -1.5, 1.5) * motion;
     for (const [index, ear] of engine.drippyEars.entries()) {
@@ -199,7 +212,10 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   } else if (OPEN_STATES.has(state)) {
     open = state === "surprised" || state === "scared" ? 1 : 0.78 + Math.abs(Math.sin(phase * 7.2)) * 0.22;
   } else if (state === "dictating") {
-    open = speaking;
+    y = 150.5;
+    width = 15;
+    curve = 4.5;
+    open = friendlySpeech;
   } else if (["loading", "working", "searching", "writing", "sending", "receiving", "uploading", "humming", "progress"].includes(state)) {
     width = 15 + Math.sin(phase * 2.2) * 0.6;
     curve = 4 + Math.sin(phase * 1.8) * 0.6;
@@ -211,7 +227,7 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     curve += Math.sin(phase * 1.7 + 0.4) * 0.8;
   }
 
-  if (talking) open = engine.paused ? 0 : speaking;
+  if (talking) open = engine.paused ? 0 : friendlySpeech;
   y = settle("mouthY", y);
   width = settle("mouthWidth", width);
   curve = settle("mouthCurve", curve);
@@ -219,21 +235,37 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   open = clamp(settle("mouthOpen", open, 26, 1), 0, 1);
 
   if (talking) {
-    // Same visual grammar as the desktop bubble: one continuous mouth shape
-    // grows from a thin line into a modest open mouth following voice energy.
-    const roundPhoneme = /[ouɔʊ]/i.test(engine.speechPhoneme || "");
-    const half = (18 + open * 7) * (roundPhoneme ? 0.84 : 1);
-    const top = y - open * 16;
-    const bottom = y + 1.2 + open * 18;
-    engine.drippyMouth.setAttribute(
-      "d",
-      `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${top.toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${bottom.toFixed(2)} ${(cx - half).toFixed(2)} ${y.toFixed(2)}`
-    );
+    // Cute, restrained articulation: it begins as the familiar small smile
+    // and becomes only a compact outlined mouth. No dark filled "cavity".
+    const phoneme = engine.speechPhoneme || "";
+    const roundPhoneme = /[ouɔʊ]/i.test(phoneme);
+    const widePhoneme = /[eiæɛ]/i.test(phoneme);
+    const phonemeWidth = roundPhoneme ? 0.86 : widePhoneme ? 1.07 : 1;
+    const half = (14.5 + open * 4.0) * phonemeWidth;
+    const smile = 3.2 - open * 2.2;
+
+    if (open < 0.12) {
+      engine.drippyMouth.setAttribute(
+        "d",
+        `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${(y + smile).toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)}`
+      );
+    } else {
+      // Let the lower jaw do most of the movement. A flatter upper lip
+      // keeps the expression smile-like instead of forming an eye-shaped oval.
+      const top = y - 0.2 - open * 1.8;
+      const bottom = y + 1.8 + open * 8.0;
+      engine.drippyMouth.setAttribute(
+        "d",
+        `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${top.toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${bottom.toFixed(2)} ${(cx - half).toFixed(2)} ${y.toFixed(2)}`
+      );
+    }
+
     engine.drippyMouth.setAttribute("transform", `rotate(${tilt.toFixed(2)} ${cx} ${y})`);
     engine.drippyMouth.style.opacity = fade.toFixed(3);
-    engine.drippyMouth.style.fill = open < 0.08 ? "none" : "var(--bg)";
-    engine.drippyMouth.style.fillOpacity = open < 0.08 ? "0" : "0.9";
-    engine.drippyMouth.style.strokeWidth = "4.2";
+    engine.drippyMouth.style.fill = "none";
+    engine.drippyMouth.style.fillOpacity = "0";
+    engine.drippyMouth.style.strokeWidth = "3.8";
+    engine.drippyMouth.style.strokeLinejoin = "round";
     engine.drippyMouthOpen.style.opacity = "0";
     return;
   }

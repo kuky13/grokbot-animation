@@ -43,6 +43,7 @@ try {
       openness: e.drippySprings.mouthOpen?.x || 0,
       path: e.drippyMouth.getAttribute("d") || "",
       fill: e.drippyMouth.style.fill,
+      fillOpacity: Number(e.drippyMouth.style.fillOpacity || 0),
       auxiliaryOpacity: Number(e.drippyMouthOpen.style.opacity),
       haloStroke: Number(e.halo.getAttribute("stroke-width")),
     };
@@ -56,11 +57,12 @@ try {
   });
   assert.equal(result.visibleLayers, 0);
   assert.equal(result.hiddenParts, true);
-  assert.ok(result.speaking.openness > 0.45);
+  assert.ok(result.speaking.openness > 0.35);
   assert.match(result.speaking.path, / Q /);
-  assert.notEqual(result.speaking.fill, "none");
+  assert.equal(result.speaking.fill, "none");
+  assert.equal(result.speaking.fillOpacity, 0);
   assert.equal(result.speaking.auxiliaryOpacity, 0);
-  assert.equal(result.speaking.haloStroke, 3.6);
+  assert.equal(result.speaking.haloStroke, 3.2);
   assert.ok(result.silence.openness < 0.12);
   assert.notEqual(result.speaking.path, result.silence.path);
   assert.ok(result.rejected);

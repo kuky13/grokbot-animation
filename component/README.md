@@ -8,7 +8,7 @@
 
 ## Drippy completa
 
-O botão **Baixar Drippy completa** em `/component/` entrega o pacote standalone v0.7.1. Ele inclui o rosto novo, olhos e piscadelas, orelhas independentes, boca e fala reativa, halo, interação de pressionar/arrastar, os 39 estados, 18 formas, 14 morphs, materiais, partículas, diálogo, tipos TypeScript e todo o runtime/vendor necessário. Consulte `DRIPPY-COMPONENTS.md` dentro do ZIP para o mapa dos arquivos.
+O botão **Baixar Drippy completa** em `/component/` entrega o pacote standalone v0.7.2. Ele inclui o rosto novo, olhos e piscadelas, orelhas independentes, boca e fala reativa, halo, interação de pressionar/arrastar, os 39 estados, 18 formas, 14 morphs, materiais, partículas, diálogo, tipos TypeScript e todo o runtime/vendor necessário. Consulte `DRIPPY-COMPONENTS.md` dentro do ZIP para o mapa dos arquivos.
 
 ## 1. 最快使用
 
