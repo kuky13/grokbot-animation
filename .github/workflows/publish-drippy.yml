@@ -1,0 +1,48 @@
+name: Publish Studio Drippy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'component/morph-bot.js'
+      - 'component/grok-bot-engine.js'
+      - 'component/original-data.js'
+      - 'component/catalog.js'
+      - 'component/materials.js'
+      - 'component/runtime/**'
+      - 'component/package.json'
+      - 'scripts/publish-drippy-release.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-studio-drippy
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Rights for redistributing the upstream-derived runtime are not yet confirmed.
+    # Set this repository variable only after that review is complete.
+    if: vars.DRIPPY_RELEASE_RIGHTS_CONFIRMED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build and verify immutable release
+        run: bash scripts/publish-drippy-release.sh
+      - name: Commit release manifest and archive
+        run: |
+          set -euo pipefail
+          git config user.name 'Studio Drippy[bot]'
+          git config user.email 'studio-drippy[bot]@users.noreply.github.com'
+          git add component/releases component/downloads
+          git diff --cached --check
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'chore: publish Studio Drippy release'
+          git push origin HEAD:main

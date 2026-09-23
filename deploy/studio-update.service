@@ -1,0 +1,9 @@
+[Unit]
+Description=Fast-forward Studio from Kuky fork after merge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/grokbot-animation
+ExecStart=/usr/bin/bash /opt/grokbot-animation/scripts/update-studio-from-fork.sh

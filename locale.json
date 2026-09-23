@@ -1,0 +1,3030 @@
+{
+  "#21356A": {
+    "en": "#21356A",
+    "pt": "#21356A"
+  },
+  "+1 帧": {
+    "en": "+1 frame",
+    "pt": "+1 quadro"
+  },
+  ", útil para integrações de voz que já calculam amplitude.": {
+    "en": ", útil para integrações de voz que já calculam amplitude.",
+    "pt": ", útil para integrações de voz que já calculam amplitude."
+  },
+  "01 — Fidelity": {
+    "en": "01 — Fidelity",
+    "pt": "01 — Fidelidade"
+  },
+  "14 个 Morph": {
+    "en": "14 Morphs",
+    "pt": "14 transformações"
+  },
+  "14 个单次 Morph": {
+    "en": "14 single Morphs",
+    "pt": "14 Morphs únicos"
+  },
+  "18 个形状": {
+    "en": "18 shapes",
+    "pt": "18 formas"
+  },
+  "2 秒": {
+    "pt": "2 segundos",
+    "en": "2 seconds"
+  },
+  "2.5 秒": {
+    "pt": "2,5 segundos",
+    "en": "2.5 seconds"
+  },
+  "25 个材质预设": {
+    "en": "25 material presets",
+    "pt": "25 predefinições de materiais"
+  },
+  "3 步": {
+    "en": "3 steps",
+    "pt": "3 etapas"
+  },
+  "3 步 · 状态停留 5 秒": {
+    "pt": "3 etapas · O status permanece por 5 segundos",
+    "en": "3 steps · Status stays for 5 seconds"
+  },
+  "39 个状态": {
+    "en": "39 states",
+    "pt": "39 estados"
+  },
+  "39 状态 · 18 形状": {
+    "en": "39 states · 18 shapes",
+    "pt": "39 estados · 18 formas"
+  },
+  "72px": {
+    "en": "72px",
+    "pt": "72px"
+  },
+  "A → B 状态切换台": {
+    "en": "A → B status switcher",
+    "pt": "Alternador de status A → B"
+  },
+  "ACCESSIBILITY": {
+    "en": "ACCESSIBILITY",
+    "pt": "ACESSIBILIDADE"
+  },
+  "API": {
+    "en": "API",
+    "pt": "API"
+  },
+  "API 文档": {
+    "en": "API documentation",
+    "pt": "Documentação da API"
+  },
+  "Agent morphs · Agent 形变": {
+    "pt": "Transformações de agente · Transformações de agente",
+    "en": "Agent morphs · Agent morphs"
+  },
+  "Agent 形变": {
+    "pt": "Deformação do agente",
+    "en": "Agent deformation"
+  },
+  "Agent 形变 · 3": {
+    "pt": "Agente Morph · 3",
+    "en": "Agent Morph · 3"
+  },
+  "Anel": {
+    "en": "Anel",
+    "pt": "Anel"
+  },
+  "Anel externo": {
+    "en": "Anel externo",
+    "pt": "Anel externo"
+  },
+  "Ativa pressão, arrasto, inclinação e retorno por mola.": {
+    "en": "Ativa pressão, arrasto, inclinação e retorno por mola.",
+    "pt": "Ativa pressão, arrasto, especificação e retorno por mola."
+  },
+  "Aurora Orb": {
+    "pt": "Aurora Orb",
+    "en": "Aurora Orb"
+  },
+  "Aurora Orb · Morph Bot": {
+    "en": "Aurora Orb · Morph Bot",
+    "pt": "Orbe Aurora · Morph Bot"
+  },
+  "Aurora Orb 表情控制": {
+    "en": "Aurora Orb Expression Control",
+    "pt": "Controle de Expressão Aurora Orb"
+  },
+  "Baixar Drippy completa": {
+    "pt": "Baixar Drippy completa",
+    "en": "Download complete Drippy"
+  },
+  "Baixar Drippy completa (.zip)": {
+    "en": "Baixar Drippy completa (.zip)",
+    "pt": "Baixar Drippy completo (.zip)"
+  },
+  "Baixar Drippy completa ↓": {
+    "en": "Baixar Drippy completa ↓",
+    "pt": "Baixar Drippy completa ↓"
+  },
+  "Baixe tudo que forma a Drippy nova em um único ZIP: rosto, olhos, orelhas, boca, halo, áudio reativo, interação física, materiais, estados, morphs, runtime e tipos TypeScript.": {
+    "en": "Baixe tudo que forma a Drippy nova em um único ZIP: rosto, olhos, orelhas, boca, halo, áudio reativo, interação física, materiais, estados, morphs, runtime e tipos TypeScript.",
+    "pt": "Baixe tudo que forma a Drippy nova em um único ZIP: rosto, olhos, orelhas, boca, halo, áudio reativo, interação física, materiais, estados, morphs, runtime e tipos TypeScript."
+  },
+  "Bot 可以放在哪里？": {
+    "en": "Where can the bot be placed?",
+    "pt": "Onde o bot pode ser colocado?"
+  },
+  "Bot 颜色": {
+    "en": "Bot color",
+    "pt": "Cor do bot"
+  },
+  "CSS color": {
+    "en": "CSS color",
+    "pt": "Cor CSS"
+  },
+  "Cadence & motion · 时序": {
+    "pt": "Cadência e movimento · Tempo",
+    "en": "Cadence & motion · Timing"
+  },
+  "Character · 角色": {
+    "pt": "Personagem · papel",
+    "en": "Character · role"
+  },
+  "Choose a mood": {
+    "pt": "Escolha uma expressão",
+    "en": "Choose a mood"
+  },
+  "Conecta um": {
+    "en": "Conecta um",
+    "pt": "Conecte-se um"
+  },
+  "Controla o anel externo reativo da Drippy.": {
+    "en": "Controla o anel externo reativo da Drippy.",
+    "pt": "Controle o anel externo reativo do Drippy."
+  },
+  "Current expression": {
+    "en": "Current expression",
+    "pt": "Expressão atual"
+  },
+  "Current shape": {
+    "en": "Current shape",
+    "pt": "Forma atual"
+  },
+  "Define manualmente a energia da fala entre": {
+    "en": "Define manualmente a energia da fala entre",
+    "pt": "Definir manualmente a energia da fala entre"
+  },
+  "Desconecta a análise de áudio externo e devolve a fala ao comportamento normal do estado.": {
+    "en": "Desconecta a análise de áudio externo e devolve a fala ao comportamento normal do estado.",
+    "pt": "Desconecta a análise de áudio externo e devolve a fala ao comportamento normal do estado."
+  },
+  "Desligado": {
+    "en": "Desligado",
+    "pt": "Desligado"
+  },
+  "Dictating sem áudio: demonstração de fala.": {
+    "en": "Dictating sem áudio: demonstração de fala.",
+    "pt": "Ditando sem áudio: demonstração de fala."
+  },
+  "Drippy animated assistant": {
+    "en": "Drippy animated assistant",
+    "pt": "Assistente animado Drippy"
+  },
+  "Drippy completa · v0.7.2": {
+    "en": "Drippy completa · v0.7.2",
+    "pt": "Drippy completa · v0.7.2"
+  },
+  "Drippy, a round animated assistant with dot eyes, expressive ears and a reactive mouth.": {
+    "en": "Drippy, a round animated assistant with dot eyes, expressive ears and a reactive mouth.",
+    "pt": "Drippy, um assistente redondo e animado com olhos pontudos, orelhas expressivas e boca reativa."
+  },
+  "E00 · eye 1.00 · morph 0.00": {
+    "en": "E00 · eye 1.00 · morph 0.00",
+    "pt": "E00 · olho 1,00 · metamorfose 0,00"
+  },
+  "ELEMENT": {
+    "en": "ELEMENT",
+    "pt": "ELEMENTO"
+  },
+  "ES Module": {
+    "en": "ES Module",
+    "pt": "Módulo ES"
+  },
+  "EVENTS": {
+    "en": "EVENTS",
+    "pt": "EVENTOS"
+  },
+  "Editing": {
+    "en": "Editing",
+    "pt": "Edição"
+  },
+  "Electric violet": {
+    "en": "Electric violet",
+    "pt": "Violeta elétrica"
+  },
+  "Em": {
+    "en": "Em",
+    "pt": "Em"
+  },
+  "Every mood.": {
+    "pt": "Cada expressão.",
+    "en": "Every mood."
+  },
+  "Eye poses": {
+    "en": "Eye poses",
+    "pt": "Poses de olhos"
+  },
+  "FRAMEWORK-FREE WEB COMPONENT": {
+    "en": "FRAMEWORK-FREE WEB COMPONENT",
+    "pt": "COMPONENTE WEB SEM FRAMEWORK"
+  },
+  "FROM": {
+    "en": "FROM",
+    "pt": "DE"
+  },
+  "Grok Bot": {
+    "pt": "Grok Bot",
+    "en": "Grok Bot"
+  },
+  "Grok Bot · Original State Lab": {
+    "en": "Grok Bot · Original State Lab",
+    "pt": "Grok Bot · Laboratório Estadual Original"
+  },
+  "Grok Bot 原版形状": {
+    "en": "Grok Bot original shape",
+    "pt": "Forma original do Grok Bot"
+  },
+  "Grok Bot 原版状态实验台": {
+    "en": "Grok Bot Original State Experiment Bench",
+    "pt": "Banco de experimentos de estado original do Grok Bot"
+  },
+  "HTML 属性": {
+    "en": "HTML attributes",
+    "pt": "Atributos HTML"
+  },
+  "IDLE": {
+    "en": "IDLE",
+    "pt": "PARADO"
+  },
+  "INSTALLATION": {
+    "en": "INSTALLATION",
+    "pt": "INSTALAÇÃO"
+  },
+  "Idle": {
+    "en": "Idle",
+    "pt": "Parado"
+  },
+  "Idle · 待机": {
+    "en": "Idle · standby",
+    "pt": "Inativo · em espera"
+  },
+  "Ink black": {
+    "en": "Ink black",
+    "pt": "Tinta preta"
+  },
+  "JAVASCRIPT": {
+    "en": "JAVASCRIPT",
+    "pt": "JAVASCRIPT"
+  },
+  "JSON 文件无法读取或格式不正确。": {
+    "pt": "O arquivo JSON não pode ser lido ou não está no formato correto.",
+    "en": "The JSON file cannot be read or is not in the correct format."
+  },
+  "JavaScript 属性": {
+    "en": "JavaScript properties",
+    "pt": "Propriedades JavaScript"
+  },
+  "LIFECYCLE": {
+    "en": "LIFECYCLE",
+    "pt": "VIDA ÚTIL"
+  },
+  "LIVE API": {
+    "en": "LIVE API",
+    "pt": "API AO VIVO"
+  },
+  "Lifecycle · 基础状态": {
+    "pt": "Ciclo de vida · Estado básico",
+    "en": "Lifecycle · Basic state"
+  },
+  "Live API 测试器": {
+    "en": "Live API tester",
+    "pt": "Testador de API ao vivo"
+  },
+  "MATERIAL REFERENCE": {
+    "en": "MATERIAL REFERENCE",
+    "pt": "REFERÊNCIA DE MATERIAIS"
+  },
+  "METHODS": {
+    "en": "METHODS",
+    "pt": "MÉTODOS"
+  },
+  "MORPH REFERENCE": {
+    "en": "MORPH REFERENCE",
+    "pt": "REFERÊNCIA DE MORFO"
+  },
+  "Morph": {
+    "en": "Morph",
+    "pt": "Morfar"
+  },
+  "Morph Bot": {
+    "pt": "Morph Bot",
+    "en": "Morph Bot"
+  },
+  "Morph Bot Element · API 文档": {
+    "en": "Morph Bot Element · API Documentation",
+    "pt": "Elemento Morph Bot · Documentação da API"
+  },
+  "Morph Bot Element · framework-free Web Component": {
+    "en": "Morph Bot Element · framework-free Web Component",
+    "pt": "Elemento Morph Bot · Componente Web sem estrutura"
+  },
+  "Morph Bot · 所见即所得组件编辑器": {
+    "en": "Morph Bot · WYSIWYG component editor",
+    "pt": "Morph Bot · Editor de componentes WYSIWYG"
+  },
+  "Morph Bot 所见即所得编辑器": {
+    "en": "Morph Bot WYSIWYG Editor",
+    "pt": "Editor WYSIWYG do Morph Bot"
+  },
+  "Morph Bot 编辑器首页": {
+    "en": "Morph Bot Editor Home Page",
+    "pt": "Página inicial do editor do Morph Bot"
+  },
+  "Morph playback": {
+    "en": "Morph playback",
+    "pt": "Reprodução de metamorfose"
+  },
+  "Morph 保持": {
+    "pt": "Morfar manter",
+    "en": "Morph keep"
+  },
+  "MorphBotMaterial": {
+    "en": "MorphBotMaterial",
+    "pt": "MorphBotMaterial"
+  },
+  "MorphBotShape": {
+    "en": "MorphBotShape",
+    "pt": "MorphBotShape"
+  },
+  "MorphBotState": {
+    "en": "MorphBotState",
+    "pt": "Estado MorphBot"
+  },
+  "Move your pointer": {
+    "en": "Move your pointer",
+    "pt": "Mova seu ponteiro"
+  },
+  "NEW": {
+    "en": "NEW",
+    "pt": "NOVO"
+  },
+  "Not an imitation layer. The original geometry model.": {
+    "en": "Not an imitation layer. The original geometry model.",
+    "pt": "Não é uma camada de imitação. O modelo geométrico original."
+  },
+  "O que vem no pacote?": {
+    "en": "O que vem no pacote?",
+    "pt": "O que vem no pacote?"
+  },
+  "Open Props": {
+    "en": "Open Props",
+    "pt": "Adereços abertos"
+  },
+  "Original geometry": {
+    "en": "Original geometry",
+    "pt": "Geometria original"
+  },
+  "Original pose offsets · 原版姿态偏移": {
+    "pt": "Deslocamentos de pose originais · Deslocamentos de pose originais",
+    "en": "Original pose offsets · Original pose offsets"
+  },
+  "Original state lab": {
+    "pt": "Laboratório de estados originais",
+    "en": "Original state lab"
+  },
+  "PREPARING WORKSPACE": {
+    "en": "PREPARING WORKSPACE",
+    "pt": "PREPARANDO O ESPAÇO DE TRABALHO"
+  },
+  "PRESET": {
+    "en": "PRESET",
+    "pt": "PREDEFINIÇÃO"
+  },
+  "Preset 配置": {
+    "en": "Preset configuration",
+    "pt": "Configuração predefinida"
+  },
+  "Product lifecycle · 任务状态": {
+    "pt": "Ciclo de vida do produto · Status da tarefa",
+    "en": "Product lifecycle · Task status"
+  },
+  "Projeto original: iduu/grokbot-animation · Adaptação Kuky: Drippy, integração OneDrip, publicação por hash e interface em português. Estudo não oficial, sem vínculo com a xAI.": {
+    "pt": "Projeto original: iduu/grokbot-animation · Adaptação Kuky: Drippy, integração OneDrip, publicação por hash e interface em português. Estudo não oficial, sem vínculo com a xAI.",
+    "en": "Original project: iduu/grokbot-animation · Kuky adaptation: Drippy, OneDrip integration, hash-based releases, and Portuguese interface. Unofficial study, unaffiliated with xAI."
+  },
+  "QUICK START": {
+    "en": "QUICK START",
+    "pt": "INÍCIO RÁPIDO"
+  },
+  "READY": {
+    "en": "READY",
+    "pt": "PREPARAR"
+  },
+  "RUNTIME": {
+    "en": "RUNTIME",
+    "pt": "TEMPO DE EXECUÇÃO"
+  },
+  "Reactions · 情绪反应": {
+    "pt": "Reações · Reações emocionais",
+    "en": "Reactions · Emotional reactions"
+  },
+  "Read the DOM analysis ↗": {
+    "en": "Read the DOM analysis ↗",
+    "pt": "Leia a análise do DOM ↗"
+  },
+  "Runtime": {
+    "en": "Runtime",
+    "pt": "Tempo de execução"
+  },
+  "SHAPE REFERENCE": {
+    "en": "SHAPE REFERENCE",
+    "pt": "REFERÊNCIA DE FORMA"
+  },
+  "STATE REFERENCE": {
+    "en": "STATE REFERENCE",
+    "pt": "REFERÊNCIA ESTADUAL"
+  },
+  "SVG + JS": {
+    "en": "SVG + JS",
+    "pt": "SVG+JS"
+  },
+  "Shadow DOM 和引擎初始化完成。": {
+    "en": "Shadow DOM and engine initialization completed.",
+    "pt": "Shadow DOM e inicialização do mecanismo concluídas."
+  },
+  "Signal blue": {
+    "en": "Signal blue",
+    "pt": "Sinal azul"
+  },
+  "Source aligned · 39 states": {
+    "pt": "Fiel à referência · 39 estados",
+    "en": "Source-aligned · 39 states"
+  },
+  "Source expression pool · 原版眼形池": {
+    "pt": "Piscina de expressão de origem · Piscina original em forma de olho",
+    "en": "Source expression pool · Original eye-shaped pool"
+  },
+  "Source-aligned motion study, 2026": {
+    "en": "Source-aligned motion study, 2026",
+    "pt": "Estudo de movimento alinhado à fonte, 2026"
+  },
+  "State index": {
+    "en": "State index",
+    "pt": "Índice estadual"
+  },
+  "State morph · 任务形变": {
+    "pt": "Metamorfose de estado · Metamorfose de tarefa",
+    "en": "State morph·Task morph"
+  },
+  "States": {
+    "en": "States",
+    "pt": "Estados"
+  },
+  "Suave": {
+    "en": "Suave",
+    "pt": "Suave"
+  },
+  "Surface material": {
+    "en": "Surface material",
+    "pt": "Material de superfície"
+  },
+  "TO": {
+    "en": "TO",
+    "pt": "PARA"
+  },
+  "TYPESCRIPT": {
+    "en": "TYPESCRIPT",
+    "pt": "TEXTO DATILOGADO"
+  },
+  "The original shape.": {
+    "en": "The original shape.",
+    "pt": "A forma original."
+  },
+  "Transition console": {
+    "en": "Transition console",
+    "pt": "Console de transição"
+  },
+  "TypeScript": {
+    "en": "TypeScript",
+    "pt": "Texto datilografado"
+  },
+  "TypeScript 类型": {
+    "en": "TypeScript types",
+    "pt": "Tipos de TypeScript"
+  },
+  "Warm coral": {
+    "en": "Warm coral",
+    "pt": "Coral quente"
+  },
+  "WebGradients": {
+    "en": "WebGradients",
+    "pt": "WebGradientes"
+  },
+  "animalese-tts 双语路由 · 更高音、更跳跃 · Bilingual animalese-tts routing with a higher, bouncier profile · 英文自动组合 th / sh / ng 等音素": {
+    "pt": "roteamento bilíngue animalese-tts · Tom mais alto, mais salto · Roteamento animalese-tts bilíngue com um perfil mais alto e saltitante · Combinação automática de fonemas em inglês, como th / sh / ng",
+    "en": "animalese-tts bilingual routing · Higher pitch, more jump · Bilingual animalese-tts routing with a higher, bouncier profile · English automatic combination of phonemes such as th / sh / ng"
+  },
+  "bot.snapshot()": {
+    "en": "bot.snapshot()",
+    "pt": "bot.instantâneo()"
+  },
+  "idle · blob · 72px": {
+    "en": "idle · blob · 72px",
+    "pt": "inativo · bolha · 72px"
+  },
+  "index.html": {
+    "en": "index.html",
+    "pt": "index.html"
+  },
+  "morph-bot/": {
+    "en": "morph-bot/",
+    "pt": "morph-bot/"
+  },
+  "preset.json": {
+    "en": "preset.json",
+    "pt": "predefinido.json"
+  },
+  "sem áudio, a boca usa uma demonstração sintética.": {
+    "en": "sem áudio, a boca usa uma demonstração sintética.",
+    "pt": "sem áudio, a boca usa uma demonstração sintética."
+  },
+  "thinking · blob · 纯色 · 72px": {
+    "pt": "pensando · bolha · cor sólida · 72px",
+    "en": "thinking · blob · solid color · 72px"
+  },
+  "v0.7.2": {
+    "en": "v0.7.2",
+    "pt": "v0.7.2"
+  },
+  "à boca da Drippy. A energia real do áudio passa a controlar a abertura; não inicia a reprodução automaticamente.": {
+    "en": "à boca da Drippy. A energia real do áudio passa a controlar a abertura; não inicia a reprodução automaticamente.",
+    "pt": "à boca do Drippy. A energia real do áudio passa a controlar a abertura; não inicia a reprodução automaticamente."
+  },
+  "Ⅱ 暂停": {
+    "en": "Ⅱ Pause",
+    "pt": "Ⅱ Pausa"
+  },
+  "← → 切换状态": {
+    "en": "← → Switch status",
+    "pt": "← → Mudar status"
+  },
+  "↑↓ 选择 · Enter 插入 · Esc 关闭": {
+    "en": "↑↓ Select · Enter to insert · Esc to close",
+    "pt": "↑↓ Selecione · Enter para inserir · Esc para fechar"
+  },
+  "→ 保持": {
+    "en": "→ keep",
+    "pt": "→ manter"
+  },
+  "→ 停留": {
+    "en": "→ stay",
+    "pt": "→ ficar"
+  },
+  "↺ 重播当前": {
+    "en": "↺ Replay current",
+    "pt": "↺ Repetir atual"
+  },
+  "└── README.md": {
+    "en": "└── README.md",
+    "pt": "└── README.md"
+  },
+  "├── catalog.js": {
+    "en": "├── catalog.js",
+    "pt": "├── catálogo.js"
+  },
+  "├── grok-bot-engine.js": {
+    "en": "├── grok-bot-engine.js",
+    "pt": "├── grok-bot-engine.js"
+  },
+  "├── materials.js": {
+    "en": "├── materials.js",
+    "pt": "├── materiais.js"
+  },
+  "├── morph-bot.d.ts": {
+    "en": "├── morph-bot.d.ts",
+    "pt": "├── morph-bot.d.ts"
+  },
+  "├── morph-bot.js": {
+    "en": "├── morph-bot.js",
+    "pt": "├── morph-bot.js"
+  },
+  "├── original-data.js": {
+    "en": "├── original-data.js",
+    "pt": "├── data-original.js"
+  },
+  "├── runtime/": {
+    "en": "├── runtime/",
+    "pt": "├── tempo de execução/"
+  },
+  "■ 停止": {
+    "en": "■ Stop",
+    "pt": "■ Parar"
+  },
+  "▶ 播放 A→B": {
+    "en": "▶ Play A→B",
+    "pt": "▶ Reproduzir A→B"
+  },
+  "▶ 继续": {
+    "pt": "▶ Continuar",
+    "en": "▶ Continue"
+  },
+  "。框架项目应把整个目录放进公开静态资源目录，再使用对应的公开 URL。": {
+    "en": ". Framework projects should put the entire directory into the public static resource directory, and then use the corresponding public URL.",
+    "pt": ". Os projetos de estrutura devem colocar o diretório inteiro no diretório de recursos estáticos públicos e, em seguida, usar o URL público correspondente."
+  },
+  "。返回 Promise。": {
+    "en": ". Return Promise.",
+    "pt": ". Promessa de retorno."
+  },
+  "丁香呼吸": {
+    "pt": "hálito lilás",
+    "en": "lilac breath"
+  },
+  "三步接入": {
+    "en": "Three steps access",
+    "pt": "Acesso em três etapas"
+  },
+  "三步看到第一个 Bot": {
+    "en": "Three steps to see your first Bot",
+    "pt": "Três etapas para ver seu primeiro Bot"
+  },
+  "三角楔形": {
+    "pt": "cunha triangular",
+    "en": "triangular wedge"
+  },
+  "三角楔形 · wedge": {
+    "pt": "cunha triangular · cunha",
+    "en": "triangular wedge · wedge"
+  },
+  "上传": {
+    "pt": "carregar",
+    "en": "upload"
+  },
+  "上传 · uploading": {
+    "pt": "carregar · carregar",
+    "en": "upload · uploading"
+  },
+  "上传停靠": {
+    "pt": "Doca de upload",
+    "en": "Upload dock"
+  },
+  "上传停靠 · dock": {
+    "pt": "Carregar doca · doca",
+    "en": "Upload dock · dock"
+  },
+  "下载包包含": {
+    "en": "The download package contains",
+    "pt": "O pacote de download contém"
+  },
+  "下载并解压": {
+    "en": "Download and unzip",
+    "pt": "Baixe e descompacte"
+  },
+  "下面展示按钮、任务卡和页面加载的实际组合方式。": {
+    "en": "Here's how buttons, task cards, and page loads actually come together.",
+    "pt": "Veja como botões, cartões de tarefas e carregamentos de páginas realmente funcionam juntos."
+  },
+  "不是 0–100% 进度。": {
+    "en": "Not 0–100% progress.",
+    "pt": "Não é um progresso de 0–100%."
+  },
+  "不触发": {
+    "pt": "Não acionado",
+    "en": "Not triggered"
+  },
+  "与": {
+    "en": "and",
+    "pt": "e"
+  },
+  "中英 Animalese · Bilingual Animalese": {
+    "pt": "Chinês-Inglês Animalês · Animalês Bilíngue",
+    "en": "Chinese-English Animalese · Bilingual Animalese"
+  },
+  "中英淘气高音 · Bilingual Playful": {
+    "pt": "Chinês-Inglês Naughty Treble · Bilíngue Brincalhão",
+    "en": "Chinese-English Naughty Treble · Bilingual Playful"
+  },
+  "书写": {
+    "pt": "escrever",
+    "en": "write"
+  },
+  "书写 · writing": {
+    "pt": "escrever · escrever",
+    "en": "writing · writing"
+  },
+  "书写铅笔": {
+    "pt": "lápis de escrita",
+    "en": "writing pencil"
+  },
+  "书写铅笔 · pencil": {
+    "pt": "lápis de escrever · lápis",
+    "en": "writing pencil · pencil"
+  },
+  "事件": {
+    "en": "event",
+    "pt": "evento"
+  },
+  "云朵": {
+    "pt": "nuvens",
+    "en": "clouds"
+  },
+  "云朵 · cloud": {
+    "pt": "nuvem · nuvem",
+    "en": "cloud · cloud"
+  },
+  "互动 Grok Bot，移动鼠标可以让它看向你": {
+    "en": "Interactive Grok Bot, move the mouse to make it look at you",
+    "pt": "Grok Bot interativo, mova o mouse para que ele olhe para você"
+  },
+  "人声 Sprite 合成链路。汉字按整句语境解析为拼音和声调，英文片段自动交给官方": {
+    "en": "Vocal sprite synthesis link. Chinese characters are parsed into pinyin and tones according to the context of the entire sentence, and the English fragments are automatically handed over to the official",
+    "pt": "Link de síntese de sprite vocal. Os caracteres chineses são analisados ​​em pinyin e tons de acordo com o contexto de toda a frase, e os fragmentos em inglês são automaticamente entregues ao oficial"
+  },
+  "从 DOM 移除时清理动画帧、观察器和指针事件。": {
+    "en": "Clean animation frames, observer and pointer events when removed from the DOM.",
+    "pt": "Limpe quadros de animação, eventos de observador e ponteiro quando removidos do DOM."
+  },
+  "从头重播当前状态。": {
+    "en": "Replay the current state from the beginning.",
+    "pt": "Reproduza o estado atual desde o início."
+  },
+  "代码始终与当前预览一致。": {
+    "en": "The code is always consistent with the current preview.",
+    "pt": "O código é sempre consistente com a visualização atual."
+  },
+  "代码已选中，请按 ⌘C": {
+    "pt": "Código selecionado, pressione ⌘C",
+    "en": "Code selected, press ⌘C"
+  },
+  "代码类型": {
+    "en": "code type",
+    "pt": "tipo de código"
+  },
+  "任务卡": {
+    "en": "task card",
+    "pt": "cartão de tarefas"
+  },
+  "任务已完成": {
+    "pt": "Tarefa concluída",
+    "en": "Task completed"
+  },
+  "任务状态": {
+    "en": "Task status",
+    "pt": "Status da tarefa"
+  },
+  "任务状态 · 13": {
+    "pt": "Status da tarefa · 13",
+    "en": "Task status · 13"
+  },
+  "会组合英文音素，": {
+    "en": "Can combine English phonemes,",
+    "pt": "Pode combinar fonemas ingleses,"
+  },
+  "会表演的对话角色": {
+    "pt": "papéis de diálogo que podem ser desempenhados",
+    "en": "dialogue roles that can be performed"
+  },
+  "会逐字母拟声。整句采用单一音频时间线、统一响度和 10–12ms 交叉淡化。播放器提前约 60ms 调度音频，字幕和进度读取带设备输出延迟补偿的 AudioContext 播放头；组合英文音素仍逐字显示。首次播放会从组件包本地加载约 1.2 MB 的音频 Sprite。": {
+    "en": "Can onomatopoeia letter by letter. The entire sentence uses a single audio timeline, unified loudness, and 10–12ms crossfade. The player schedules audio, subtitles and progress about 60ms ahead of time to read the AudioContext playhead with device output delay compensation; combined English phonemes are still displayed verbatim. The first playback loads approximately 1.2 MB of audio sprite locally from the component package.",
+    "pt": "Pode onomatopeia letra por letra. A frase inteira usa uma única linha do tempo de áudio, volume unificado e crossfade de 10 a 12 ms. O player agenda áudio, legendas e progresso com cerca de 60 ms de antecedência para ler o playhead AudioContext com compensação de atraso de saída do dispositivo; os fonemas ingleses combinados ainda são exibidos literalmente. A primeira reprodução carrega aproximadamente 1,2 MB de sprite de áudio localmente do pacote do componente."
+  },
+  "作为纯装饰并从无障碍树隐藏。": {
+    "en": "Serves as purely decorative and hidden from the accessible tree.",
+    "pt": "Serve como puramente decorativo e escondido da árvore acessível."
+  },
+  "作用": {
+    "en": "effect",
+    "pt": "efeito"
+  },
+  "你好，我是 Morph Bot。": {
+    "pt": "Olá, sou o Morph Bot.",
+    "en": "Hello, I'm Morph Bot."
+  },
+  "使用 animalese-tts 人声 Sprite，分别提供干净与高音跳跃配置，也支持": {
+    "en": "Use animalese-tts vocal sprite, providing clean and treble jump configurations respectively, also supported",
+    "pt": "Use sprite vocal animalese-tts, fornecendo configurações de salto limpo e agudo respectivamente, também suportado"
+  },
+  "使用步骤": {
+    "en": "Usage steps",
+    "pt": "Etapas de uso"
+  },
+  "使用组件": {
+    "en": "Use components",
+    "pt": "Usar componentes"
+  },
+  "依次执行状态停留和单次 Morph。每步支持": {
+    "en": "Perform a state dwell and a single Morph in sequence. Support every step",
+    "pt": "Execute uma pausa de estado e um único Morph em sequência. Apoie cada passo"
+  },
+  "保持文件相对位置": {
+    "en": "Keep file relative position",
+    "pt": "Manter a posição relativa do arquivo"
+  },
+  "信号蓝": {
+    "pt": "sinal azul",
+    "en": "signal blue"
+  },
+  "信号蓝 · signal-blue": {
+    "pt": "azul-sinal · azul-sinal",
+    "en": "signal-blue · signal-blue"
+  },
+  "修改会立即显示": {
+    "en": "Changes will appear immediately",
+    "pt": "As alterações aparecerão imediatamente"
+  },
+  "修改值以原版为基线叠加；点击重置即可恢复该状态的精确默认值。": {
+    "en": "Modified values ​​are overlaid with the original version as the baseline; click Reset to restore the precise default value for that state.",
+    "pt": "Os valores modificados são sobrepostos à versão original como linha de base; clique em Redefinir para restaurar o valor padrão preciso para esse estado."
+  },
+  "倾听": {
+    "pt": "ouvir",
+    "en": "listen"
+  },
+  "倾听 · listening": {
+    "pt": "ouvindo · escutando",
+    "en": "listening · listening"
+  },
+  "停止": {
+    "en": "stop",
+    "pt": "parar"
+  },
+  "停留 A": {
+    "en": "Stay A",
+    "pt": "Fique um"
+  },
+  "停留 B": {
+    "en": "Stay B",
+    "pt": "Fique B"
+  },
+  "停留后播放": {
+    "pt": "jogar depois de ficar",
+    "en": "play after stay"
+  },
+  "先在编辑器里配置": {
+    "en": "Configure it in the editor first",
+    "pt": "Configure-o primeiro no editor"
+  },
+  "先点中间的时间线步骤，再点这里的状态。目录缩略图隐藏彩色粒子，完整效果在中间播放。": {
+    "en": "First click on the middle timeline step, then click on the status here. Catalog thumbnail hides colored particles, full effect plays in the middle.",
+    "pt": "Primeiro clique na etapa intermediária da linha do tempo e, em seguida, clique no status aqui. A miniatura do catálogo esconde partículas coloridas, o efeito completo é reproduzido no meio."
+  },
+  "全部形状": {
+    "en": "All shapes",
+    "pt": "Todas as formas"
+  },
+  "全部状态": {
+    "en": "All status",
+    "pt": "Todos os status"
+  },
+  "全部表情状态": {
+    "en": "All expression status",
+    "pt": "Status de todas as expressões"
+  },
+  "六边形": {
+    "pt": "hexágono",
+    "en": "hexagon"
+  },
+  "六边形 · hex": {
+    "pt": "hexágono · hexágono",
+    "en": "hexagon · hex"
+  },
+  "关": {
+    "en": "close",
+    "pt": "fechar"
+  },
+  "关机": {
+    "pt": "Desligar",
+    "en": "Shut down"
+  },
+  "关机 · powering-down": {
+    "pt": "desligar · desligar",
+    "en": "shutdown · powering-down"
+  },
+  "关闭": {
+    "en": "closure",
+    "pt": "encerramento"
+  },
+  "兴奋": {
+    "pt": "excitado",
+    "en": "excited"
+  },
+  "兴奋 · excited": {
+    "pt": "entusiasmado · excitado",
+    "en": "excited · excited"
+  },
+  "写一句，让 Bot 演出来": {
+    "en": "Write a sentence and let the Bot perform it",
+    "pt": "Escreva uma frase e deixe o Bot executá-la"
+  },
+  "写标签": {
+    "en": "write tags",
+    "pt": "escrever tags"
+  },
+  "冰晶珍珠": {
+    "en": "ice crystal pearl",
+    "pt": "pérola de cristal de gelo"
+  },
+  "准备好后点击播放": {
+    "en": "Click play when you're ready",
+    "pt": "Clique em reproduzir quando estiver pronto"
+  },
+  "准备第 1 步…": {
+    "pt": "Prepare-se para a etapa 1…",
+    "en": "Prepare for step 1…"
+  },
+  "切换到目标状态并返回当前元素。传入": {
+    "en": "Switch to the target state and return the current element. incoming",
+    "pt": "Mude para o estado de destino e retorne o elemento atual. entrada"
+  },
+  "切换容器，检查它在真实界面里的样子。": {
+    "en": "Switch the container and check how it looks in the real interface.",
+    "pt": "Troque o contêiner e verifique como fica na interface real."
+  },
+  "切换最短": {
+    "pt": "Interruptor mais curto",
+    "en": "Shortest switch"
+  },
+  "切换最长": {
+    "pt": "Trocar por mais tempo",
+    "en": "Switch longest"
+  },
+  "切换材质。纯色传": {
+    "en": "Switch material. Pure color biography",
+    "pt": "Troque de material. Biografia em cores puras"
+  },
+  "切换轮廓并返回当前元素。": {
+    "en": "Toggles the outline and returns the current element.",
+    "pt": "Alterna o contorno e retorna o elemento atual."
+  },
+  "删除": {
+    "pt": "excluir",
+    "en": "delete"
+  },
+  "删除标签": {
+    "en": "Delete tag",
+    "pt": "Excluir etiqueta"
+  },
+  "前移": {
+    "pt": "seguir em frente",
+    "en": "move forward"
+  },
+  "前进一帧并保持暂停，适合逐帧检查。": {
+    "en": "Advance one frame and keep paused, suitable for frame-by-frame inspection.",
+    "pt": "Avance um quadro e mantenha-o em pausa, adequado para inspeção quadro a quadro."
+  },
+  "加深 Plus darker": {
+    "en": "Plus darker",
+    "pt": "Mais escuro"
+  },
+  "加载": {
+    "pt": "carregar",
+    "en": "load"
+  },
+  "加载 · loading": {
+    "pt": "carregando · carregando",
+    "en": "loading · loading"
+  },
+  "加载组件": {
+    "en": "Load component",
+    "pt": "Carregar componente"
+  },
+  "加载编辑器导出的 v6 preset，并返回当前元素。": {
+    "en": "Loads the v6 preset exported by the editor and returns the current element.",
+    "pt": "Carrega a predefinição v6 exportada pelo editor e retorna o elemento atual."
+  },
+  "加载编辑器配置": {
+    "en": "Load editor configuration",
+    "pt": "Carregar configuração do editor"
+  },
+  "动作": {
+    "en": "action",
+    "pt": "Ação"
+  },
+  "动画参考": {
+    "en": "Animation reference",
+    "pt": "Referência de animação"
+  },
+  "动画时间线": {
+    "en": "animation timeline",
+    "pt": "linha do tempo da animação"
+  },
+  "动画时间线编辑器": {
+    "en": "Animation Timeline Editor",
+    "pt": "Editor de linha do tempo de animação"
+  },
+  "动画运行时系统": {
+    "en": "animation runtime system",
+    "pt": "sistema de tempo de execução de animação"
+  },
+  "午夜李子": {
+    "pt": "ameixa da meia-noite",
+    "en": "midnight plum"
+  },
+  "单次 Morph": {
+    "en": "Single Morph",
+    "pt": "Morfização única"
+  },
+  "单次 Morph 完成退出。": {
+    "en": "Single Morph complete exit.",
+    "pt": "Saída completa do Single Morph."
+  },
+  "单次 Morph 开始。": {
+    "en": "A single Morph starts.",
+    "pt": "Um único Morph é iniciado."
+  },
+  "单次保持": {
+    "en": "single hold",
+    "pt": "espera única"
+  },
+  "单状态": {
+    "en": "single state",
+    "pt": "estado único"
+  },
+  "单独": {
+    "en": "alone",
+    "pt": "sozinho"
+  },
+  "单独触发，或放进": {
+    "en": "Trigger alone, or put in",
+    "pt": "Acione sozinho ou coloque"
+  },
+  "卵石": {
+    "pt": "seixo",
+    "en": "pebble"
+  },
+  "卵石 · pebble": {
+    "pt": "seixo · seixo",
+    "en": "pebble · pebble"
+  },
+  "原始页面": {
+    "pt": "Referência original",
+    "en": "Original reference"
+  },
+  "原版参数": {
+    "en": "Original parameters",
+    "pt": "Parâmetros originais"
+  },
+  "原版循环": {
+    "pt": "Laço original",
+    "en": "Original loop"
+  },
+  "原版持续": {
+    "pt": "A versão original dura",
+    "en": "Original version lasts"
+  },
+  "原版眨眼": {
+    "pt": "Piscar original",
+    "en": "Original blink"
+  },
+  "原版编辑器": {
+    "en": "original editor",
+    "pt": "editor original"
+  },
+  "双语状态、形状与 Morph 目录": {
+    "en": "Bilingual Status, Shape and Morph Table of Contents",
+    "pt": "Status bilíngue, forma e índice de transformação"
+  },
+  "发送": {
+    "pt": "enviar",
+    "en": "send"
+  },
+  "发送 · sending": {
+    "pt": "enviar · enviar",
+    "en": "send · sending"
+  },
+  "变亮 Lighten": {
+    "en": "Lighten",
+    "pt": "Clarear"
+  },
+  "变暗 Darken": {
+    "en": "Darken",
+    "pt": "Escurecer"
+  },
+  "叠加 Overlay": {
+    "en": "Overlay Overlay",
+    "pt": "Sobreposição Sobreposição"
+  },
+  "可传状态名、": {
+    "en": "Transferable status name,",
+    "pt": "Nome de status transferível,"
+  },
+  "可循环。": {
+    "en": "Recyclable.",
+    "pt": "Reciclável."
+  },
+  "可用鼠标扰动的 Aurora 液体球": {
+    "en": "Aurora liquid sphere that can be perturbed with the mouse",
+    "pt": "Esfera líquida Aurora que pode ser perturbada com o mouse"
+  },
+  "可读写属性": {
+    "en": "Readable and writable properties",
+    "pt": "Propriedades legíveis e graváveis"
+  },
+  "可重新播放相同状态。": {
+    "en": "The same state can be replayed.",
+    "pt": "O mesmo estado pode ser reproduzido."
+  },
+  "叶片": {
+    "pt": "lâmina",
+    "en": "blade"
+  },
+  "叶片 · leaf": {
+    "pt": "folha · folha",
+    "en": "leaf · leaf"
+  },
+  "后移": {
+    "pt": "voltar",
+    "en": "move back"
+  },
+  "向外发送": {
+    "pt": "Enviar",
+    "en": "Send out"
+  },
+  "向外发送 · send": {
+    "pt": "Enviar · enviar",
+    "en": "Send out · send"
+  },
+  "向左转 12°": {
+    "pt": "Vire à esquerda 12°",
+    "en": "Turn left 12°"
+  },
+  "听写": {
+    "pt": "ditado",
+    "en": "dictation"
+  },
+  "听写 · dictating": {
+    "pt": "Ditado · ditado",
+    "en": "Dictation · dictating"
+  },
+  "和": {
+    "en": "and",
+    "pt": "e"
+  },
+  "回到 Grok Bot 表情舞台": {
+    "en": "Back to the Grok Bot expression stage",
+    "pt": "De volta ao estágio de expressão do Grok Bot"
+  },
+  "困倦": {
+    "pt": "com sono",
+    "en": "sleepy"
+  },
+  "困倦 · drowsy": {
+    "pt": "sonolento · sonolento",
+    "en": "sleepy · drowsy"
+  },
+  "困惑": {
+    "pt": "Intrigado",
+    "en": "Puzzled"
+  },
+  "困惑 · confused": {
+    "pt": "confuso · confuso",
+    "en": "confused · confused"
+  },
+  "圆形": {
+    "pt": "redondo",
+    "en": "round"
+  },
+  "圆形 · Blob": {
+    "en": "Round · Blob",
+    "pt": "Rodada · Bolha"
+  },
+  "圆形 · blob": {
+    "pt": "redondo · bolha",
+    "en": "round · blob"
+  },
+  "圆柱": {
+    "pt": "cilindro",
+    "en": "cylinder"
+  },
+  "圆柱 · cylinder": {
+    "pt": "cilindro · cilindro",
+    "en": "cylinder · cylinder"
+  },
+  "圆角方形": {
+    "pt": "quadrado arredondado",
+    "en": "rounded square"
+  },
+  "圆角方形 · squircle": {
+    "pt": "quadrado arredondado · esquilo",
+    "en": "rounded square · squircle"
+  },
+  "圆角矩形": {
+    "pt": "retângulo arredondado",
+    "en": "rounded rectangle"
+  },
+  "圆角矩形 · tablet": {
+    "pt": "comprimido retangular arredondado",
+    "en": "rounded rectangle tablet"
+  },
+  "场景参考": {
+    "en": "Scene reference",
+    "pt": "Referência de cena"
+  },
+  "基础状态": {
+    "pt": "estado básico",
+    "en": "base state"
+  },
+  "基础状态 · 7": {
+    "pt": "Estado base · 7",
+    "en": "Base state · 7"
+  },
+  "墨色内嵌": {
+    "en": "Ink inlay",
+    "pt": "Incrustação de tinta"
+  },
+  "墨黑": {
+    "pt": "preto azeviche",
+    "en": "jet black"
+  },
+  "墨黑 · ink": {
+    "pt": "preto azeviche · tinta",
+    "en": "jet black · ink"
+  },
+  "声音波形": {
+    "pt": "forma de onda sonora",
+    "en": "sound waveform"
+  },
+  "声音波形 · wave": {
+    "pt": "forma de onda sonora · onda",
+    "en": "sound waveform · wave"
+  },
+  "复制": {
+    "en": "copy",
+    "pt": "cópia"
+  },
+  "复制 JSON": {
+    "en": "Copy JSON",
+    "pt": "Copiar JSON"
+  },
+  "复制使用": {
+    "en": "Copy and use",
+    "pt": "Copiar e usar"
+  },
+  "复制这段代码": {
+    "en": "Copy this code",
+    "pt": "Copie este código"
+  },
+  "大笑": {
+    "pt": "rindo alto",
+    "en": "laughing out loud"
+  },
+  "大笑 · laughing": {
+    "pt": "rindo · rindo",
+    "en": "laughing · laughing"
+  },
+  "大量实例仍应控制可见数量；目录缩略图使用专用模式关闭粒子发射。": {
+    "en": "A large number of instances should still control the visible number; catalog thumbnails use a dedicated mode to turn off particle emission.",
+    "pt": "Um grande número de instâncias ainda deve controlar o número visível; as miniaturas do catálogo usam um modo dedicado para desligar a emissão de partículas."
+  },
+  "头部横向": {
+    "pt": "Cabeça para o lado",
+    "en": "Head sideways"
+  },
+  "头部纵向": {
+    "pt": "Retrato de cabeça",
+    "en": "Head portrait"
+  },
+  "好奇": {
+    "pt": "curioso",
+    "en": "curious"
+  },
+  "好奇 · curious": {
+    "pt": "curioso · curioso",
+    "en": "curious · curious"
+  },
+  "如果页面和": {
+    "en": "If the page and",
+    "pt": "Se a página e"
+  },
+  "完整 API 文档": {
+    "pt": "Documentação completa da API",
+    "en": "Complete API documentation"
+  },
+  "完整 API 文档 ↗": {
+    "en": "Full API documentation ↗",
+    "pt": "Documentação completa da API ↗"
+  },
+  "完整声明": {
+    "en": "full statement",
+    "pt": "declaração completa"
+  },
+  "完整播放。": {
+    "en": "Play in full.",
+    "pt": "Jogue na íntegra."
+  },
+  "宝石": {
+    "pt": "jóia",
+    "en": "gem"
+  },
+  "宝石 · gem": {
+    "pt": "gema · gema",
+    "en": "gem · gem"
+  },
+  "实例离开视口时通过": {
+    "en": "passed when the instance leaves the viewport",
+    "pt": "passado quando a instância sai da janela de visualização"
+  },
+  "实时预览": {
+    "en": "Live preview",
+    "pt": "Visualização ao vivo"
+  },
+  "害怕": {
+    "pt": "Temer",
+    "en": "Fear"
+  },
+  "害怕 · scared": {
+    "pt": "assustado · assustado",
+    "en": "scared · scared"
+  },
+  "害羞": {
+    "pt": "tímido",
+    "en": "shy"
+  },
+  "害羞 · shy": {
+    "pt": "tímido · tímido",
+    "en": "shy · shy"
+  },
+  "对话": {
+    "en": "dialogue",
+    "pt": "diálogo"
+  },
+  "对话完成或被停止。": {
+    "en": "The conversation is completed or stopped.",
+    "pt": "A conversa foi concluída ou interrompida."
+  },
+  "对话导演": {
+    "en": "dialogue director",
+    "pt": "diretor de diálogo"
+  },
+  "对话导演编辑器": {
+    "en": "Dialogue Director Editor",
+    "pt": "Editor Diretor de Diálogo"
+  },
+  "对话播放进度": {
+    "en": "Dialogue playback progress",
+    "pt": "Progresso da reprodução do diálogo"
+  },
+  "对话文字和动作": {
+    "en": "Dialogue text and actions",
+    "pt": "Texto e ações de diálogo"
+  },
+  "对话暂停或继续。": {
+    "en": "The conversation is paused or resumed.",
+    "pt": "A conversa é pausada ou retomada."
+  },
+  "对话脚本是一组有序节点。文字节点逐字播放；动作节点在当前位置改变状态或旋转、触发 Morph，或者插入精确停顿。组件编辑器的“对话导演”会通过": {
+    "en": "A conversation script is an ordered set of nodes. Text nodes play verbatim; action nodes change state or rotate at the current position, trigger Morphs, or insert precise pauses. The Component Editor's \"Conversation Director\" will pass",
+    "pt": "Um script de conversação é um conjunto ordenado de nós. Os nós de texto são reproduzidos literalmente; os nós de ação mudam de estado ou giram na posição atual, acionam Morphs ou inserem pausas precisas. O \"Diretor de Conversa\" do Editor de Componentes passará"
+  },
+  "导入 JSON": {
+    "en": "Import JSON",
+    "pt": "Importar JSON"
+  },
+  "导出文件": {
+    "en": "Export file",
+    "pt": "Exportar arquivo"
+  },
+  "就会在停留后直接进入下一状态。": {
+    "en": "It will directly enter the next state after staying.",
+    "pt": "Ele entrará diretamente no próximo estado após ficar."
+  },
+  "尺寸": {
+    "en": "size",
+    "pt": "tamanho"
+  },
+  "尺寸、眼睛与播放设置": {
+    "en": "Size, eyes and playback settings",
+    "pt": "Tamanho, olhos e configurações de reprodução"
+  },
+  "属性": {
+    "en": "property",
+    "pt": "propriedade"
+  },
+  "属性改变。": {
+    "en": "Properties change.",
+    "pt": "Mudança de propriedades."
+  },
+  "工作": {
+    "pt": "Trabalhar",
+    "en": "Work"
+  },
+  "工作 · working": {
+    "pt": "trabalhar · trabalhar",
+    "en": "work · working"
+  },
+  "工程化": {
+    "en": "Engineering",
+    "pt": "Engenharia"
+  },
+  "差值 Difference": {
+    "en": "Difference",
+    "pt": "Diferença"
+  },
+  "已停止": {
+    "pt": "Parou",
+    "en": "Stopped"
+  },
+  "已关闭状态形变": {
+    "pt": "Deformação de estado fechado",
+    "en": "Closed state deformation"
+  },
+  "已同步": {
+    "en": "Synced",
+    "pt": "Sincronizado"
+  },
+  "已复制": {
+    "pt": "Copiado",
+    "en": "Copied"
+  },
+  "已复制，可以粘贴了 ✓": {
+    "pt": "Copiado e pronto para colar ✓",
+    "en": "Copied and ready to paste ✓"
+  },
+  "已自定义": {
+    "pt": "Personalizado",
+    "en": "Customized"
+  },
+  "已选中": {
+    "pt": "selecionado",
+    "en": "selected"
+  },
+  "庆祝": {
+    "pt": "comemorar",
+    "en": "celebrate"
+  },
+  "庆祝 · celebrate": {
+    "pt": "comemorar · celebrar",
+    "en": "celebrate · celebrate"
+  },
+  "应用状态": {
+    "en": "Application status",
+    "pt": "Status do aplicativo"
+  },
+  "开": {
+    "en": "open",
+    "pt": "abrir"
+  },
+  "开始": {
+    "en": "start",
+    "pt": "começar"
+  },
+  "开始接入": {
+    "pt": "Começar",
+    "en": "Get started"
+  },
+  "开心": {
+    "pt": "feliz",
+    "en": "happy"
+  },
+  "开心 · happy": {
+    "pt": "feliz · feliz",
+    "en": "happy · happy"
+  },
+  "弹跳": {
+    "pt": "quicar",
+    "en": "bounce"
+  },
+  "弹跳 · bouncing": {
+    "pt": "saltando · saltando",
+    "en": "bouncing · bouncing"
+  },
+  "弹跳球体": {
+    "pt": "esfera saltitante",
+    "en": "bouncing sphere"
+  },
+  "弹跳球体 · ball": {
+    "pt": "esfera saltitante · bola",
+    "en": "bouncing sphere · ball"
+  },
+  "强光 Hard light": {
+    "en": "Hard light",
+    "pt": "Luz forte"
+  },
+  "当前状态不会自动请求几何形变。": {
+    "en": "The current state does not automatically request geometric deformation.",
+    "pt": "O estado atual não solicita automaticamente a deformação geométrica."
+  },
+  "当前状态不会自动请求几何形变。请先在下方选择形变，再使用单次触发。": {
+    "pt": "O estado atual não solicita automaticamente a deformação geométrica. Selecione a deformação abaixo antes de usar o gatilho único.",
+    "en": "The current state does not automatically request geometric deformation. Please select the deformation below before using single trigger."
+  },
+  "形变触发逻辑": {
+    "en": "Deformation trigger logic",
+    "pt": "Lógica de gatilho de deformação"
+  },
+  "形状": {
+    "en": "shape",
+    "pt": "forma"
+  },
+  "形状只改变身体轮廓和眼位适配，不改变状态语义。": {
+    "en": "The shape only changes the body contour and eye position adaptation, but does not change the state semantics.",
+    "pt": "A forma altera apenas o contorno corporal e a adaptação da posição dos olhos, mas não altera a semântica do estado."
+  },
+  "形状库": {
+    "en": "Shape library",
+    "pt": "Biblioteca de formas"
+  },
+  "形状是独立于状态的原版参数。选择后会应用到全部 39 个状态，并以原版弹簧在轮廓、眼位和透视参数之间过渡。": {
+    "en": "Shape is a state-independent vanilla parameter. Once selected, it is applied to all 39 states, transitioning between outline, eye position, and perspective parameters with native springs.",
+    "pt": "Shape é um parâmetro vanilla independente do estado. Uma vez selecionado, ele é aplicado a todos os 39 estados, fazendo a transição entre contorno, posição dos olhos e parâmetros de perspectiva com molas nativas."
+  },
+  "形状材质": {
+    "en": "shape material",
+    "pt": "material de forma"
+  },
+  "彩色轨道": {
+    "pt": "Faixa colorida",
+    "en": "Color track"
+  },
+  "彩色轨道 · orbit": {
+    "pt": "Órbita colorida · órbita",
+    "en": "Color orbit · orbit"
+  },
+  "彩虹玻璃": {
+    "pt": "vidro arco-íris",
+    "en": "rainbow glass"
+  },
+  "彩虹玻璃 · rainbow-glass": {
+    "pt": "vidro arco-íris · vidro arco-íris",
+    "en": "rainbow glass · rainbow-glass"
+  },
+  "待机": {
+    "pt": "Em espera",
+    "en": "Idle"
+  },
+  "待机 · idle": {
+    "pt": "em espera · inativo",
+    "en": "standby · idle"
+  },
+  "待机关机": {
+    "pt": "Desligamento em espera",
+    "en": "Standby shutdown"
+  },
+  "待机关机 · standby": {
+    "pt": "Desligamento em espera · espera",
+    "en": "Standby shutdown · standby"
+  },
+  "得意": {
+    "pt": "orgulhoso",
+    "en": "proud"
+  },
+  "得意 · proud": {
+    "pt": "orgulhoso · orgulhoso",
+    "en": "proud · proud"
+  },
+  "循环": {
+    "en": "cycle",
+    "pt": "ciclo"
+  },
+  "循环 A ↔ B": {
+    "en": "Loop A ↔ B",
+    "pt": "Ciclo A ↔ B"
+  },
+  "循环进度": {
+    "pt": "progresso do ciclo",
+    "en": "cycle progress"
+  },
+  "循环进度 · progress": {
+    "pt": "Progresso do ciclo · progresso",
+    "en": "Cycle progress · progress"
+  },
+  "怀疑": {
+    "pt": "Suspeito",
+    "en": "Suspect"
+  },
+  "怀疑 · suspicious": {
+    "pt": "dúvida · suspeito",
+    "en": "doubt · suspicious"
+  },
+  "思考": {
+    "pt": "pensar",
+    "en": "think"
+  },
+  "思考 · thinking": {
+    "pt": "pensando · pensando",
+    "en": "thinking · thinking"
+  },
+  "思考点阵": {
+    "pt": "Rede de pensamento",
+    "en": "Thinking lattice"
+  },
+  "思考点阵 · dots": {
+    "pt": "Pontos de pensamento · pontos",
+    "en": "Thinking dots · dots"
+  },
+  "性能与生命周期": {
+    "en": "Performance and lifecycle",
+    "pt": "Desempenho e ciclo de vida"
+  },
+  "恢复 39 个状态的全部原版参数？当前编辑仍可通过撤销找回。": {
+    "pt": "Restaurar todos os parâmetros originais de 39 estados? As edições atuais ainda podem ser recuperadas desfazendo-as.",
+    "en": "Restore all original parameters of 39 states? Current edits can still be retrieved by undoing."
+  },
+  "恢复全部原版": {
+    "en": "Restore all original versions",
+    "pt": "Restaurar todas as versões originais"
+  },
+  "恢复本状态原版": {
+    "en": "Restore the original state",
+    "pt": "Restaurar o estado original"
+  },
+  "恢复状态默认": {
+    "en": "Restore state default",
+    "pt": "Restaurar estado padrão"
+  },
+  "恢复角色外观": {
+    "en": "Restore character appearance",
+    "pt": "Restaurar a aparência do personagem"
+  },
+  "恢复默认": {
+    "en": "Restore default",
+    "pt": "Restaurar padrão"
+  },
+  "情绪反应": {
+    "pt": "resposta emocional",
+    "en": "emotional response"
+  },
+  "情绪反应 · 16": {
+    "pt": "Resposta emocional · 16",
+    "en": "Emotional response · 16"
+  },
+  "惊讶": {
+    "pt": "surpresa",
+    "en": "surprise"
+  },
+  "惊讶 · surprised": {
+    "pt": "surpreso · surpreso",
+    "en": "surprised · surprised"
+  },
+  "或": {
+    "en": "or",
+    "pt": "ou"
+  },
+  "所有修改立即反映在中间。": {
+    "en": "All modifications are immediately reflected in the middle.",
+    "pt": "Todas as modificações são refletidas imediatamente no meio."
+  },
+  "所选步骤停留后播放": {
+    "en": "Play after staying at the selected step",
+    "pt": "Jogue depois de permanecer na etapa selecionada"
+  },
+  "手动插入": {
+    "en": "Manual insertion",
+    "pt": "Inserção manual"
+  },
+  "打开页面即可看到": {
+    "en": "Open the page to see",
+    "pt": "Abra a página para ver"
+  },
+  "打开高级动画实验室": {
+    "en": "Open the Advanced Animation Lab",
+    "pt": "Abra o Laboratório de Animação Avançada"
+  },
+  "把完整的": {
+    "en": "put the complete",
+    "pt": "coloque o completo"
+  },
+  "拖动 · 搅动液体": {
+    "en": "Drag · Stir liquid",
+    "pt": "Arrastar · Mexa o líquido"
+  },
+  "拖拽": {
+    "pt": "arrastar",
+    "en": "drag"
+  },
+  "拖拽 · dragging": {
+    "pt": "arrastar · arrastar",
+    "en": "dragging · dragging"
+  },
+  "拱门": {
+    "pt": "arco",
+    "en": "arch"
+  },
+  "拱门 · arch": {
+    "pt": "arco · arco",
+    "en": "arch · arch"
+  },
+  "拱顶": {
+    "pt": "cúpula",
+    "en": "dome"
+  },
+  "拱顶 · dome": {
+    "pt": "cofre · cúpula",
+    "en": "vault · dome"
+  },
+  "指定": {
+    "en": "Specify",
+    "pt": "Especificar"
+  },
+  "指针视线": {
+    "pt": "mira de ponteiro",
+    "en": "pointer sight"
+  },
+  "按住 · 惊讶": {
+    "en": "Hold · Surprised",
+    "pt": "Esperar · Surpreso"
+  },
+  "按钮": {
+    "en": "button",
+    "pt": "botão"
+  },
+  "按钮内加载": {
+    "en": "Load in button",
+    "pt": "Botão carregar"
+  },
+  "按钮旁已有相同文字时，给 Bot 添加": {
+    "en": "When the same text already exists next to the button, add it to the Bot",
+    "pt": "Quando o mesmo texto já existir próximo ao botão, adicione-o ao Bot"
+  },
+  "排除 Exclusion": {
+    "en": "ExclusionExclusion",
+    "pt": "ExclusãoExclusão"
+  },
+  "接受编辑器导出的 v6 JSON。标签上的 HTML 属性优先，因此可以用一个 preset 保存完整设计，再在每个使用位置覆盖状态、形状、尺寸或材质。": {
+    "en": "Accepts v6 JSON exported by the editor. HTML attributes on tags take precedence, so a preset can be used to save the complete design and then override state, shape, size or material everywhere it is used.",
+    "pt": "Aceita JSON v6 exportado pelo editor. Os atributos HTML nas tags têm precedência, portanto, uma predefinição pode ser usada para salvar o design completo e, em seguida, substituir o estado, a forma, o tamanho ou o material em todos os lugares em que for usado."
+  },
+  "接收": {
+    "pt": "assumir",
+    "en": "take over"
+  },
+  "接收 · receiving": {
+    "pt": "receber · receber",
+    "en": "receive · receive"
+  },
+  "接收进入": {
+    "pt": "receber entrada",
+    "en": "receive entry"
+  },
+  "接收进入 · receive": {
+    "pt": "receber entrada · receber",
+    "en": "receive entry · receive"
+  },
+  "提亮 Plus lighter": {
+    "en": "Brighten Plus lighter",
+    "pt": "Brighten Plus mais leve"
+  },
+  "搜索": {
+    "pt": "procurar",
+    "en": "search"
+  },
+  "搜索 · searching": {
+    "pt": "Pesquisar · pesquisar",
+    "en": "Search · searching"
+  },
+  "撤销": {
+    "en": "Cancel",
+    "pt": "Cancelar"
+  },
+  "撤销自动": {
+    "en": "Undo automatic",
+    "pt": "Desfazer automático"
+  },
+  "播放 Morph": {
+    "en": "Play Morph",
+    "pt": "Jogar Morph"
+  },
+  "播放一次 Morph。": {
+    "en": "Play Morph once.",
+    "pt": "Jogue Morph uma vez."
+  },
+  "播放倍率，范围 0.1–4。": {
+    "en": "Playback magnification, range 0.1–4.",
+    "pt": "Ampliação de reprodução, intervalo 0,1–4."
+  },
+  "播放完成 · 可再次播放": {
+    "pt": "Reprodução concluída·pode ser reproduzida novamente",
+    "en": "Playback completed·can be played again"
+  },
+  "播放对话": {
+    "en": "Play conversation",
+    "pt": "Jogar conversa"
+  },
+  "播放文字、表情、旋转、Morph 和停顿组成的对话脚本。中文会按整句语境解析为拼音；": {
+    "en": "Play dialogue scripts composed of text, expressions, spins, morphs, and pauses. Chinese will be parsed into Pinyin according to the context of the entire sentence;",
+    "pt": "Reproduza scripts de diálogo compostos de texto, expressões, giros, transformações e pausas. O chinês será analisado em Pinyin de acordo com o contexto de toda a frase;"
+  },
+  "播放时间线": {
+    "en": "Play timeline",
+    "pt": "Linha do tempo de reprodução"
+  },
+  "播放速度": {
+    "en": "play speed",
+    "pt": "velocidade de jogo"
+  },
+  "播放顺序": {
+    "pt": "Ordem de jogo",
+    "en": "Play order"
+  },
+  "整句音频预渲染完成，对话开始。": {
+    "en": "The entire sentence audio is pre-rendered and the conversation begins.",
+    "pt": "O áudio da frase inteira é pré-renderizado e a conversa começa."
+  },
+  "文件夹放在 HTML 文件旁。": {
+    "en": "folder next to the HTML file.",
+    "pt": "pasta ao lado do arquivo HTML."
+  },
+  "文件结构": {
+    "en": "File structure",
+    "pt": "Estrutura de arquivo"
+  },
+  "文档目录": {
+    "en": "Document directory",
+    "pt": "Diretório de documentos"
+  },
+  "方向": {
+    "pt": "direção",
+    "en": "direction"
+  },
+  "方法": {
+    "en": "method",
+    "pt": "método"
+  },
+  "旋转加载": {
+    "pt": "Carregamento giratório",
+    "en": "Spin loading"
+  },
+  "旋转加载 · whirl": {
+    "pt": "Carregamento giratório · giro",
+    "en": "Spin loading · whirl"
+  },
+  "无法访问剪贴板，请使用“导出文件”。": {
+    "pt": "Não é possível acessar a área de transferência, use Exportar arquivo.",
+    "en": "Unable to access clipboard, please use Export File."
+  },
+  "无聊": {
+    "pt": "tedioso",
+    "en": "boring"
+  },
+  "无聊 · bored": {
+    "pt": "entediado · entediado",
+    "en": "bored · bored"
+  },
+  "无障碍": {
+    "en": "Accessibility",
+    "pt": "Acessibilidade"
+  },
+  "无障碍语义": {
+    "en": "accessibility semantics",
+    "pt": "semântica de acessibilidade"
+  },
+  "无默认形变": {
+    "en": "No default deformation",
+    "pt": "Sem deformação padrão"
+  },
+  "日光": {
+    "pt": "luz solar",
+    "en": "sunlight"
+  },
+  "日光 · solar": {
+    "pt": "luz do dia · solar",
+    "en": "daylight · solar"
+  },
+  "时间线": {
+    "en": "timeline",
+    "pt": "linha do tempo"
+  },
+  "时间线开始。": {
+    "en": "The timeline begins.",
+    "pt": "A linha do tempo começa."
+  },
+  "明度 Luminosity": {
+    "en": "Luminosity",
+    "pt": "Luminosidade"
+  },
+  "是同级，使用": {
+    "en": "are of the same level, use",
+    "pt": "são do mesmo nível, use"
+  },
+  "是循环动画，不代表真实百分比。": {
+    "en": "It is a loop animation and does not represent the real percentage.",
+    "pt": "É uma animação em loop e não representa a porcentagem real."
+  },
+  "暂停": {
+    "en": "pause",
+    "pt": "pausa"
+  },
+  "暂停、继续或停止对话及其角色音。停止会退出单次 Morph 并把额外旋转归零。": {
+    "en": "Pause, resume or stop dialogue and its character voices. Stopping exits the single Morph and resets the extra spins to zero.",
+    "pt": "Pause, retome ou pare o diálogo e as vozes dos personagens. Parar sai do Morph único e redefine os giros extras para zero."
+  },
+  "暂停内部仿真时钟。": {
+    "en": "Pauses the internal emulation clock.",
+    "pt": "Pausa o relógio de emulação interno."
+  },
+  "暂停动画": {
+    "en": "pause animation",
+    "pt": "pausar animação"
+  },
+  "暂停或恢复动画，均返回当前元素。": {
+    "en": "Pausing or resuming the animation returns the current element.",
+    "pt": "Pausar ou retomar a animação retorna o elemento atual."
+  },
+  "暖焰": {
+    "pt": "chama quente",
+    "en": "warm flame"
+  },
+  "暖珊瑚": {
+    "pt": "coral quente",
+    "en": "warm coral"
+  },
+  "暖珊瑚 · coral": {
+    "pt": "coral quente · coral",
+    "en": "warm coral · coral"
+  },
+  "有业务含义时提供明确的": {
+    "en": "Provide clear information when it has business implications",
+    "pt": "Forneça informações claras quando houver implicações comerciais"
+  },
+  "有了！": {
+    "pt": "Entendi!",
+    "en": "Got it!"
+  },
+  "本地角色对话": {
+    "en": "local character dialogue",
+    "pt": "diálogo de personagem local"
+  },
+  "本项目用于动画研究，与 xAI 没有隶属或背书关系。公开或商业使用精确参考几何前，请自行确认授权。": {
+    "en": "This project is for animation research and has no affiliation or endorsement with xAI. Please confirm authorization before using precise reference geometry publicly or commercially.",
+    "pt": "Este projeto é para pesquisa de animação e não tem afiliação ou endosso com xAI. Por favor, confirme a autorização antes de usar geometria de referência precisa publicamente ou comercialmente."
+  },
+  "权重": {
+    "pt": "peso",
+    "en": "weight"
+  },
+  "材质": {
+    "en": "Material",
+    "pt": "Material"
+  },
+  "材质切换": {
+    "en": "Material switching",
+    "pt": "Troca de materiais"
+  },
+  "材质或其参数属性改变。": {
+    "en": "The material or its parameter properties change.",
+    "pt": "O material ou suas propriedades de parâmetros mudam."
+  },
+  "材质类型": {
+    "en": "Material type",
+    "pt": "Tipo de material"
+  },
+  "材质预设": {
+    "en": "Material presets",
+    "pt": "Predefinições de materiais"
+  },
+  "极光玻璃": {
+    "pt": "Vidro Aurora",
+    "en": "Aurora glass"
+  },
+  "极光薄膜": {
+    "en": "Aurora film",
+    "pt": "Filme Aurora"
+  },
+  "柔光 Soft light": {
+    "en": "Soft light Soft light",
+    "pt": "Luz suave Luz suave"
+  },
+  "柔焦预设由近白雾底与 4 个大尺度径向色团组成；色团固定在镜头方向，并自动裁切到当前形状。选择其他预设即可快速更换整套配色。": {
+    "pt": "A predefinição de foco suave consiste em uma base de neblina quase branca e 4 grupos de cores radiais em grande escala; os grupos de cores são fixados na direção da lente e cortados automaticamente no formato atual. Selecione uma predefinição diferente para alterar rapidamente toda a paleta de cores.",
+    "en": "The soft focus preset consists of a near-white fog base and 4 large-scale radial color groups; the color groups are fixed in the direction of the lens and automatically cropped to the current shape. Select a different preset to quickly change the entire color palette."
+  },
+  "柔焦预设由近白雾底和 4 个大尺度径向色团组成，色团固定在镜头方向并自动裁切到全部形状。": {
+    "pt": "A predefinição de foco suave consiste em uma base de neblina quase branca e 4 cromóforos radiais de grande escala, que são fixados na direção da lente e cortados automaticamente no formato completo.",
+    "en": "The soft focus preset consists of a near-white fog base and 4 large-scale radial chromophores, which are fixed in the direction of the lens and automatically cropped to the full shape."
+  },
+  "查看 API": {
+    "en": "View API",
+    "pt": "Ver API"
+  },
+  "标签展示状态、加载过程和任务反馈。组件基于原生 Web Component，可在普通 HTML、React、Vue 或任何能加载 ES Module 的项目中使用。": {
+    "en": "Labels display status, loading process, and task feedback. The component is based on native Web Component and can be used in ordinary HTML, React, Vue or any project that can load ES Module.",
+    "pt": "Os rótulos exibem o status, o processo de carregamento e o feedback da tarefa. O componente é baseado em Web Component nativo e pode ser usado em HTML comum, React, Vue ou qualquer projeto que possa carregar o Módulo ES."
+  },
+  "桃色天空": {
+    "pt": "céu rosa",
+    "en": "pink sky"
+  },
+  "棱镜泡泡": {
+    "pt": "bolha de prisma",
+    "en": "prism bubble"
+  },
+  "概览": {
+    "en": "Overview",
+    "pt": "Visão geral"
+  },
+  "横向缩放": {
+    "pt": "Escala horizontal",
+    "en": "Horizontal scaling"
+  },
+  "正在思考": {
+    "pt": "pensamento",
+    "en": "thinking"
+  },
+  "正在播放…": {
+    "pt": "Agora jogando…",
+    "en": "Now playing…"
+  },
+  "正在整理答案": {
+    "en": "Compiling answers",
+    "pt": "Compilando respostas"
+  },
+  "正在生成": {
+    "en": "Generating",
+    "pt": "Gerando"
+  },
+  "正常 Normal": {
+    "en": "Normal Normal",
+    "pt": "Normal Normal"
+  },
+  "正片叠底 Multiply": {
+    "en": "Multiply",
+    "pt": "Multiplicar"
+  },
+  "每一步都按固定顺序执行：进入": {
+    "en": "Each step is performed in a fixed order: enter",
+    "pt": "Cada etapa é executada em uma ordem fixa: insira"
+  },
+  "每个实例使用独立 Shadow DOM 和 SVG clip ID，可同时放置多个 Bot。": {
+    "en": "Each instance uses independent Shadow DOM and SVG clip ID, allowing multiple Bots to be placed at the same time.",
+    "pt": "Cada instância usa Shadow DOM e ID de clipe SVG independentes, permitindo que vários Bots sejam colocados ao mesmo tempo."
+  },
+  "每只眼睛由 48 点闭合环插值，头部由 96 点形状环驱动；39 个状态使用各自的表情池、眨眼区间、身体运动公式和任务 morph。": {
+    "en": "Each eye is interpolated by a 48-point closed loop, and the head is driven by a 96-point shape loop; the 39 states use their own expression pools, blink intervals, body motion formulas, and task morphs.",
+    "pt": "Cada olho é interpolado por um loop fechado de 48 pontos e a cabeça é acionada por um loop de formato de 96 pontos; os 39 estados usam seus próprios conjuntos de expressões, intervalos de intermitência, fórmulas de movimento corporal e formas de tarefa."
+  },
+  "毫秒 → 播放": {
+    "en": "milliseconds → play",
+    "pt": "milissegundos → reproduzir"
+  },
+  "毫秒 → 进入下一步。省略": {
+    "en": "Milliseconds → Go to next step. Omit",
+    "pt": "Milissegundos → Vá para a próxima etapa. Omitir"
+  },
+  "水平翻转": {
+    "pt": "Virar horizontalmente",
+    "en": "Flip horizontally"
+  },
+  "水平翻转组件。": {
+    "en": "Flip the component horizontally.",
+    "pt": "Vire o componente horizontalmente."
+  },
+  "水晶": {
+    "pt": "cristal",
+    "en": "crystal"
+  },
+  "水晶 · crystal": {
+    "pt": "cristal · cristal",
+    "en": "crystal · crystal"
+  },
+  "水滴": {
+    "pt": "gotas de água",
+    "en": "water droplets"
+  },
+  "水滴 · teardrop": {
+    "pt": "gota de água · lágrima",
+    "en": "water drop · teardrop"
+  },
+  "海洋信号": {
+    "pt": "sinal do oceano",
+    "en": "ocean signal"
+  },
+  "深海玻璃": {
+    "en": "deep sea glass",
+    "pt": "vidro do mar profundo"
+  },
+  "深海虹彩": {
+    "pt": "iridescência do mar profundo",
+    "en": "deep sea iridescence"
+  },
+  "混合模式": {
+    "en": "blend mode",
+    "pt": "modo de mesclagem"
+  },
+  "渐变": {
+    "pt": "Gradiente",
+    "en": "Gradient"
+  },
+  "渐变 · gradient": {
+    "pt": "gradiente · gradiente",
+    "en": "gradient · gradient"
+  },
+  "滤色 Screen": {
+    "en": "Color Screen",
+    "pt": "Tela colorida"
+  },
+  "状态": {
+    "en": "state",
+    "pt": "estado"
+  },
+  "状态、形状、尺寸、材质和速度可在运行时更新，无需重新创建元素。": {
+    "en": "State, shape, size, material and velocity can be updated at runtime without having to recreate elements.",
+    "pt": "Estado, forma, tamanho, material e velocidade podem ser atualizados em tempo de execução sem a necessidade de recriar elementos."
+  },
+  "状态与几何数据": {
+    "en": "Status and geometry data",
+    "pt": "Dados de status e geometria"
+  },
+  "状态停留": {
+    "pt": "estadia de status",
+    "en": "status stay"
+  },
+  "状态停留 → Morph → 下一状态": {
+    "en": "State stay → Morph → next state",
+    "pt": "Estadia do estado → Morph → próximo estado"
+  },
+  "状态切换播放控制": {
+    "en": "Status switching playback control",
+    "pt": "Controle de reprodução de mudança de status"
+  },
+  "状态可以随时切换": {
+    "en": "The status can be switched at any time",
+    "pt": "O status pode ser alterado a qualquer momento"
+  },
+  "状态工具": {
+    "en": "status tool",
+    "pt": "ferramenta de status"
+  },
+  "状态库": {
+    "en": "State library",
+    "pt": "Biblioteca estadual"
+  },
+  "状态控制眼形池、眨眼节奏、姿态、运动和默认 Morph。点击右侧 Live API 的“应用状态”可立即检查任意状态。": {
+    "en": "State controls eye pool, blink rhythm, posture, movement, and default Morph. Click \"Application Status\" in the Live API on the right to instantly check any status.",
+    "pt": "O estado controla o pool ocular, o ritmo do piscar, a postura, o movimento e o Morph padrão. Clique em \"Status do aplicativo\" na API Live à direita para verificar instantaneamente qualquer status."
+  },
+  "状态时间线": {
+    "en": "status timeline",
+    "pt": "cronograma de status"
+  },
+  "状态驻留期间持续保持，离开状态才退出。单次触发会完整播放并停留于 bot。": {
+    "pt": "O estado é mantido durante o período de residência e só é encerrado após a saída do estado. Um único gatilho será reproduzido por completo e permanecerá no bot.",
+    "en": "The state is maintained during the residence period and is exited only after leaving the state. A single trigger will play in full and stay in the bot."
+  },
+  "状态默认形变": {
+    "pt": "Deformação padrão do estado",
+    "en": "State default deformation"
+  },
+  "玻璃预设包含彩虹基底、体积暗部、局部高光与折射感轮廓；这些层会自动贴合每一种形状。": {
+    "pt": "As predefinições de vidro incluem bases de arco-íris, sombras volumétricas, realces locais e contornos refrativos; essas camadas se ajustam automaticamente a cada forma.",
+    "en": "Glass presets include rainbow bases, volumetric shadows, local highlights, and refractive contours; these layers automatically fit each shape."
+  },
+  "玻璃预设由彩虹基底、体积暗部、局部高光和折射轮廓组成，并会自动贴合全部 18 种形状。": {
+    "pt": "As predefinições de vidro consistem em bases de arco-íris, sombras volumétricas, realces locais e contornos de refração e ajustam-se automaticamente a todas as 18 formas.",
+    "en": "Glass presets consist of rainbow bases, volumetric shadows, local highlights, and refraction contours, and automatically fit all 18 shapes."
+  },
+  "珍珠": {
+    "pt": "pérola",
+    "en": "pearl"
+  },
+  "珍珠 · pearl": {
+    "pt": "pérola · pérola",
+    "en": "pearl · pearl"
+  },
+  "瓷雾花影": {
+    "pt": "sombra de flor de névoa de porcelana",
+    "en": "porcelain fog flower shadow"
+  },
+  "生成": {
+    "pt": "gerar",
+    "en": "generate"
+  },
+  "生成 · spawning": {
+    "pt": "Desova",
+    "en": "Spawning"
+  },
+  "生成组件代码 ↗": {
+    "en": "Generate component code ↗",
+    "pt": "Gerar código do componente ↗"
+  },
+  "生气": {
+    "pt": "nervoso",
+    "en": "angry"
+  },
+  "生气 · angry": {
+    "pt": "zangado · zangado",
+    "en": "angry · angry"
+  },
+  "用一个": {
+    "en": "use a",
+    "pt": "use um"
+  },
+  "用动作标签编排对话": {
+    "en": "Organize conversations with action tags",
+    "pt": "Organize conversas com tags de ação"
+  },
+  "电光暮色": {
+    "pt": "crepúsculo elétrico",
+    "en": "electric twilight"
+  },
+  "的 angle + ordered stops 表达；具体配色与玻璃分层为本项目设计。": {
+    "en": "The expression of angle + ordered stops; the specific color matching and glass layering were designed for this project.",
+    "pt": "A expressão do ângulo + paradas ordenadas; a combinação de cores específicas e as camadas de vidro foram projetadas para este projeto."
+  },
+  "的可移植渐变 token 与": {
+    "en": "Portable gradient tokens with",
+    "pt": "Tokens gradientes portáteis com"
+  },
+  "的步骤中。它们按": {
+    "en": "in the steps. They press",
+    "pt": "nas etapas. Eles pressionam"
+  },
+  "监听状态": {
+    "en": "Listening status",
+    "pt": "Status de escuta"
+  },
+  "盾牌": {
+    "pt": "escudo",
+    "en": "shield"
+  },
+  "盾牌 · shield": {
+    "pt": "escudo · escudo",
+    "en": "shield · shield"
+  },
+  "真实百分比必须由业务界面另外显示；循环的": {
+    "en": "The true percentage must be additionally displayed by the business interface; circular",
+    "pt": "A verdadeira porcentagem deve ser exibida adicionalmente pela interface de negócios; circular"
+  },
+  "眨眼最短": {
+    "pt": "O piscar mais curto",
+    "en": "The shortest blink"
+  },
+  "眨眼最长": {
+    "pt": "O piscar mais longo",
+    "en": "The longest blink"
+  },
+  "眼形组合": {
+    "pt": "combinação de formato de olho",
+    "en": "eye shape combination"
+  },
+  "眼睛外观": {
+    "en": "Eye appearance",
+    "pt": "Aparência dos olhos"
+  },
+  "眼睛尺寸": {
+    "pt": "tamanho dos olhos",
+    "en": "eye size"
+  },
+  "眼睛开合": {
+    "pt": "olhos abrindo e fechando",
+    "en": "eyes opening and closing"
+  },
+  "眼睛设置": {
+    "en": "eye settings",
+    "pt": "configurações dos olhos"
+  },
+  "眼睛颜色": {
+    "en": "eye color",
+    "pt": "cor dos olhos"
+  },
+  "眼睛颜色。": {
+    "en": "Eye color.",
+    "pt": "Cor dos olhos."
+  },
+  "睡眠": {
+    "pt": "dormir",
+    "en": "sleep"
+  },
+  "睡眠 · sleeping": {
+    "pt": "dormir · dormir",
+    "en": "sleep · sleeping"
+  },
+  "石墨": {
+    "pt": "grafite",
+    "en": "graphite"
+  },
+  "石墨 · graphite": {
+    "pt": "grafite · grafite",
+    "en": "graphite · graphite"
+  },
+  "秒": {
+    "en": "Second",
+    "pt": "Segundo"
+  },
+  "移动 · 注视": {
+    "en": "Move · Gaze",
+    "pt": "Mover · Olhar"
+  },
+  "稳定引擎门面": {
+    "en": "Stable engine facade",
+    "pt": "Fachada estável do motor"
+  },
+  "立即取消当前时间线并退出正在播放的单次 Morph，返回当前元素。": {
+    "en": "Immediately cancels the current timeline and exits the single Morph being played, returning to the current element.",
+    "pt": "Cancela imediatamente a linha do tempo atual e sai do Morph único que está sendo reproduzido, retornando ao elemento atual."
+  },
+  "第 2 步": {
+    "en": "Step 2",
+    "pt": "Etapa 2"
+  },
+  "等待任务": {
+    "en": "Waiting for tasks",
+    "pt": "Aguardando tarefas"
+  },
+  "类型": {
+    "en": "type",
+    "pt": "tipo"
+  },
+  "类型与导出": {
+    "en": "Types and Exports",
+    "pt": "Tipos e exportações"
+  },
+  "粘贴上面的代码": {
+    "en": "Paste the code above",
+    "pt": "Cole o código acima"
+  },
+  "精确使用原版公开组件的头部环、25 组眼形、状态表情池、弹簧参数和任务形变。\n            编辑器默认值即原版，只有主动调整后才会产生偏移。": {
+    "en": "Precisely uses the original public components of the head ring, 25 sets of eye shapes, state expression pool, spring parameters and task deformations.\n            The editor's default value is the original version, and the offset will only occur after active adjustment.",
+    "pt": "Usa com precisão os componentes públicos originais do anel de cabeça, 25 conjuntos de formatos de olhos, conjunto de expressão de estado, parâmetros de mola e deformações de tarefas.\n            O valor padrão do editor é a versão original, e o deslocamento só ocorrerá após o ajuste ativo."
+  },
+  "精确控制状态停留与 Morph": {
+    "en": "Precisely control state dwells and Morph",
+    "pt": "Controle com precisão a permanência e o Morph do estado"
+  },
+  "精确插入。": {
+    "en": "Precise insertion.",
+    "pt": "Inserção precisa."
+  },
+  "糖果玻璃": {
+    "pt": "copo de doces",
+    "en": "candy glass"
+  },
+  "紫外光": {
+    "pt": "Luz ultravioleta",
+    "en": "UV light"
+  },
+  "紫外光 · ultraviolet": {
+    "pt": "luz ultravioleta · ultravioleta",
+    "en": "ultraviolet light · ultraviolet"
+  },
+  "纯色": {
+    "pt": "cor sólida",
+    "en": "solid color"
+  },
+  "纯色 · solid": {
+    "pt": "cor sólida · sólido",
+    "en": "solid color · solid"
+  },
+  "纯色 · 墨黑": {
+    "en": "Solid color·Jet black",
+    "pt": "Cor sólida·Preto azeviche"
+  },
+  "纯色、渐变与玻璃材质预设": {
+    "en": "Solid color, gradient and glass material presets",
+    "pt": "Predefinições de cor sólida, gradiente e material de vidro"
+  },
+  "纯色提供 8 个基础色；渐变包含 8 个经过 OKLab 平滑的线性预设，以及 4 个由雾底和多个柔焦径向色团组成的空间预设；彩虹玻璃提供 5 个由基底、暗部、固定环境高光、边缘色散和内部焦散组成的多层预设。点击任意卡片即可应用到右侧 Live API。": {
+    "en": "Solid Color offers 8 base colors; Gradient includes 8 linear presets smoothed by OKLab, and 4 Space presets consisting of a fog base and multiple soft focus radial color clusters; Iridescent Glass offers 5 multi-layer presets consisting of base, shadows, fixed ambient highlights, edge dispersion and internal caustics. Click on any card to apply it to the Live API on the right.",
+    "pt": "Solid Color oferece 8 cores básicas; O gradiente inclui 8 predefinições lineares suavizadas pelo OKLab e 4 predefinições de espaço que consistem em uma base de neblina e vários grupos de cores radiais de foco suave; O Iridescent Glass oferece 5 predefinições multicamadas que consistem em base, sombras, realces de ambiente fixos, dispersão de bordas e cáusticos internos. Clique em qualquer cartão para aplicá-lo à API Live à direita."
+  },
+  "纯色模式下的身体与 Morph 主色。": {
+    "en": "Body in solid color mode with Morph main color.",
+    "pt": "Corpo em modo de cor sólida com cor principal Morph."
+  },
+  "纵向缩放": {
+    "pt": "ampliação vertical",
+    "en": "vertical zoom"
+  },
+  "组件 API": {
+    "en": "Component API",
+    "pt": "API de componente"
+  },
+  "组件入口": {
+    "en": "Component entry",
+    "pt": "Entrada de componente"
+  },
+  "组件入口会从同目录加载动画引擎和几何数据，因此不要只复制": {
+    "en": "The component entry will load the animation engine and geometry data from the same directory, so don't just copy",
+    "pt": "A entrada do componente carregará o mecanismo de animação e os dados de geometria do mesmo diretório, portanto, não copie apenas"
+  },
+  "组件文件结构": {
+    "en": "Component file structure",
+    "pt": "Estrutura de arquivo de componente"
+  },
+  "组件编辑器": {
+    "en": "Component Editor",
+    "pt": "Editor de componentes"
+  },
+  "组件边长，范围 12–1024 CSS px。": {
+    "en": "Component side length, range 12–1024 CSS px.",
+    "pt": "Comprimento lateral do componente, intervalo de 12 a 1024 CSS px."
+  },
+  "组件遵循系统的": {
+    "en": "Components follow the system's",
+    "pt": "Os componentes seguem o sistema"
+  },
+  "组合音素": {
+    "en": "combined phonemes",
+    "pt": "fonemas combinados"
+  },
+  "经典 RPG · Classic RPG": {
+    "pt": "RPG Clássico · RPG Clássico",
+    "en": "Classic RPG · Classic RPG"
+  },
+  "结束单次 Morph 预览，恢复当前状态自带的 Morph 逻辑。": {
+    "en": "End a single Morph preview and restore the Morph logic of the current state.",
+    "pt": "Encerre uma única visualização do Morph e restaure a lógica do Morph do estado atual."
+  },
+  "结束色": {
+    "pt": "cor final",
+    "en": "end color"
+  },
+  "结果已经准备好了": {
+    "pt": "O resultado está pronto",
+    "en": "The result is ready"
+  },
+  "继续": {
+    "pt": "continuar",
+    "en": "continue"
+  },
+  "继续动画": {
+    "pt": "Continuar animação",
+    "en": "Continue animation"
+  },
+  "编辑历史": {
+    "en": "Edit history",
+    "pt": "Editar histórico"
+  },
+  "聚合生成": {
+    "pt": "Geração de agregação",
+    "en": "Aggregation generation"
+  },
+  "聚合生成 · gather": {
+    "pt": "Geração de agregação · reunir",
+    "en": "Aggregation generation · gather"
+  },
+  "胶囊": {
+    "pt": "cápsula",
+    "en": "capsule"
+  },
+  "胶囊 · capsule": {
+    "pt": "cápsula · cápsula",
+    "en": "capsule · capsule"
+  },
+  "脚本注册自定义元素。": {
+    "en": "Script registers custom elements.",
+    "pt": "O script registra elementos personalizados."
+  },
+  "自动": {
+    "en": "automatic",
+    "pt": "automático"
+  },
+  "自动巡演": {
+    "en": "automatic tour",
+    "pt": "tour automático"
+  },
+  "自动播放": {
+    "en": "Autoplay",
+    "pt": "Reprodução automática"
+  },
+  "自动暂停，重新可见时恢复。": {
+    "en": "Automatically pauses and resumes when visible again.",
+    "pt": "Pausa e retoma automaticamente quando visível novamente."
+  },
+  "自动编排": {
+    "en": "Automatic orchestration",
+    "pt": "Orquestração automática"
+  },
+  "自动编排会读语气和标点；也可以输入": {
+    "en": "Automatically arrange the tone and punctuation; you can also type",
+    "pt": "Organize automaticamente o tom e a pontuação; você também pode digitar"
+  },
+  "自定义": {
+    "en": "Customize",
+    "pt": "Personalizar"
+  },
+  "自定义双色渐变结束色。": {
+    "en": "Customize the two-color gradient end color.",
+    "pt": "Personalize a cor final do gradiente de duas cores."
+  },
+  "自定义双色渐变起始色；设置后不必提供 preset。": {
+    "en": "Customize the starting color of the two-color gradient; you do not need to provide a preset after setting.",
+    "pt": "Personalize a cor inicial do gradiente de duas cores; você não precisa fornecer uma predefinição após a configuração."
+  },
+  "自定义循环": {
+    "pt": "Ciclo personalizado",
+    "en": "Custom loop"
+  },
+  "自定义持续": {
+    "pt": "Persistência personalizada",
+    "en": "Custom persistence"
+  },
+  "自定义渐变方向，范围 0–360°。": {
+    "en": "Custom gradient direction, range 0–360°.",
+    "pt": "Direção de gradiente personalizada, faixa de 0 a 360°."
+  },
+  "自定义纯色": {
+    "pt": "Cor sólida personalizada",
+    "en": "Custom solid color"
+  },
+  "舞台设置": {
+    "en": "stage setting",
+    "pt": "cenário"
+  },
+  "色相 Hue": {
+    "en": "Hue Hue",
+    "pt": "Matiz Matiz"
+  },
+  "节奏倍率": {
+    "pt": "Multiplicador de ritmo",
+    "en": "Rhythm multiplier"
+  },
+  "英文节奏": {
+    "en": "English Rhythm",
+    "pt": "Ritmo Inglês"
+  },
+  "菜单生成同样的数据。": {
+    "en": "The menu generates the same data.",
+    "pt": "O menu gera os mesmos dados."
+  },
+  "蓝调时刻": {
+    "pt": "hora do blues",
+    "en": "blues hour"
+  },
+  "蓝调牛乳": {
+    "pt": "leite azul",
+    "en": "blues milk"
+  },
+  "薄荷": {
+    "pt": "Hortelã",
+    "en": "Mint"
+  },
+  "薄荷 · mint": {
+    "pt": "hortelã · hortelã",
+    "en": "mint · mint"
+  },
+  "薄荷紫": {
+    "pt": "menta roxa",
+    "en": "mint purple"
+  },
+  "蛋形": {
+    "pt": "formato de ovo",
+    "en": "egg shape"
+  },
+  "蛋形 · egg": {
+    "pt": "formato de ovo · ovo",
+    "en": "egg shape · egg"
+  },
+  "蛋白石": {
+    "pt": "opala",
+    "en": "opal"
+  },
+  "蜜桃柔霭": {
+    "pt": "Névoa suave de pêssego",
+    "en": "Peach soft mist"
+  },
+  "表情": {
+    "en": "expression",
+    "pt": "expressão"
+  },
+  "表情状态 · 23": {
+    "en": "Expression status · 23",
+    "pt": "Status da expressão · 23"
+  },
+  "视线幅度": {
+    "pt": "linha de visão",
+    "en": "line of sight"
+  },
+  "角度": {
+    "pt": "ângulo",
+    "en": "angle"
+  },
+  "角色声音": {
+    "en": "character voice",
+    "pt": "voz do personagem"
+  },
+  "解压组件包到项目": {
+    "en": "Unzip the component package to the project",
+    "pt": "Descompacte o pacote de componentes para o projeto"
+  },
+  "触发一次并退出": {
+    "en": "Fire once and exit",
+    "pt": "Atire uma vez e saia"
+  },
+  "触发时机": {
+    "en": "Trigger time",
+    "pt": "Tempo de disparo"
+  },
+  "警报": {
+    "pt": "alarme",
+    "en": "alarm"
+  },
+  "警报 · alerting": {
+    "pt": "alertar · alertar",
+    "en": "alert · alerting"
+  },
+  "警报符号": {
+    "pt": "Símbolo de alerta",
+    "en": "Alert symbol"
+  },
+  "警报符号 · bang": {
+    "pt": "Símbolo de alerta · bang",
+    "en": "Alert symbol · bang"
+  },
+  "让我想一下……": {
+    "pt": "Deixe-me pensar sobre isso...",
+    "en": "Let me think about it..."
+  },
+  "让视线跟随页面指针。": {
+    "en": "Let your eyes follow the page pointer.",
+    "pt": "Deixe seus olhos seguirem o ponteiro da página."
+  },
+  "设置。": {
+    "en": "set up.",
+    "pt": "configurar."
+  },
+  "设计依据：": {
+    "en": "Design basis:",
+    "pt": "Base de projeto:"
+  },
+  "说话速度": {
+    "en": "speaking speed",
+    "pt": "velocidade de fala"
+  },
+  "读取当前彩虹玻璃预设。": {
+    "en": "Reads the current rainbow glass preset.",
+    "pt": "Lê a predefinição atual do vidro arco-íris."
+  },
+  "读取当前渐变预设，使用双色参数时为": {
+    "en": "Read the current gradient preset, when using two-color parameters",
+    "pt": "Leia a predefinição de gradiente atual ao usar parâmetros de duas cores"
+  },
+  "读取或设置当前材质模式。": {
+    "en": "Read or set the current material mode.",
+    "pt": "Leia ou defina o modo de material atual."
+  },
+  "读取或设置当前状态。赋值会立即开始状态切换。": {
+    "en": "Read or set the current status. Assignment immediately initiates a state switch.",
+    "pt": "Leia ou defina o status atual. A atribuição inicia imediatamente uma mudança de estado."
+  },
+  "读取或设置当前轮廓。": {
+    "en": "Read or set the current profile.",
+    "pt": "Leia ou defina o perfil atual."
+  },
+  "读取或设置播放倍率。": {
+    "en": "Read or set playback magnification.",
+    "pt": "Leia ou defina a ampliação da reprodução."
+  },
+  "读取或设置暂停状态。": {
+    "en": "Read or set pause status.",
+    "pt": "Leia ou defina o status de pausa."
+  },
+  "读取或设置组件尺寸。": {
+    "en": "Read or set component dimensions.",
+    "pt": "Leia ou defina as dimensões do componente."
+  },
+  "读取或设置额外旋转角度，状态自身运动仍会叠加。": {
+    "en": "When reading or setting additional rotation angles, the state's own motion will still be superimposed.",
+    "pt": "Ao ler ou definir ângulos de rotação adicionais, o movimento do próprio estado ainda será sobreposto."
+  },
+  "调皮": {
+    "pt": "Impertinente",
+    "en": "Naughty"
+  },
+  "调皮 · playful": {
+    "pt": "travesso · brincalhão",
+    "en": "naughty · playful"
+  },
+  "豆形": {
+    "pt": "forma de feijão",
+    "en": "bean shape"
+  },
+  "豆形 · bean": {
+    "pt": "forma de feijão · feijão",
+    "en": "bean shape · bean"
+  },
+  "起始色": {
+    "pt": "cor inicial",
+    "en": "starting color"
+  },
+  "跟随指针": {
+    "en": "follow pointer",
+    "pt": "siga o ponteiro"
+  },
+  "路径规则：": {
+    "en": "Path rules:",
+    "pt": "Regras de caminho:"
+  },
+  "身体幅度": {
+    "pt": "largura do corpo",
+    "en": "body width"
+  },
+  "轨道": {
+    "pt": "acompanhar",
+    "en": "track"
+  },
+  "轨道 · orbit": {
+    "pt": "órbita · órbita",
+    "en": "orbit · orbit"
+  },
+  "输入一句话，键入 @ 添加表情…": {
+    "en": "Enter a sentence, type @ to add an emoticon...",
+    "pt": "Digite uma frase, digite @ para adicionar um emoticon..."
+  },
+  "输入文字后，一键生成贴合语气的动作。": {
+    "en": "After entering text, one-click actions that fit the tone are generated.",
+    "pt": "Após inserir o texto, são geradas ações de um clique que se ajustam ao tom."
+  },
+  "过渡时间": {
+    "en": "transition time",
+    "pt": "tempo de transição"
+  },
+  "运行中": {
+    "en": "Running",
+    "pt": "Correndo"
+  },
+  "运行快照": {
+    "en": "Run snapshot",
+    "pt": "Executar instantâneo"
+  },
+  "运转": {
+    "pt": "correr",
+    "en": "run"
+  },
+  "运转 · humming": {
+    "pt": "Operação · zumbido",
+    "en": "Operation · humming"
+  },
+  "返回 Morph Bot 组件编辑器": {
+    "en": "Return to the Morph Bot Component Editor",
+    "pt": "Retornar ao editor de componentes do Morph Bot"
+  },
+  "返回只读的即时信息，适合调试面板和测试，不用于反向修改组件。": {
+    "en": "Returns read-only instant information, suitable for debugging panels and testing, not for reverse modification of components.",
+    "pt": "Retorna informações instantâneas somente leitura, adequadas para depuração de painéis e testes, não para modificação reversa de componentes."
+  },
+  "返回当前引擎快照；组件尚未连接时返回": {
+    "en": "Returns the current engine snapshot; returned if the component is not connected yet",
+    "pt": "Retorna o instantâneo atual do mecanismo; retornado se o componente ainda não estiver conectado"
+  },
+  "返回组件编辑器": {
+    "en": "Return to component editor",
+    "pt": "Retornar ao editor de componentes"
+  },
+  "这个回答可以直接演出来。": {
+    "pt": "Esta resposta pode ser realizada diretamente.",
+    "en": "This answer can be performed directly."
+  },
+  "这个实验需要浏览器支持 WebGL。": {
+    "en": "This experiment requires browser support for WebGL.",
+    "pt": "Este experimento requer suporte do navegador para WebGL."
+  },
+  "进入一个状态步骤。": {
+    "en": "Enter a status step.",
+    "pt": "Insira uma etapa de status."
+  },
+  "进入表情、旋转、Morph 或停顿节点。": {
+    "en": "Enter the Expression, Rotation, Morph or Pause nodes.",
+    "pt": "Insira os nós Expressão, Rotação, Morph ou Pausa."
+  },
+  "进度": {
+    "pt": "agendar",
+    "en": "schedule"
+  },
+  "进度 · progress": {
+    "pt": "progresso · progresso",
+    "en": "progress · progress"
+  },
+  "退出": {
+    "pt": "desistir",
+    "en": "quit"
+  },
+  "选择 18 个身体轮廓之一。": {
+    "en": "Choose one of 18 body contours.",
+    "pt": "Escolha um dos 18 contornos corporais."
+  },
+  "选择 39 个状态之一。": {
+    "en": "Choose one of 39 states.",
+    "pt": "Escolha um dos 39 estados."
+  },
+  "选择内置渐变预设。": {
+    "en": "Choose from built-in gradient presets.",
+    "pt": "Escolha entre predefinições de gradiente integradas."
+  },
+  "选择动作": {
+    "en": "Select action",
+    "pt": "Selecione a ação"
+  },
+  "选择彩虹玻璃预设。": {
+    "en": "Choose the Rainbow Glass preset.",
+    "pt": "Escolha a predefinição Rainbow Glass."
+  },
+  "选择样式": {
+    "en": "Select style",
+    "pt": "Selecione o estilo"
+  },
+  "透明度": {
+    "en": "transparency",
+    "pt": "transparência"
+  },
+  "逐字母": {
+    "en": "letter by letter",
+    "pt": "letra por letra"
+  },
+  "通常只需要几秒钟": {
+    "en": "Usually only takes a few seconds",
+    "pt": "Geralmente leva apenas alguns segundos"
+  },
+  "通知": {
+    "pt": "notificar",
+    "en": "notify"
+  },
+  "通知 · notifying": {
+    "pt": "Notificação · notificar",
+    "en": "Notification · notifying"
+  },
+  "通知尺寸": {
+    "pt": "Tamanho da notificação",
+    "en": "Notification size"
+  },
+  "通知颜色": {
+    "pt": "Cor da notificação",
+    "en": "Notification color"
+  },
+  "通过": {
+    "en": "pass",
+    "pt": "passar"
+  },
+  "速度": {
+    "en": "speed",
+    "pt": "velocidade"
+  },
+  "都使用真正的": {
+    "en": "both use real",
+    "pt": "ambos usam real"
+  },
+  "酸性青柠": {
+    "pt": "cal ácida",
+    "en": "acidic lime"
+  },
+  "醒来": {
+    "pt": "acordar",
+    "en": "wake up"
+  },
+  "醒来 · waking": {
+    "pt": "acordar · acordar",
+    "en": "wake up · waking"
+  },
+  "采样语音播放时由 AudioContext 主时钟更新。": {
+    "en": "The AudioContext master clock is updated when the sampled speech is played.",
+    "pt": "O relógio mestre AudioContext é atualizado quando a fala amostrada é reproduzida."
+  },
+  "重做": {
+    "en": "Redo",
+    "pt": "Refazer"
+  },
+  "重播": {
+    "en": "replay",
+    "pt": "repetir"
+  },
+  "附加旋转": {
+    "pt": "giro adicional",
+    "en": "additional spin"
+  },
+  "随机表情": {
+    "en": "random emoticons",
+    "pt": "emoticons aleatórios"
+  },
+  "难过": {
+    "pt": "triste",
+    "en": "sad"
+  },
+  "难过 · sad": {
+    "pt": "triste · triste",
+    "en": "sad · sad"
+  },
+  "雷达": {
+    "pt": "radar",
+    "en": "radar"
+  },
+  "雷达 · radar": {
+    "pt": "radar · radar",
+    "en": "radar · radar"
+  },
+  "雷达扫描": {
+    "pt": "varredura de radar",
+    "en": "radar scan"
+  },
+  "雷达扫描 · radar": {
+    "pt": "varredura de radar · radar",
+    "en": "radar scan · radar"
+  },
+  "需要用 JS 切换状态？": {
+    "en": "Need to switch states using JS?",
+    "pt": "Precisa mudar de estado usando JS?"
+  },
+  "非官方复刻": {
+    "en": "unofficial replica",
+    "pt": "réplica não oficial"
+  },
+  "非循环时间线完整结束。": {
+    "en": "The acyclic timeline is complete.",
+    "pt": "A linha do tempo acíclica está completa."
+  },
+  "非装饰组件的无障碍名称。": {
+    "en": "Accessibility name for non-decorative components.",
+    "pt": "Nome de acessibilidade para componentes não decorativos."
+  },
+  "音频 cue 到达新字符；同时给出拼音、合成音素、音高与句内音频时间。": {
+    "en": "The audio cue arrives at a new character; pinyin, synthetic phonemes, pitch, and in-sentence audio timing are also given.",
+    "pt": "A dica de áudio chega a um novo personagem; pinyin, fonemas sintéticos, tom e tempo de áudio na frase também são fornecidos."
+  },
+  "页面": {
+    "en": "page",
+    "pt": "página"
+  },
+  "页面加载": {
+    "en": "Page loading",
+    "pt": "Carregamento de página"
+  },
+  "项目链接": {
+    "en": "Project link",
+    "pt": "Link do projeto"
+  },
+  "预览": {
+    "pt": "Visualização",
+    "en": "Preview"
+  },
+  "预览场景": {
+    "en": "Preview scene",
+    "pt": "Cena de visualização"
+  },
+  "预览模式": {
+    "en": "preview mode",
+    "pt": "modo de visualização"
+  },
+  "预设结构参考": {
+    "en": "Default structure reference",
+    "pt": "Referência de estrutura padrão"
+  },
+  "颜色": {
+    "en": "color",
+    "pt": "cor"
+  },
+  "颜色 Color": {
+    "en": "Color Color",
+    "pt": "Cor Cor"
+  },
+  "颜色减淡 Color dodge": {
+    "en": "Color dodge Color dodge",
+    "pt": "Desvio de cores Desvio de cores"
+  },
+  "颜色加深 Color burn": {
+    "en": "Color burn Color burn",
+    "pt": "Queimadura de cor Queimadura de cor"
+  },
+  "额外旋转角度，范围 -180–180°；适合对话动作。": {
+    "en": "Additional rotation angle, range -180–180°; suitable for conversational actions.",
+    "pt": "Ângulo de rotação adicional, faixa de -180–180°; adequado para ações de conversação."
+  },
+  "饱和度 Saturation": {
+    "en": "Saturation",
+    "pt": "Saturação"
+  },
+  "默认 2500ms；": {
+    "en": "Default 2500ms;",
+    "pt": "Padrão 2500ms;"
+  },
+  "默认使用": {
+    "en": "Used by default",
+    "pt": "Usado por padrão"
+  },
+  "默认值": {
+    "en": "default value",
+    "pt": "valor padrão"
+  },
+  "鼠标响应": {
+    "en": "mouse response",
+    "pt": "resposta do mouse"
+  },
+  "＋ 添加状态": {
+    "en": "+ Add status",
+    "pt": "+ Adicionar status"
+  },
+  "，例如“正在生成报告”。": {
+    "en": ", such as \"Generating report\".",
+    "pt": ", como \"Gerando relatório\"."
+  },
+  "，并导出组件类、状态/形状/Morph 列表、材质列表、对话声音、中文语音单元分析器与全部预设。": {
+    "en": ", and export component classes, state/shape/Morph lists, material lists, dialogue sounds, Chinese speech unit analyzers and all presets.",
+    "pt": "e exportar classes de componentes, listas de estado/forma/Morph, listas de materiais, sons de diálogo, analisadores de unidades de fala chinesas e todas as predefinições."
+  },
+  "，渐变传": {
+    "en": ", gradient pass",
+    "pt": ", passagem gradiente"
+  },
+  "，玻璃传": {
+    "en": ", glass biography",
+    "pt": ", biografia de vidro"
+  },
+  "，避免重复朗读。": {
+    "en": ", avoid repeated reading.",
+    "pt": ", evite leituras repetidas."
+  }
+}

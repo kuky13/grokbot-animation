@@ -1,4 +1,24 @@
-# Morph Bot — Grok Bot Animation Lab
+# Studio Drippy — laboratório de animação Morph Bot
+
+> Idioma principal: português. O Studio oferece uma opção **English** em cada página; os nomes de atributos, métodos e eventos da API continuam em inglês.
+
+Este repositório é uma adaptação do projeto original [iduu/grokbot-animation](https://github.com/iduu/grokbot-animation), criado para estudar e reproduzir estados expressivos em SVG. A autoria da base original é de **iduu**. As modificações da **Kuky** incluem a personagem Drippy, integração com OneDrip, materiais e cores adicionais, documentação, interface em português e empacotamento de releases imutáveis identificadas por SHA-256. O histórico Git preserva as contribuições anteriores; as licenças de terceiros seguem em `component/runtime/vendor/` e nos pacotes.
+
+O projeto é **não oficial** e não tem vínculo nem endosso da xAI. O upstream não declara licença de redistribuição para toda a base e os ativos de referência; por isso a automação de **novas** releases públicas derivadas fica desativada até a revisão dos direitos. A variável de repositório `DRIPPY_RELEASE_RIGHTS_CONFIRMED=true` é o único desbloqueio do workflow de publicação. A interface e o código podem evoluir sem acionar essa publicação.
+
+## Uso rápido
+
+Execute `npm run dev` com Node.js 20 ou superior e acesse `/` para o laboratório de estados, `/component/` para o editor visual, `/component/docs/` para a API e `/aurora-orb/` para a experiência Aurora Orb. Execute `npm test` para validar o runtime e `npm run build:static` para gerar o site estático. O fluxo OneDrip lê `component/releases/latest.json`, valida hash e ZIP e sincroniza a release aprovada por PR e CI.
+
+## English
+
+This is Kuky's adaptation of the original [iduu/grokbot-animation](https://github.com/iduu/grokbot-animation). Credit for the original project belongs to **iduu**. Kuky's changes include Drippy, OneDrip integration, added materials, a Portuguese-first interface, documentation, and SHA-256-addressed releases. It is an unofficial study, unaffiliated with xAI. The upstream repository does not declare redistribution rights for all source and reference assets, so publication of **new** public derived runtime releases remains disabled until rights review. Existing third-party notices remain with the runtime.
+
+The Studio offers Portuguese by default and an English switch on every page. API identifiers remain in English. Run `npm run dev` on Node.js 20+, use `/component/` for the editor and `/component/docs/` for the API, and run `npm test` for validation.
+
+---
+
+# Morph Bot — historical project notes
 
 > An unofficial, reference-driven 2D SVG animation study, visual editor, and framework-free Web Component inspired by the public `grok-bot-lazy` / `grok-bot-mark` implementation on [x.ai/bot](https://x.ai/bot).
 

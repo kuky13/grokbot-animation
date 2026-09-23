@@ -14,6 +14,8 @@ cp \
   "$repo_dir/index.html" \
   "$repo_dir/styles.css" \
   "$repo_dir/app.js" \
+  "$repo_dir/locale.js" \
+  "$repo_dir/locale.json" \
   "$repo_dir/grok-bot-engine.js" \
   "$repo_dir/original-data.js" \
   "$repo_dir/catalog.js" \
