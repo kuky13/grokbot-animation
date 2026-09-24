@@ -8,7 +8,7 @@ O projeto é **não oficial** e não tem vínculo nem endosso da xAI. O upstream
 
 ## Uso rápido
 
-Execute `npm run dev` com Node.js 20 ou superior e acesse `/` para o laboratório de estados, `/component/` para o editor visual, `/component/docs/` para a API e `/aurora-orb/` para a experiência Aurora Orb. Execute `npm test` para validar o runtime e `npm run build:static` para gerar o site estático. O fluxo OneDrip lê `component/releases/latest.json`, valida hash e ZIP e sincroniza a release aprovada por PR e CI.
+Execute `npm run dev` com Node.js 20 ou superior e acesse `/` para o laboratório de estados, `/paint/` para o Drippy Paint Studio, `/component/` para o editor visual, `/component/docs/` para a API e `/aurora-orb/` para a experiência Aurora Orb. O Paint está documentado em `docs/DRIPPY_PAINT.md`. Execute `npm test` para validar o runtime e `npm run build:static` para gerar o site estático. O fluxo OneDrip lê `component/releases/latest.json`, valida hash e ZIP e sincroniza a release aprovada por PR e CI.
 
 ## English
 
