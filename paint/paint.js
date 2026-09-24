@@ -84,7 +84,7 @@ function recordEvent(type, data = {}) {
 function configForState(id) {
   const blink = ORIGINAL_STATE_DATA.BLINK_CADENCE[id];
   return {
-    ...character, pointer: $("#follow-brush").checked, interactive: false, shape: "blob",
+    ...character, pointer: $("#follow-brush").checked, interactive: false, shape: "blob", speechMouthScale: 1.8,
     expressionPool: [...ORIGINAL_STATE_DATA.EXPRESSION_POOLS[id]], expressionWeights: {},
     expressionCadence: [...ORIGINAL_STATE_DATA.EXPRESSION_CADENCE[id]],
     blinkCadence: $("#blink").checked && blink ? [Math.min(...blink), Math.max(...blink)] : null,

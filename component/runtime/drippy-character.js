@@ -249,36 +249,36 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
   open = clamp(settle("mouthOpen", open, 26, 1), 0, 1);
 
   if (talking) {
-    // Cute, restrained articulation: it begins as the familiar small smile
-    // and becomes only a compact outlined mouth. No dark filled "cavity".
+    const expressiveMouth = Number(config.speechMouthScale) > 1;
+    const visualOpen = clamp(open * (expressiveMouth ? config.speechMouthScale : 1), 0, 1);
     const phoneme = engine.speechPhoneme || "";
     const roundPhoneme = /[ouɔʊ]/i.test(phoneme);
     const widePhoneme = /[eiæɛ]/i.test(phoneme);
     const phonemeWidth = roundPhoneme ? 0.86 : widePhoneme ? 1.07 : 1;
-    const half = (14.5 + open * 4.0) * phonemeWidth;
-    const smile = 3.2 - open * 2.2;
+    const half = (14.5 + visualOpen * 4.0) * phonemeWidth;
+    const smile = 3.2 - visualOpen * 2.2;
 
-    if (open < 0.12) {
+    if (visualOpen < 0.12) {
       engine.drippyMouth.setAttribute(
         "d",
         `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${(y + smile).toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)}`
       );
     } else {
-      // Let the lower jaw do most of the movement. A flatter upper lip
-      // keeps the expression smile-like instead of forming an eye-shaped oval.
-      const top = y - 0.2 - open * 1.8;
-      const bottom = y + 1.8 + open * 8.0;
+      const top = expressiveMouth ? y - 2 - visualOpen * 4 : y - 0.2 - open * 1.8;
+      const bottom = expressiveMouth ? y + 3 + visualOpen * 18 : y + 1.8 + open * 8.0;
       engine.drippyMouth.setAttribute(
         "d",
-        `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${top.toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${bottom.toFixed(2)} ${(cx - half).toFixed(2)} ${y.toFixed(2)}`
+        expressiveMouth
+          ? `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} C ${(cx - half * 0.6).toFixed(2)} ${top.toFixed(2)} ${(cx + half * 0.6).toFixed(2)} ${top.toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)} C ${(cx + half * 0.6).toFixed(2)} ${bottom.toFixed(2)} ${(cx - half * 0.6).toFixed(2)} ${bottom.toFixed(2)} ${(cx - half).toFixed(2)} ${y.toFixed(2)} Z`
+          : `M ${(cx - half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${top.toFixed(2)} ${(cx + half).toFixed(2)} ${y.toFixed(2)} Q ${cx.toFixed(2)} ${bottom.toFixed(2)} ${(cx - half).toFixed(2)} ${y.toFixed(2)} Z`
       );
     }
 
     engine.drippyMouth.setAttribute("transform", `rotate(${tilt.toFixed(2)} ${cx} ${y})`);
     engine.drippyMouth.style.opacity = fade.toFixed(3);
-    engine.drippyMouth.style.fill = "none";
-    engine.drippyMouth.style.fillOpacity = "0";
-    engine.drippyMouth.style.strokeWidth = "3.8";
+    engine.drippyMouth.style.fill = expressiveMouth && visualOpen >= 0.12 ? "var(--bg)" : "none";
+    engine.drippyMouth.style.fillOpacity = expressiveMouth ? "1" : "0";
+    engine.drippyMouth.style.strokeWidth = expressiveMouth ? "2.6" : "3.8";
     engine.drippyMouth.style.strokeLinejoin = "round";
     engine.drippyMouthOpen.style.opacity = "0";
     return;
