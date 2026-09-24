@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { WIDTH, HEIGHT, moveRegion, parseProject, renderActions } from "./model.js";
+import { WIDTH, HEIGHT, moveRegion, parseProject, renderActions, speechLevelForAudio } from "./model.js";
 
 const stroke = { tool: "pen", color: "#fec832", size: 8, points: [{ x: 4, y: 5, p: 1 }, { x: 10, y: 12, p: 1 }] };
 const project = { version: 1, canvas: { width: WIDTH, height: HEIGHT }, actions: [{ kind: "stroke", stroke }, { kind: "clear" }], timeline: { version: 1, duration: 1, events: [{ time: .1, type: "brush.start" }] } };
@@ -56,4 +56,11 @@ test("pasted pixels and deletion replay after project import", () => {
   assert.deepEqual(calls.at(-1), ["clear", 10, 20, 1, 1]);
   assert.throws(() => parseProject({ ...project, version: 2, actions: [pasted], bitmaps: {} }));
   assert.throws(() => parseProject({ ...project, version: 2, actions: [erased], bitmaps: { bad: "data:image/svg+xml;base64,AAA" } }));
+});
+
+test("audio articulation follows sound, moves on sustained notes and closes on silence", () => {
+  assert.equal(speechLevelForAudio(0, 0.3), 0);
+  assert.notEqual(speechLevelForAudio(.5, .2), speechLevelForAudio(.5, .35));
+  assert.ok(speechLevelForAudio(.5, .35) > 0);
+  assert.ok(speechLevelForAudio(2, .35) <= 1);
 });

@@ -3,7 +3,7 @@ import { ORIGINAL_STATE_DATA } from "../original-data.js";
 import { MORPH_BY_STATE, STATE_CATALOG } from "../component/catalog.js";
 import { DEFAULT_MATERIAL, SOLID_PRESETS, GRADIENT_PRESETS, GLASS_PRESETS } from "../component/materials.js";
 import { createSpeechMeter } from "../component/runtime/speech-meter.js";
-import { WIDTH, HEIGHT, drawStroke, moveRegion, renderActions, parseProject } from "./model.js";
+import { WIDTH, HEIGHT, drawStroke, moveRegion, renderActions, parseProject, speechLevelForAudio } from "./model.js";
 import { createRecorder } from "./recorder.js";
 
 const $ = selector => document.querySelector(selector);
@@ -72,6 +72,7 @@ let audioMeter = null;
 let microphone = null;
 let microphoneSource = null;
 let lastAudioGesture = 0;
+let audioGestureIndex = 0;
 
 function recordEvent(type, data = {}) {
   if (timeline.events.length >= 10000) return;
@@ -484,7 +485,7 @@ for (const id of ["drippy-size", "drippy-x", "drippy-y"]) $("#" + id).addEventLi
   botPose = { x: Number($("#drippy-x").value), y: Number($("#drippy-y").value) };
   roamTarget = null; roamPausedUntil = performance.now() + 1800; applyBotLayout(); recordEvent("drippy.position", botPose); persist();
 });
-for (const id of ["show-drippy", "follow-brush", "react-drawing", "blink", "lock-drippy", "auto-motion", "audio-reaction", "audio-loop"]) $("#" + id).addEventListener("change", () => { applyBotLayout(); $("#audio-preview").loop = $("#audio-loop").checked; persist(); });
+for (const id of ["show-drippy", "follow-brush", "react-drawing", "blink", "lock-drippy", "auto-motion", "audio-reaction", "audio-loop"]) $("#" + id).addEventListener("change", () => { applyBotLayout(); $("#audio-preview").loop = $("#audio-loop").checked; syncAudioPause(); persist(); });
 $("#motion-speed").addEventListener("input", persist);
 $("#reset-drippy").addEventListener("click", () => { $("#drippy-x").value = "70"; $("#drippy-y").value = "58"; botPose = { x: 70, y: 58 }; roamTarget = null; applyBotLayout(); recordEvent("drippy.position", botPose); persist(); });
 
@@ -589,6 +590,7 @@ async function applyProject(raw) {
   if (audioUrl) URL.revokeObjectURL(audioUrl);
   audioUrl = null; audioName = data.audio.name;
   $("#audio-preview").pause(); $("#audio-preview").removeAttribute("src"); $("#audio-preview").load();
+  syncAudioPause();
   $("#audio-name").textContent = audioName ? `${audioName} — reanexe o arquivo para gravar` : "Nenhum áudio selecionado";
   $("#audio-volume").value = String(data.audio.volume);
   $("#audio-loop").checked = data.audio.loop;
@@ -684,6 +686,17 @@ function audioActive() {
   return Boolean((audioUrl && !audioPreview.paused && !audioPreview.ended) || (microphone && recorder.state === "recording"));
 }
 
+function syncAudioPause() {
+  const paused = $("#audio-reaction").checked && (recorder.state === "paused" || (audioUrl && audioPreview.paused && audioPreview.currentTime > 0 && recorder.state !== "recording"));
+  engine.setPaused(paused);
+  if (paused) {
+    reactionUntil = 0;
+    clearTimeout(reactionTimer);
+    engine.disconnectAudio();
+    setRuntimeState(baseState);
+  }
+}
+
 async function ensureAudioGraph() {
   if (!audioContext) {
     const Context = window.AudioContext || window.webkitAudioContext;
@@ -710,7 +723,9 @@ function releaseMicrophone() {
   microphone = null;
 }
 
-audioPreview.addEventListener("play", () => ensureAudioGraph().catch(error => { audioPreview.pause(); $("#record-message").textContent = error.message; }));
+audioPreview.addEventListener("play", () => { syncAudioPause(); ensureAudioGraph().catch(error => { audioPreview.pause(); $("#record-message").textContent = error.message; }); });
+audioPreview.addEventListener("pause", syncAudioPause);
+audioPreview.addEventListener("ended", syncAudioPause);
 $("#audio-file").addEventListener("change", event => {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -720,6 +735,7 @@ $("#audio-file").addEventListener("change", event => {
   audioUrl = URL.createObjectURL(file);
   audioName = file.name;
   audioPreview.src = audioUrl;
+  syncAudioPause();
   audioPreview.loop = $("#audio-loop").checked;
   $("#audio-name").textContent = audioName;
   persist();
@@ -765,15 +781,15 @@ $("#record-button").addEventListener("click", async () => {
   finally { recordStarting = false; $("#record-button").disabled = false; }
 });
 $("#pause-button").addEventListener("click", async () => {
-  if (recorder.state === "paused") { await audioContext?.resume(); recorder.resume(); if (audioUrl) await audioPreview.play(); }
-  else { audioPreview.pause(); recorder.pause(); await audioContext?.suspend(); }
+  if (recorder.state === "paused") { await audioContext?.resume(); recorder.resume(); if (audioUrl) await audioPreview.play(); syncAudioPause(); }
+  else { audioPreview.pause(); recorder.pause(); syncAudioPause(); await audioContext?.suspend(); }
 });
 function finishRecording(discard = false) {
   audioPreview.pause();
   audioPreview.controls = true;
   if (discard) recorder.discard(); else recorder.stop();
   releaseMicrophone();
-  engine.setSpeechLevel(0);
+  syncAudioPause();
 }
 $("#stop-button").addEventListener("click", () => finishRecording());
 $("#discard-button").addEventListener("click", () => finishRecording(true));
@@ -781,7 +797,7 @@ $("#discard-button").addEventListener("click", () => finishRecording(true));
 function updateRoam(now) {
   const elapsed = Math.min(50, now - roamAt) / 1000;
   roamAt = now;
-  if (!$("#auto-motion").checked || $("#lock-drippy").checked || botDrag || now < roamPausedUntil || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!$("#auto-motion").checked || $("#lock-drippy").checked || botDrag || engine.paused || now < roamPausedUntil || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const halfX = Number($("#drippy-size").value) / WIDTH * 50;
   const halfY = Number($("#drippy-size").value) / HEIGHT * 50;
   if (!roamTarget || Math.hypot(roamTarget.x - botPose.x, roamTarget.y - botPose.y) < 1) {
@@ -799,13 +815,17 @@ function frame() {
   updateRoam(now);
   engine.pointer.active = $("#follow-brush").checked && Boolean(lastClient);
   if (lastClient) { engine.pointer.clientX = lastClient.x; engine.pointer.clientY = lastClient.y; }
-  const level = $("#audio-reaction").checked && audioActive() && audioMeter ? audioMeter() : 0;
-  engine.setSpeechLevel(level);
-  if (now >= reactionUntil && runtimeState !== (audioActive() && $("#audio-reaction").checked ? "dictating" : baseState)) setRuntimeState(audioActive() && $("#audio-reaction").checked ? "dictating" : baseState);
-  if (level > .65 && now - lastAudioGesture > 4000 && now >= reactionUntil) {
+  const speaking = $("#audio-reaction").checked && audioActive() && !engine.paused;
+  const energy = speaking && audioMeter ? audioMeter() : 0;
+  if (speaking) {
+    const phase = audioUrl && !audioPreview.paused ? audioPreview.currentTime : now / 1000;
+    engine.setSpeechLevel(speechLevelForAudio(energy, phase));
+  } else if (engine.manualSpeech != null) engine.disconnectAudio();
+  if (!engine.paused && now >= reactionUntil && runtimeState !== (speaking ? "dictating" : baseState)) setRuntimeState(speaking ? "dictating" : baseState);
+  if (speaking && energy > .17 && now - lastAudioGesture > 2200 && now >= reactionUntil) {
     lastAudioGesture = now;
-    reactionUntil = now + 650;
-    setRuntimeState("excited");
+    reactionUntil = now + 640;
+    setRuntimeState(["happy", "curious", "playful"][audioGestureIndex++ % 3]);
   }
   if (recorder.state === "recording") { renderComposite({ video: true }); refreshSnapshot(); }
   animationFrame = requestAnimationFrame(frame);

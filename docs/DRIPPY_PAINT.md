@@ -29,6 +29,7 @@ As imagens PNG embutidas têm limite conjunto de 6 MB; uma imagem externa maior 
 - `Ctrl/Cmd+S`: exportar projeto; `Ctrl/Cmd+O`: abrir projeto. Atalhos não atuam enquanto um campo de texto ou controle está em edição.
 
 O PNG pode conter só o desenho ou também a Drippy. Materiais sólidos, gradientes e vidro do Character Studio aparecem na prévia, no PNG e no vídeo. Fundo branco ou transparente é configurável. A gravação exporta WebM com início, pausa, continuação, parada e descarte. Um arquivo de áudio local pode ser ouvido antes, ter volume e repetição ajustados e começar do início com a gravação. O microfone é opcional, mediante permissão do navegador; áudio local e microfone são misturados em uma faixa.
+A reprodução do áudio também anima a boca e expressões na prévia; pausar congela a reação e fecha a boca, continuar retoma a animação. A articulação acompanha a intensidade com variação visual em notas sustentadas, sem prometer sincronização fonética.
 
 ## Limitações
 

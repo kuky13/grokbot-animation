@@ -7,6 +7,12 @@ export const TOOLS = [...DRAW_TOOLS, "select", "pan"];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
 
+export function speechLevelForAudio(energy, seconds) {
+  if (!Number.isFinite(energy) || !Number.isFinite(seconds)) return 0;
+  const articulation = 0.18 + 0.82 * Math.abs(Math.sin(seconds * 13.2) * Math.cos(seconds * 3.7));
+  return clamp((energy - 0.015) * 1.65 * articulation, 0, 1);
+}
+
 export function drawStroke(ctx, stroke) {
   const points = stroke.points;
   if (!points?.length) return;
