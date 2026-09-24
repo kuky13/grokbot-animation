@@ -47,12 +47,17 @@ export function drawStroke(ctx, stroke) {
   ctx.restore();
 }
 
-export function renderActions(ctx, actions, draft = null) {
+export function renderActions(ctx, actions, draft = null, bitmaps = new Map()) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   for (const action of actions) {
     if (action.kind === "clear") ctx.clearRect(0, 0, WIDTH, HEIGHT);
     else if (action.kind === "stroke") drawStroke(ctx, action.stroke);
     else if (action.kind === "move-region") moveRegion(ctx, action.source, action.destination);
+    else if (action.kind === "erase-region") ctx.clearRect(action.rect.x, action.rect.y, action.rect.w, action.rect.h);
+    else if (action.kind === "bitmap") {
+      const image = bitmaps.get(action.id);
+      if (image) ctx.drawImage(image, action.x, action.y, action.w, action.h);
+    }
   }
   if (draft) drawStroke(ctx, draft);
 }
@@ -67,9 +72,21 @@ export function parseProject(data) {
   if (!data || ![1, 2].includes(data.version) || data.canvas?.width !== WIDTH || data.canvas?.height !== HEIGHT) throw new Error("Formato ou dimensões incompatíveis");
   const source = data.actions ?? (Array.isArray(data.strokes) ? data.strokes.map(stroke => ({ kind: "stroke", stroke })) : null);
   if (!Array.isArray(source) || source.length > 5000) throw new Error("Histórico inválido ou muito grande");
+  const bitmapSources = data.bitmaps && typeof data.bitmaps === "object" && !Array.isArray(data.bitmaps) ? data.bitmaps : {};
+  const entries = Object.entries(bitmapSources);
+  if (entries.length > 100 || entries.reduce((total, [, png]) => total + String(png).length, 0) > 6_000_000 || entries.some(([id, png]) => !/^[\w-]{1,64}$/.test(id) || typeof png !== "string" || !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(png))) throw new Error("Imagens do projeto inválidas");
   let pointCount = 0;
   const actions = source.map(action => {
     if (action.kind === "clear") return { kind: "clear" };
+    if (action.kind === "erase-region") {
+      const r = action.rect;
+      if (![r?.x, r?.y, r?.w, r?.h].every(Number.isInteger) || r.x < 0 || r.y < 0 || r.w < 1 || r.h < 1 || r.x + r.w > WIDTH || r.y + r.h > HEIGHT) throw new Error("Área apagada inválida");
+      return { kind: "erase-region", rect: { x: r.x, y: r.y, w: r.w, h: r.h } };
+    }
+    if (action.kind === "bitmap") {
+      if (typeof action.id !== "string" || !Object.hasOwn(bitmapSources, action.id) || ![action.x, action.y, action.w, action.h].every(Number.isInteger) || action.x < 0 || action.y < 0 || action.w < 1 || action.h < 1 || action.x + action.w > WIDTH || action.y + action.h > HEIGHT) throw new Error("Imagem colada inválida");
+      return { kind: "bitmap", id: action.id, x: action.x, y: action.y, w: action.w, h: action.h };
+    }
     if (action.kind === "move-region") {
       const { source: s, destination: d } = action;
       if (![s?.x, s?.y, s?.w, s?.h, d?.x, d?.y].every(Number.isInteger) || s.w < 1 || s.h < 1 || s.x < 0 || s.y < 0 || d.x < 0 || d.y < 0 || s.x + s.w > WIDTH || s.y + s.h > HEIGHT || d.x + s.w > WIDTH || d.y + s.h > HEIGHT) throw new Error("Seleção inválida");
@@ -92,6 +109,7 @@ export function parseProject(data) {
   const hex = (value, fallback) => /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
   return {
     actions,
+    bitmaps: Object.fromEntries(entries),
     tool: TOOLS.includes(data.tool) ? data.tool : "pen",
     brush: { color: /^#[0-9a-fA-F]{6}$/.test(data.brush?.color) ? data.brush.color : "#fec832", size: clamp(data.brush?.size || 8, 1, 48) },
     background: data.background === "transparent" ? "transparent" : "white",

@@ -43,3 +43,17 @@ test("v2 selection movement and material survive import; v1 defaults remain", ()
   moveRegion(ctx, moved.source, moved.destination);
   assert.deepEqual(calls, [["clear", 4, 5, 6, 7], ["put", "pixels", 20, 30]]);
 });
+
+test("pasted pixels and deletion replay after project import", () => {
+  const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/f4cAAAAASUVORK5CYII=";
+  const pasted = { kind: "bitmap", id: "image-1", x: 10, y: 20, w: 1, h: 1 };
+  const erased = { kind: "erase-region", rect: { x: 10, y: 20, w: 1, h: 1 } };
+  const parsed = parseProject({ ...project, version: 2, actions: [pasted, erased], bitmaps: { "image-1": png } });
+  const calls = [];
+  const ctx = { clearRect: (...args) => calls.push(["clear", ...args]), drawImage: (...args) => calls.push(["draw", ...args]) };
+  renderActions(ctx, parsed.actions, null, new Map([["image-1", "decoded image"]]));
+  assert.deepEqual(calls.at(-2), ["draw", "decoded image", 10, 20, 1, 1]);
+  assert.deepEqual(calls.at(-1), ["clear", 10, 20, 1, 1]);
+  assert.throws(() => parseProject({ ...project, version: 2, actions: [pasted], bitmaps: {} }));
+  assert.throws(() => parseProject({ ...project, version: 2, actions: [erased], bitmaps: { bad: "data:image/svg+xml;base64,AAA" } }));
+});

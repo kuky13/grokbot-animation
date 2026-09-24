@@ -23,14 +23,14 @@
       <aside class="tool-panel" aria-label="Ferramentas de desenho">
         <div class="panel-title"><span>Ferramentas</span><small>PAINT</small></div>
         <div class="tool-grid" role="group" aria-label="Ferramentas">
-          <button class="tool is-active" data-tool="pen" title="Lápis" aria-label="Lápis">✎<span>Lápis</span></button>
-          <button class="tool" data-tool="brush" title="Pincel" aria-label="Pincel">◉<span>Pincel</span></button>
-          <button class="tool" data-tool="eraser" title="Borracha">⌫<span>Borracha</span></button>
-          <button class="tool" data-tool="line" title="Linha">╱<span>Linha</span></button>
-          <button class="tool" data-tool="rect" title="Retângulo">□<span>Retângulo</span></button>
-          <button class="tool" data-tool="ellipse" title="Elipse">○<span>Elipse</span></button>
-          <button class="tool" data-tool="select" title="Selecionar e mover desenho">▧<span>Seleção</span></button>
-          <button class="tool" data-tool="pan" title="Mover área" aria-label="Mover área">✥<span>Mover</span></button>
+          <button class="tool is-active" data-tool="pen" title="Lápis (P)" aria-label="Lápis">✎<span>Lápis</span></button>
+          <button class="tool" data-tool="brush" title="Pincel (B)" aria-label="Pincel">◉<span>Pincel</span></button>
+          <button class="tool" data-tool="eraser" title="Borracha (E)">⌫<span>Borracha</span></button>
+          <button class="tool" data-tool="line" title="Linha (L)">╱<span>Linha</span></button>
+          <button class="tool" data-tool="rect" title="Retângulo (R)">□<span>Retângulo</span></button>
+          <button class="tool" data-tool="ellipse" title="Elipse (O)">○<span>Elipse</span></button>
+          <button class="tool" data-tool="select" title="Seleção (M); Ctrl/Cmd+C, X, V; Del">▧<span>Seleção</span></button>
+          <button class="tool" data-tool="pan" title="Mover área (H)" aria-label="Mover área">✥<span>Mover</span></button>
         </div>
 
         <details id="tool-settings" class="tool-settings" open>
@@ -44,8 +44,8 @@
         <label class="switch-row"><input id="use-pressure" type="checkbox" /><span>Pressão da caneta</span></label>
 
         <div class="button-stack">
-          <button id="undo-button" type="button">↶ Desfazer</button>
-          <button id="redo-button" type="button">↷ Refazer</button>
+          <button id="undo-button" type="button" title="Ctrl/Cmd+Z">↶ Desfazer</button>
+          <button id="redo-button" type="button" title="Ctrl/Cmd+Y ou Ctrl/Cmd+Shift+Z">↷ Refazer</button>
           <button id="clear-button" class="danger" type="button">Limpar canvas</button>
           <button id="reset-view" type="button">Centralizar vista</button>
         </div>
@@ -167,8 +167,8 @@
           <label class="field"><span>Imagem PNG</span><select id="png-content"><option value="combined">Desenho + Drippy</option><option value="drawing">Somente desenho</option></select></label>
           <div class="button-stack">
             <button id="export-png" type="button">Exportar PNG</button>
-            <button id="export-project" type="button">Exportar projeto</button>
-            <label class="import-label" for="import-project">Abrir projeto</label>
+            <button id="export-project" type="button" title="Ctrl/Cmd+S">Exportar projeto</button>
+            <label class="import-label" for="import-project" title="Ctrl/Cmd+O">Abrir projeto</label>
             <input id="import-project" type="file" accept=".drippypaint.json,.json,application/json" />
           </div>
         </section>

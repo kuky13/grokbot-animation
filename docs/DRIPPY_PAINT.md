@@ -17,7 +17,16 @@ Lápis, pincel, borracha e formas criam comandos concluídos. A ferramenta Sele�
 
 ## Projeto e exportação
 
-`*.drippypaint.json` usa `version: 2`, canvas 1280x720, `actions` (`stroke`/`clear`/`move-region`), ferramenta, pincel, fundo, zoom, material, estado, controles da Drippy, metadados de áudio e `timeline` (`version`, `duration`, `events`). Traços têm pontos e pressão normalizada. Projetos versão 1, inclusive o formato antigo com `strokes`, continuam aceitos. Arquivos importados têm limite de 8 MB, 5.000 ações e 150.000 pontos. O áudio não entra no JSON: reanexe o arquivo local após abrir um projeto.
+`*.drippypaint.json` usa `version: 2`, canvas 1280x720, `actions` (`stroke`/`clear`/`move-region`/`erase-region`/`bitmap`), PNGs colados, ferramenta, pincel, fundo, zoom, material, estado, controles da Drippy, metadados de áudio e `timeline` (`version`, `duration`, `events`). Traços têm pontos e pressão normalizada. Projetos versão 1, inclusive o formato antigo com `strokes`, continuam aceitos. Arquivos importados têm limite de 8 MB, 5.000 ações e 150.000 pontos. O áudio não entra no JSON: reanexe o arquivo local após abrir um projeto.
+As imagens PNG embutidas têm limite conjunto de 6 MB; uma imagem externa maior é reduzida ao tamanho do canvas antes de entrar no projeto. Se a gravação local do navegador ficar cheia, o projeto continua em memória e o indicador mostra "não salvo": exporte o JSON antes de fechar a página.
+
+## Atalhos
+
+- `Ctrl/Cmd+Z`: desfazer; `Ctrl/Cmd+Y` ou `Ctrl/Cmd+Shift+Z`: refazer.
+- `Ctrl/Cmd+A`: selecionar tudo; `Esc`: tirar a seleção; `Del`/`Backspace`: apagar a seleção.
+- `Ctrl/Cmd+C`: copiar a seleção ou todo o desenho; `Ctrl/Cmd+X`: recortar a seleção; `Ctrl/Cmd+V`: colar imagem do clipboard ou da cópia interna.
+- `P`: lápis; `B`: pincel; `E`: borracha; `M`: seleção; `L`: linha; `R`: retângulo; `O`: elipse; `H`: mover vista.
+- `Ctrl/Cmd+S`: exportar projeto; `Ctrl/Cmd+O`: abrir projeto. Atalhos não atuam enquanto um campo de texto ou controle está em edição.
 
 O PNG pode conter só o desenho ou também a Drippy. Materiais sólidos, gradientes e vidro do Character Studio aparecem na prévia, no PNG e no vídeo. Fundo branco ou transparente é configurável. A gravação exporta WebM com início, pausa, continuação, parada e descarte. Um arquivo de áudio local pode ser ouvido antes, ter volume e repetição ajustados e começar do início com a gravação. O microfone é opcional, mediante permissão do navegador; áudio local e microfone são misturados em uma faixa.
 

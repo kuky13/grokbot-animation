@@ -28,6 +28,9 @@ const character = { ...DEFAULT_MATERIAL, color: "#fec832", eyeColor: "#111111", 
 
 let actions = [];
 let redo = [];
+let bitmapSources = new Map();
+let bitmapImages = new Map();
+let internalClipboard = null;
 let draft = null;
 let selection = null;
 let selectionDrag = null;
@@ -193,7 +196,7 @@ function scheduleDraw() {
 }
 
 function rebuild() {
-  renderActions(committedCtx, actions);
+  renderActions(committedCtx, actions, null, bitmapImages);
   scheduleDraw();
 }
 
@@ -212,6 +215,8 @@ function commit(action) {
   actions.push(action);
   redo = [];
   if (action.kind === "clear") committedCtx.clearRect(0, 0, WIDTH, HEIGHT);
+  else if (action.kind === "erase-region") committedCtx.clearRect(action.rect.x, action.rect.y, action.rect.w, action.rect.h);
+  else if (action.kind === "bitmap") committedCtx.drawImage(bitmapImages.get(action.id), action.x, action.y, action.w, action.h);
   else if (action.kind === "move-region") moveRegion(committedCtx, action.source, action.destination);
   else drawStroke(committedCtx, action.stroke);
   scheduleDraw();
@@ -357,10 +362,109 @@ $("#undo-button").addEventListener("click", () => { if (actions.length) { redo.p
 $("#redo-button").addEventListener("click", () => { if (redo.length) { actions.push(redo.pop()); selection = null; showSelection(); recordEvent("redo"); rebuild(); persist(); } });
 $("#clear-button").addEventListener("click", () => { if (actions.length && actions.at(-1)?.kind !== "clear") { recordEvent("clear"); commit({ kind: "clear" }); react("clear"); } });
 
+function editing(event) {
+  return event.target instanceof Element && Boolean(event.target.closest("input, select, textarea, [contenteditable]:not([contenteditable='false'])"));
+}
+
+function reportClipboardError(error) {
+  $("#record-message").textContent = `Não foi possível colar a imagem: ${error.message}`;
+}
+
+function copyDrawing() {
+  const rect = selection || { x: 0, y: 0, w: WIDTH, h: HEIGHT };
+  const crop = document.createElement("canvas");
+  crop.width = rect.w; crop.height = rect.h;
+  crop.getContext("2d").drawImage(committed, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+  const png = crop.toDataURL("image/png");
+  if (png.length > 6_000_000) {
+    $("#record-message").textContent = "Seleção muito grande para copiar no projeto.";
+    return false;
+  }
+  internalClipboard = png;
+  if (navigator.clipboard?.write && window.ClipboardItem) {
+    navigator.clipboard.write([new ClipboardItem({ "image/png": fetch(internalClipboard).then(response => response.blob()) })]).catch(() => {});
+  }
+  return true;
+}
+
+function eraseSelection() {
+  if (!selection) return;
+  commit({ kind: "erase-region", rect: { ...selection } });
+  selection = null;
+  showSelection();
+}
+
+async function pastePng(src) {
+  const image = new Image();
+  image.src = src;
+  await image.decode();
+  const scale = Math.min(1, WIDTH / image.width, HEIGHT / image.height);
+  const w = Math.max(1, Math.round(image.width * scale));
+  const h = Math.max(1, Math.round(image.height * scale));
+  const x = Math.round(clamp(selection?.x ?? (WIDTH - w) / 2, 0, WIDTH - w));
+  const y = Math.round(clamp(selection?.y ?? (HEIGHT - h) / 2, 0, HEIGHT - h));
+  const resized = document.createElement("canvas");
+  resized.width = w; resized.height = h;
+  resized.getContext("2d").drawImage(image, 0, 0, w, h);
+  const png = resized.toDataURL("image/png");
+  if (png.length > 6_000_000) throw new Error("Imagem muito grande para o projeto");
+  let id = [...bitmapSources].find(([, value]) => value === png)?.[0];
+  const active = new Set(actions.filter(action => action.kind === "bitmap").map(action => action.id));
+  const total = [...active].reduce((size, key) => size + bitmapSources.get(key).length, 0);
+  if (!active.has(id) && total + png.length > 6_000_000) throw new Error("Projeto atingiu o limite de imagens; exporte antes de colar mais");
+  if (!id) {
+    id = crypto.randomUUID();
+    bitmapSources.set(id, png);
+    bitmapImages.set(id, resized);
+  }
+  selectTool("select");
+  commit({ kind: "bitmap", id, x, y, w, h });
+  selection = { x, y, w, h };
+  showSelection();
+}
+
+document.addEventListener("paste", event => {
+  if (editing(event)) return;
+  const items = [...(event.clipboardData?.items || [])];
+  const image = items.find(item => item.type.startsWith("image/"))?.getAsFile();
+  if (image) {
+    event.preventDefault();
+    if (image.size > 12_000_000) return reportClipboardError(new Error("Imagem maior que 12 MB"));
+    createImageBitmap(image).then(async bitmap => {
+      const scale = Math.min(1, WIDTH / bitmap.width, HEIGHT / bitmap.height);
+      const temp = document.createElement("canvas");
+      temp.width = Math.max(1, Math.round(bitmap.width * scale));
+      temp.height = Math.max(1, Math.round(bitmap.height * scale));
+      temp.getContext("2d").drawImage(bitmap, 0, 0, temp.width, temp.height);
+      bitmap.close();
+      await pastePng(temp.toDataURL("image/png"));
+    }).catch(reportClipboardError);
+  } else if (!items.some(item => item.type.startsWith("text/")) && internalClipboard) {
+    event.preventDefault();
+    pastePng(internalClipboard).catch(reportClipboardError);
+  }
+});
+
+const toolKeys = { p: "pen", b: "brush", e: "eraser", m: "select", l: "line", r: "rect", o: "ellipse", h: "pan" };
 document.addEventListener("keydown", event => {
-  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") { event.preventDefault(); $(event.shiftKey ? "#redo-button" : "#undo-button").click(); }
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") { event.preventDefault(); $("#redo-button").click(); }
+  if (editing(event) || event.altKey) return;
+  const key = event.key.toLowerCase();
+  if (event.ctrlKey || event.metaKey) {
+    const commands = {
+      z: () => $(event.shiftKey ? "#redo-button" : "#undo-button").click(),
+      y: () => $("#redo-button").click(),
+      a: () => { selectTool("select"); selection = { x: 0, y: 0, w: WIDTH, h: HEIGHT }; showSelection(); },
+      c: copyDrawing,
+      x: () => { if (selection && copyDrawing()) eraseSelection(); },
+      s: () => $("#export-project").click(),
+      o: () => $("#import-project").click(),
+    };
+    if (commands[key] && !event.repeat) { event.preventDefault(); commands[key](); }
+    return;
+  }
+  if (key === "escape" && selection) { selection = null; showSelection(); event.preventDefault(); }
+  else if (["delete", "backspace"].includes(key) && selection) { event.preventDefault(); eraseSelection(); }
+  else if (!event.shiftKey && toolKeys[key] && !event.repeat) { event.preventDefault(); selectTool(toolKeys[key]); }
 });
 
 $("#base-state").addEventListener("change", () => { baseState = $("#base-state").value; clearTimeout(reactionTimer); setRuntimeState(baseState); persist(); });
@@ -427,8 +531,10 @@ position.addEventListener("keydown", event => {
 });
 
 function projectData() {
+  const used = new Set(actions.filter(action => action.kind === "bitmap").map(action => action.id));
   return {
     version: 2, canvas: { width: WIDTH, height: HEIGHT }, actions, tool,
+    bitmaps: Object.fromEntries([...used].map(id => [id, bitmapSources.get(id)])),
     brush: { color: $("#brush-color").value, size: Number($("#brush-size").value) },
     background: $("#background").value, zoom, baseState,
     material: Object.fromEntries(["material", "color", "eyeColor", "badgeColor", "gradientPreset", "gradientStart", "gradientEnd", "gradientAngle", "glassPreset"].map(key => [key, character[key]])),
@@ -445,8 +551,18 @@ function projectData() {
   };
 }
 
-function applyProject(raw) {
+async function applyProject(raw) {
   const data = parseProject(raw);
+  const images = new Map();
+  for (const [id, png] of Object.entries(data.bitmaps)) {
+    const image = new Image();
+    image.src = png;
+    await image.decode();
+    if (image.width > WIDTH || image.height > HEIGHT) throw new Error("Imagem colada excede o canvas");
+    images.set(id, image);
+  }
+  bitmapSources = new Map(Object.entries(data.bitmaps));
+  bitmapImages = images;
   actions = data.actions;
   redo = [];
   draft = null;
@@ -500,7 +616,7 @@ $("#import-project").addEventListener("change", async event => {
     if (file.size > 8_000_000) throw new Error("Arquivo maior que 8 MB");
     const data = JSON.parse(await file.text());
     parseProject(data);
-    applyProject(data);
+    await applyProject(data);
     persist();
   } catch (error) { $("#record-message").textContent = `Não foi possível abrir o projeto: ${error.message}`; }
   finally { event.target.value = ""; }
@@ -697,7 +813,7 @@ function frame() {
 
 try {
   const raw = localStorage.getItem(storageKey);
-  if (raw) applyProject(JSON.parse(raw));
+  if (raw) applyProject(JSON.parse(raw)).catch(() => { $("#save-status").textContent = "projeto local incompatível"; });
 } catch { $("#save-status").textContent = "projeto local incompatível"; }
 $("#base-state").value = baseState;
 applyView();
