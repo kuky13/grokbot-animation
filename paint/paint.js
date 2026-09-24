@@ -478,6 +478,7 @@ function applyBotLayout() {
   position.style.top = `${botPose.y}%`;
   position.hidden = !$("#show-drippy").checked;
   position.classList.toggle("is-locked", $("#lock-drippy").checked);
+  stage.classList.toggle("hide-cursor", $("#hide-cursor").checked);
   $("#drippy-size-value").textContent = `${size} px`;
 }
 
@@ -485,7 +486,7 @@ for (const id of ["drippy-size", "drippy-x", "drippy-y"]) $("#" + id).addEventLi
   botPose = { x: Number($("#drippy-x").value), y: Number($("#drippy-y").value) };
   roamTarget = null; roamPausedUntil = performance.now() + 1800; applyBotLayout(); recordEvent("drippy.position", botPose); persist();
 });
-for (const id of ["show-drippy", "follow-brush", "react-drawing", "blink", "lock-drippy", "auto-motion", "audio-reaction", "audio-loop"]) $("#" + id).addEventListener("change", () => { applyBotLayout(); $("#audio-preview").loop = $("#audio-loop").checked; syncAudioPause(); persist(); });
+for (const id of ["show-drippy", "hide-cursor", "follow-brush", "react-drawing", "blink", "lock-drippy", "auto-motion", "audio-reaction", "audio-loop"]) $("#" + id).addEventListener("change", () => { applyBotLayout(); $("#audio-preview").loop = $("#audio-loop").checked; syncAudioPause(); persist(); });
 $("#motion-speed").addEventListener("input", persist);
 $("#reset-drippy").addEventListener("click", () => { $("#drippy-x").value = "70"; $("#drippy-y").value = "58"; botPose = { x: 70, y: 58 }; roamTarget = null; applyBotLayout(); recordEvent("drippy.position", botPose); persist(); });
 
@@ -542,7 +543,7 @@ function projectData() {
     audio: { name: audioName, volume: Number($("#audio-volume").value), loop: $("#audio-loop").checked },
     drippy: {
       x: Number($("#drippy-x").value), y: Number($("#drippy-y").value), size: Number($("#drippy-size").value),
-      visible: $("#show-drippy").checked, follow: $("#follow-brush").checked,
+      visible: $("#show-drippy").checked, hideCursor: $("#hide-cursor").checked, follow: $("#follow-brush").checked,
       reactions: $("#react-drawing").checked, blink: $("#blink").checked,
       locked: $("#lock-drippy").checked, pressure: $("#use-pressure").checked,
       autoMotion: $("#auto-motion").checked, audioReaction: $("#audio-reaction").checked,
@@ -583,7 +584,7 @@ async function applyProject(raw) {
   pan = { x: 0, y: 0 };
   for (const [id, key] of [["drippy-x", "x"], ["drippy-y", "y"], ["drippy-size", "size"]]) $("#" + id).value = String(data.drippy[key]);
   botPose = { x: data.drippy.x, y: data.drippy.y }; roamTarget = null;
-  for (const [id, key] of [["show-drippy", "visible"], ["follow-brush", "follow"], ["react-drawing", "reactions"], ["blink", "blink"], ["lock-drippy", "locked"], ["use-pressure", "pressure"], ["auto-motion", "autoMotion"], ["audio-reaction", "audioReaction"]]) $("#" + id).checked = data.drippy[key];
+  for (const [id, key] of [["show-drippy", "visible"], ["hide-cursor", "hideCursor"], ["follow-brush", "follow"], ["react-drawing", "reactions"], ["blink", "blink"], ["lock-drippy", "locked"], ["use-pressure", "pressure"], ["auto-motion", "autoMotion"], ["audio-reaction", "audioReaction"]]) $("#" + id).checked = data.drippy[key];
   $("#motion-speed").value = String(data.drippy.motionSpeed);
   Object.assign(character, data.material);
   syncMaterialControls();

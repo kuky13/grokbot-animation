@@ -132,7 +132,7 @@ export function parseProject(data) {
     },
     drippy: {
       x: clamp(data.drippy?.x ?? 70, 0, 100), y: clamp(data.drippy?.y ?? 58, 0, 100), size: clamp(data.drippy?.size || 250, 120, 420),
-      visible: data.drippy?.visible !== false, follow: data.drippy?.follow !== false,
+      visible: data.drippy?.visible !== false, hideCursor: Boolean(data.drippy?.hideCursor), follow: data.drippy?.follow !== false,
       reactions: data.drippy?.reactions !== false, blink: data.drippy?.blink !== false,
       locked: Boolean(data.drippy?.locked), pressure: Boolean(data.drippy?.pressure),
       autoMotion: data.version === 1 ? false : data.drippy?.autoMotion !== false,

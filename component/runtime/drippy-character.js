@@ -255,7 +255,7 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     const roundPhoneme = /[ouɔʊ]/i.test(phoneme);
     const widePhoneme = /[eiæɛ]/i.test(phoneme);
     const phonemeWidth = roundPhoneme ? 0.86 : widePhoneme ? 1.07 : 1;
-    const half = (14.5 + visualOpen * 4.0) * phonemeWidth;
+    const half = (expressiveMouth ? 14 + visualOpen * 8 : 14.5 + visualOpen * 4) * phonemeWidth;
     const smile = 3.2 - visualOpen * 2.2;
 
     if (visualOpen < 0.12) {
@@ -280,7 +280,13 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     engine.drippyMouth.style.fillOpacity = expressiveMouth ? "1" : "0";
     engine.drippyMouth.style.strokeWidth = expressiveMouth ? "2.6" : "3.8";
     engine.drippyMouth.style.strokeLinejoin = "round";
-    engine.drippyMouthOpen.style.opacity = "0";
+    engine.drippyMouthOpen.setAttribute("cx", String(cx));
+    engine.drippyMouthOpen.setAttribute("cy", String(y + visualOpen * 9));
+    engine.drippyMouthOpen.setAttribute("rx", (half * 0.42).toFixed(2));
+    engine.drippyMouthOpen.setAttribute("ry", (1 + visualOpen * 2.5).toFixed(2));
+    engine.drippyMouthOpen.style.fill = "#d97883";
+    engine.drippyMouthOpen.style.stroke = "none";
+    engine.drippyMouthOpen.style.opacity = expressiveMouth ? (fade * clamp((visualOpen - 0.3) * 4, 0, 1)).toFixed(3) : "0";
     return;
   }
 
