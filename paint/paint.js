@@ -2,519 +2,462 @@ import { GrokBotEngine } from "../grok-bot-engine.js";
 import { ORIGINAL_STATE_DATA } from "../original-data.js";
 import { MORPH_BY_STATE, STATE_CATALOG } from "../component/catalog.js";
 import { DEFAULT_MATERIAL } from "../component/materials.js";
+import { WIDTH, HEIGHT, drawStroke, renderActions, parseProject } from "./model.js";
+import { createRecorder } from "./recorder.js";
 
-const WIDTH = 1280;
-const HEIGHT = 720;
-const STORAGE_KEY = "drippy-paint-studio-v1";
-
-const canvas = document.querySelector("#draw-canvas");
+const $ = selector => document.querySelector(selector);
+const canvas = $("#draw-canvas");
 const ctx = canvas.getContext("2d");
-const captureCanvas = document.querySelector("#capture-canvas");
+const committed = document.createElement("canvas");
+committed.width = WIDTH;
+committed.height = HEIGHT;
+const committedCtx = committed.getContext("2d");
+const captureCanvas = $("#capture-canvas");
 const captureCtx = captureCanvas.getContext("2d");
-const stage = document.querySelector("#paint-stage");
-const svg = document.querySelector("#drippy-bot");
-const baseStateSelect = document.querySelector("#base-state");
-const brushColor = document.querySelector("#brush-color");
-const brushSize = document.querySelector("#brush-size");
-const brushSizeValue = document.querySelector("#brush-size-value");
-const reactionStatus = document.querySelector("#reaction-status");
-const strokeCount = document.querySelector("#stroke-count");
-const saveStatus = document.querySelector("#save-status");
-const pointerDot = document.querySelector("#pointer-dot");
+const stage = $("#paint-stage");
+const content = $("#stage-content");
+const position = $("#drippy-position");
+const svg = $("#drippy-bot");
+const states = new Set(STATE_CATALOG.map(state => state.id));
+const mobileSettings = matchMedia("(max-width: 760px)");
+$("#tool-settings").open = !mobileSettings.matches;
+mobileSettings.addEventListener("change", event => { $("#tool-settings").open = !event.matches; });
+const storageKey = "drippy-paint-studio-v1";
+const character = { ...DEFAULT_MATERIAL, color: "#fec832", eyeColor: "#111111", size: 250, flipX: false, pointer: true, halo: "soft", badgeColor: "#fec832", badgeScale: 1, particlesEnabled: true };
 
+let actions = [];
+let redo = [];
+let draft = null;
 let tool = "pen";
-let strokes = [];
-let redoStack = [];
-let currentStroke = null;
-let pointerInside = false;
-let lastPointer = { x: 0, y: 0 };
-let lastNearReactionAt = 0;let baseState = "idle";
+let baseState = "idle";
 let runtimeState = "idle";
+let zoom = 1;
+let pan = { x: 0, y: 0 };
+let panDrag = null;
+let botDrag = null;
+let lastClient = null;
+let lastPoint = null;
+let lastMoveAt = 0;
+let lastTimelineMove = 0;
+let reactionUntil = 0;
+let reactionPriority = 0;
+let reactionCooldown = 0;
 let reactionTimer = null;
-let recorder = null;
-let recordChunks = [];
-let recordStartedAt = 0;
-let recordTimerId = null;
-let recordingStream = null;
-let microphoneStream = null;
-let drippySnapshot = null;
-let snapshotBusy = false;
+let timelineOrigin = performance.now();
+let timeline = { version: 1, duration: 0, events: [] };
+let drawingFrame = 0;
+let animationFrame = 0;
+let snapshotPromise = null;
+let snapshotImage = null;
 let lastSnapshotAt = 0;
 
-const character = {
-  ...DEFAULT_MATERIAL,
-  eyeColor: "#111111",
-  size: 250,
-  flipX: false,
-  pointer: true,
-  halo: "soft",
-  badgeColor: "#fec832",
-  badgeScale: 1,
-  particlesEnabled: true,
-};
+function recordEvent(type, data = {}) {
+  if (timeline.events.length >= 10000) return;
+  const time = Math.round((performance.now() - timelineOrigin) / 10) / 100;
+  timeline.events.push({ time, type, ...data });
+  timeline.duration = time;
+}
 
 function configForState(id) {
   const blink = ORIGINAL_STATE_DATA.BLINK_CADENCE[id];
   return {
-    ...character,
-    interactive: true,
-    shape: "blob",
-    expressionPool: [...ORIGINAL_STATE_DATA.EXPRESSION_POOLS[id]],
-    expressionWeights: {},    expressionCadence: [...ORIGINAL_STATE_DATA.EXPRESSION_CADENCE[id]],
-    blinkCadence: blink ? [Math.min(...blink), Math.max(...blink)] : null,
+    ...character, interactive: false, shape: "blob",
+    expressionPool: [...ORIGINAL_STATE_DATA.EXPRESSION_POOLS[id]], expressionWeights: {},
+    expressionCadence: [...ORIGINAL_STATE_DATA.EXPRESSION_CADENCE[id]],
+    blinkCadence: $("#blink").checked && blink ? [Math.min(...blink), Math.max(...blink)] : null,
     morph: ["thinking", "dictating"].includes(id) ? "none" : MORPH_BY_STATE[id] || "none",
-    headX: 0,
-    headY: 0,
-    headRotation: 0,
-    scaleX: 1,
-    scaleY: 1,
-    eyeOpen: 1,
-    eyeScale: 1,
-    gazeScale: 1,
-    motionScale: 1,
-    tempo: 1,
+    headX: 0, headY: 0, headRotation: 0, scaleX: 1, scaleY: 1, eyeOpen: 1,
+    eyeScale: 1, gazeScale: 1, motionScale: 1, tempo: 1,
   };
 }
 
 const engine = new GrokBotEngine(svg, () => configForState(runtimeState));
+const REACTIONS = {
+  drawing: { state: "working", priority: 1, duration: 950 },
+  fast: { state: "excited", priority: 2, duration: 850 },
+  near: { state: "surprised", priority: 3, duration: 900 },
+  erase: { state: "curious", priority: 2, duration: 800 },
+  clear: { state: "surprised", priority: 4, duration: 1150 },
+  click: { state: "playful", priority: 4, duration: 1050 },
+  done: { state: "happy", priority: 1, duration: 700 },
+};
 
-function setRuntimeState(id, immediate = true) {
+function setRuntimeState(id) {
+  if (!states.has(id) || id === runtimeState) return;
   runtimeState = id;
-  engine.setState(id, immediate);
-  reactionStatus.textContent = `Drippy: ${id}`;
+  engine.setState(id, false);
+  $("#reaction-status").textContent = `Drippy: ${id}`;
+  recordEvent("drippy.state", { state: id });
 }
 
-function react(id, duration = 850) {
-  if (!document.querySelector("#react-drawing").checked) return;
+function react(kind) {
+  if (!$("#react-drawing").checked || !$("#show-drippy").checked) return;
+  const reaction = REACTIONS[kind];
+  const now = performance.now();
+  if (!reaction || (now < reactionUntil && reaction.priority < reactionPriority) || (now < reactionCooldown && reaction.state === runtimeState)) return;
+  reactionPriority = reaction.priority;
+  reactionUntil = now + reaction.duration;
+  reactionCooldown = now + 260;
+  setRuntimeState(reaction.state);
   clearTimeout(reactionTimer);
-  setRuntimeState(id, true);
-  reactionTimer = setTimeout(() => setRuntimeState(baseState, true), duration);
+  reactionTimer = setTimeout(() => { reactionPriority = 0; setRuntimeState(baseState); }, reaction.duration);
 }
 
 for (const state of STATE_CATALOG) {
-  const option = document.createElement("option");  option.value = state.id;
-  option.textContent = `${state.en || state.id} · ${state.zh || ""}`;
-  baseStateSelect.append(option);
+  const option = document.createElement("option");
+  option.value = state.id;
+  option.textContent = state.en || state.id;
+  $("#base-state").append(option);
 }
 
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 function pointFromEvent(event) {
   const rect = canvas.getBoundingClientRect();
-  return {
-    x: (event.clientX - rect.left) * WIDTH / rect.width,
-    y: (event.clientY - rect.top) * HEIGHT / rect.height,
-  };
+  return { x: clamp((event.clientX - rect.left) * WIDTH / rect.width, 0, WIDTH), y: clamp((event.clientY - rect.top) * HEIGHT / rect.height, 0, HEIGHT), p: event.pointerType === "pen" ? clamp(event.pressure || .5, .1, 1) : 1 };
 }
 
-function setPaintStyle(stroke) {
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.lineWidth = stroke.size;
-  ctx.strokeStyle = stroke.color;
-  ctx.fillStyle = stroke.color;
-  ctx.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
+function scheduleDraw() {
+  if (!drawingFrame) drawingFrame = requestAnimationFrame(() => {
+    drawingFrame = 0;
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    ctx.drawImage(committed, 0, 0);
+    if (draft) drawStroke(ctx, draft);
+    let visibleStrokes = 0;
+    for (const action of actions) visibleStrokes = action.kind === "clear" ? 0 : visibleStrokes + 1;
+    $("#stroke-count").textContent = `${visibleStrokes} ${visibleStrokes === 1 ? "traço" : "traços"}`;
+    $("#undo-button").disabled = !actions.length;
+    $("#redo-button").disabled = !redo.length;
+  });
 }
 
-function drawStroke(stroke) {
-  if (!stroke?.points?.length) return;
-  setPaintStyle(stroke);
-  const [start, ...rest] = stroke.points;
-
-  if (stroke.tool === "pen" || stroke.tool === "eraser") {
-    ctx.beginPath();
-    ctx.moveTo(start.x, start.y);
-    for (const point of rest) ctx.lineTo(point.x, point.y);
-    if (!rest.length) ctx.lineTo(start.x + 0.01, start.y + 0.01);
-    ctx.stroke();
-    return;
-  }  const end = stroke.points.at(-1);
-  const x = Math.min(start.x, end.x);
-  const y = Math.min(start.y, end.y);
-  const width = Math.abs(end.x - start.x);
-  const height = Math.abs(end.y - start.y);
-  ctx.beginPath();
-  if (stroke.tool === "line") {
-    ctx.moveTo(start.x, start.y);
-    ctx.lineTo(end.x, end.y);
-  } else if (stroke.tool === "rect") {
-    ctx.rect(x, y, width, height);
-  } else if (stroke.tool === "ellipse") {
-    ctx.ellipse(x + width / 2, y + height / 2, Math.max(width / 2, .1), Math.max(height / 2, .1), 0, 0, Math.PI * 2);
-  }
-  ctx.stroke();
-}function redraw() {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  for (const stroke of strokes) drawStroke(stroke);
-  if (currentStroke) drawStroke(currentStroke);
-  ctx.globalCompositeOperation = "source-over";
-  strokeCount.textContent = `${strokes.length} ${strokes.length === 1 ? "traço" : "traços"}`;
-  document.querySelector("#undo-button").disabled = strokes.length === 0;
-  document.querySelector("#redo-button").disabled = redoStack.length === 0;
+function rebuild() {
+  renderActions(committedCtx, actions);
+  scheduleDraw();
 }
 
-function drippyCenterClient() {
-  const rect = svg.getBoundingClientRect();
-  return {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2,
-    radius: rect.width * .48,
-  };
-}canvas.addEventListener("pointerdown", (event) => {
-  const point = pointFromEvent(event);
-  currentStroke = {
-    tool,
-    color: brushColor.value,
-    size: Number(brushSize.value),
-    points: [point],
-  };
-  redoStack = [];
+function applyView() {
+  content.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
+  $("#zoom").value = String(Math.round(zoom * 100));
+  $("#zoom-value").textContent = `${Math.round(zoom * 100)}%`;
+}
+
+function persist() {
+  try { localStorage.setItem(storageKey, JSON.stringify(projectData())); $("#save-status").textContent = "salvo"; }
+  catch { $("#save-status").textContent = "não salvo"; }
+}
+
+function commit(action) {
+  actions.push(action);
+  redo = [];
+  if (action.kind === "clear") committedCtx.clearRect(0, 0, WIDTH, HEIGHT);
+  else drawStroke(committedCtx, action.stroke);
+  scheduleDraw();
+  persist();
+}
+
+canvas.addEventListener("pointerdown", event => {
+  if (event.button !== 0) return;
   canvas.setPointerCapture(event.pointerId);
-  const drippy = drippyCenterClient();
-  const distance = Math.hypot(event.clientX - drippy.x, event.clientY - drippy.y);
-  react(distance < drippy.radius * 1.3 ? "surprised" : "working", 700);
-  redraw();
+  lastClient = { x: event.clientX, y: event.clientY };
+  if (tool === "pan") { panDrag = { x: event.clientX, y: event.clientY, pan: { ...pan } }; return; }
+  const point = pointFromEvent(event);
+  lastPoint = point;
+  lastMoveAt = performance.now();
+  draft = { tool, color: $("#brush-color").value, size: Number($("#brush-size").value), pressure: $("#use-pressure").checked && ["brush", "eraser"].includes(tool), points: [point] };
+  recordEvent("brush.start", { x: point.x, y: point.y, tool });
+  const x = Number($("#drippy-x").value) * WIDTH / 100;
+  const y = Number($("#drippy-y").value) * HEIGHT / 100;
+  react(Math.hypot(point.x - x, point.y - y) < Number($("#drippy-size").value) * .6 ? "near" : tool === "eraser" ? "erase" : "drawing");
+  scheduleDraw();
 });
 
-canvas.addEventListener("pointermove", (event) => {
-  const point = pointFromEvent(event);
-  lastPointer = point;
-  pointerInside = true;
-  const rect = canvas.getBoundingClientRect();
-  pointerDot.hidden = !document.querySelector("#record-cursor").checked;
-  pointerDot.style.left = `${event.clientX - rect.left}px`;
-  pointerDot.style.top = `${event.clientY - rect.top}px`;
-  if (!currentStroke) return;
-  const drippy = drippyCenterClient();
-  const distance = Math.hypot(event.clientX - drippy.x, event.clientY - drippy.y);
-  if (distance < drippy.radius * 1.2 && performance.now() - lastNearReactionAt > 650) {
-    lastNearReactionAt = performance.now();
-    react("surprised", 650);
+canvas.addEventListener("pointermove", event => {
+  lastClient = { x: event.clientX, y: event.clientY };
+  if (panDrag) {
+    pan = { x: panDrag.pan.x + event.clientX - panDrag.x, y: panDrag.pan.y + event.clientY - panDrag.y };
+    applyView();
+    return;
   }
-  if (tool === "pen" || tool === "eraser") currentStroke.points.push(point);
-  else currentStroke.points[1] = point;
-  redraw();
-});function finishStroke(event) {
-  if (!currentStroke) return;
-  if (currentStroke.points.length === 1) currentStroke.points.push({ ...currentStroke.points[0] });
-  strokes.push(currentStroke);
-  currentStroke = null;
-  try { canvas.releasePointerCapture(event.pointerId); } catch {}
-  react("happy", 900);
-  redraw();
-  persistProject();
-}
+  if (!draft) return;
+  const point = pointFromEvent(event);
+  const prior = lastPoint;
+  const now = performance.now();
+  if (["pen", "brush", "eraser"].includes(tool)) {
+    if (Math.hypot(point.x - prior.x, point.y - prior.y) < 1) return;
+    draft.points.push(point);
+  } else draft.points[1] = point;
+  const speed = Math.hypot(point.x - prior.x, point.y - prior.y) / Math.max(1, now - lastMoveAt);
+  lastPoint = point;
+  lastMoveAt = now;
+  if (now - lastTimelineMove > 40) { recordEvent("brush.move", { x: point.x, y: point.y }); lastTimelineMove = now; }
+  const x = Number($("#drippy-x").value) * WIDTH / 100;
+  const y = Number($("#drippy-y").value) * HEIGHT / 100;
+  if (Math.hypot(point.x - x, point.y - y) < Number($("#drippy-size").value) * .55) react("near");
+  else if (speed > 3) react("fast");
+  scheduleDraw();
+});
 
+function finishStroke(event) {
+  if (panDrag) { panDrag = null; return; }
+  if (!draft) return;
+  const stroke = draft;
+  draft = null;
+  recordEvent("brush.end", { x: lastPoint.x, y: lastPoint.y });
+  commit({ kind: "stroke", stroke });
+  react("done");
+}
 canvas.addEventListener("pointerup", finishStroke);
 canvas.addEventListener("pointercancel", finishStroke);
-canvas.addEventListener("pointerleave", () => {
-  pointerInside = false;
-  pointerDot.hidden = true;
-});
-canvas.addEventListener("pointerenter", () => { pointerInside = true; });
 
-document.querySelectorAll(".tool").forEach((button) => {
-  button.addEventListener("click", () => {
-    tool = button.dataset.tool;
-    document.querySelectorAll(".tool").forEach((item) => item.classList.toggle("is-active", item === button));
+function selectTool(next) {
+  tool = next;
+  document.querySelectorAll(".tool").forEach(button => {
+    const active = button.dataset.tool === tool;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
   });
+  recordEvent("tool.change", { tool });
+  persist();
+}
+document.querySelectorAll(".tool").forEach(button => button.addEventListener("click", () => selectTool(button.dataset.tool)));
+$("#brush-color").addEventListener("input", () => { recordEvent("color.change", { color: $("#brush-color").value }); persist(); });
+$("#brush-size").addEventListener("input", () => { $("#brush-size-value").textContent = `${$("#brush-size").value} px`; persist(); });
+$("#zoom").addEventListener("input", () => { zoom = Number($("#zoom").value) / 100; applyView(); persist(); });
+$("#reset-view").addEventListener("click", () => { zoom = 1; pan = { x: 0, y: 0 }; applyView(); persist(); });
+$("#background").addEventListener("change", () => { stage.classList.toggle("is-transparent", $("#background").value === "transparent"); persist(); });
+$("#use-pressure").addEventListener("change", persist);
+
+$("#undo-button").addEventListener("click", () => { if (actions.length) { redo.push(actions.pop()); recordEvent("undo"); rebuild(); persist(); } });
+$("#redo-button").addEventListener("click", () => { if (redo.length) { actions.push(redo.pop()); recordEvent("redo"); rebuild(); persist(); } });
+$("#clear-button").addEventListener("click", () => { if (actions.length && actions.at(-1)?.kind !== "clear") { recordEvent("clear"); commit({ kind: "clear" }); react("clear"); } });
+
+document.addEventListener("keydown", event => {
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") { event.preventDefault(); $(event.shiftKey ? "#redo-button" : "#undo-button").click(); }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") { event.preventDefault(); $("#redo-button").click(); }
 });
 
-brushSize.addEventListener("input", () => {
-  brushSizeValue.textContent = `${brushSize.value} px`;
-  persistProject();
-});brushColor.addEventListener("input", persistProject);
+$("#base-state").addEventListener("change", () => { baseState = $("#base-state").value; clearTimeout(reactionTimer); setRuntimeState(baseState); persist(); });
 
-document.querySelector("#undo-button").addEventListener("click", () => {
-  const stroke = strokes.pop();
-  if (stroke) redoStack.push(stroke);
-  redraw();
-  persistProject();
-});
-
-document.querySelector("#redo-button").addEventListener("click", () => {
-  const stroke = redoStack.pop();
-  if (stroke) strokes.push(stroke);
-  redraw();
-  persistProject();
-});document.querySelector("#clear-button").addEventListener("click", () => {
-  if (!strokes.length) return;
-  redoStack.push(...strokes.splice(0));
-  redraw();
-  react("surprised", 800);
-  persistProject();
-});
-
-baseStateSelect.addEventListener("change", () => {
-  baseState = baseStateSelect.value;
-  setRuntimeState(baseState, true);
-  persistProject();
-});function applyDrippyLayout() {
-  const size = Number(document.querySelector("#drippy-size").value);
+function applyBotLayout() {
+  const size = Number($("#drippy-size").value);
   character.size = size;
-  svg.style.left = `${document.querySelector("#drippy-x").value}%`;
-  svg.style.top = `${document.querySelector("#drippy-y").value}%`;
-  svg.hidden = !document.querySelector("#show-drippy").checked;
-  document.querySelector("#drippy-size-value").textContent = `${size} px`;
+  position.style.width = `${size / WIDTH * 100}%`;
+  position.style.left = `${$("#drippy-x").value}%`;
+  position.style.top = `${$("#drippy-y").value}%`;
+  position.hidden = !$("#show-drippy").checked;
+  position.classList.toggle("is-locked", $("#lock-drippy").checked);
+  $("#drippy-size-value").textContent = `${size} px`;
 }
 
-["drippy-size", "drippy-x", "drippy-y"].forEach((id) => {
-  document.querySelector(`#${id}`).addEventListener("input", () => {
-    applyDrippyLayout();
-    persistProject();
-  });
+for (const id of ["drippy-size", "drippy-x", "drippy-y"]) $("#" + id).addEventListener("input", () => { applyBotLayout(); recordEvent("drippy.position", { x: Number($("#drippy-x").value), y: Number($("#drippy-y").value) }); persist(); });
+for (const id of ["show-drippy", "follow-brush", "react-drawing", "blink", "lock-drippy"]) $("#" + id).addEventListener("change", () => { applyBotLayout(); persist(); });
+$("#reset-drippy").addEventListener("click", () => { $("#drippy-x").value = "70"; $("#drippy-y").value = "58"; applyBotLayout(); recordEvent("drippy.position", { x: 70, y: 58 }); persist(); });
+
+position.addEventListener("pointerdown", event => {
+  if (event.button !== 0) return;
+  position.setPointerCapture(event.pointerId);
+  botDrag = { x: event.clientX, y: event.clientY, bx: Number($("#drippy-x").value), by: Number($("#drippy-y").value), moved: false };
+  position.classList.add("is-dragging");
+});
+position.addEventListener("pointermove", event => {
+  if (!botDrag || $("#lock-drippy").checked) return;
+  const rect = content.getBoundingClientRect();
+  const dx = event.clientX - botDrag.x;
+  const dy = event.clientY - botDrag.y;
+  botDrag.moved ||= Math.hypot(dx, dy) > 4;
+  $("#drippy-x").value = String(Math.round(clamp(botDrag.bx + dx / rect.width * 100, 0, 100)));
+  $("#drippy-y").value = String(Math.round(clamp(botDrag.by + dy / rect.height * 100, 0, 100)));
+  applyBotLayout();
+});
+function finishBotDrag() {
+  if (!botDrag) return;
+  if (botDrag.moved) { recordEvent("drippy.position", { x: Number($("#drippy-x").value), y: Number($("#drippy-y").value) }); persist(); }
+  else react("click");
+  botDrag = null;
+  position.classList.remove("is-dragging");
+}
+position.addEventListener("pointerup", finishBotDrag);
+position.addEventListener("pointercancel", finishBotDrag);
+position.addEventListener("keydown", event => {
+  if (["Enter", " "].includes(event.key)) { event.preventDefault(); react("click"); return; }
+  if ($("#lock-drippy").checked || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+  event.preventDefault();
+  const id = ["ArrowLeft", "ArrowRight"].includes(event.key) ? "drippy-x" : "drippy-y";
+  $("#" + id).value = String(clamp(Number($("#" + id).value) + (["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 1), 0, 100));
+  applyBotLayout();
+  recordEvent("drippy.position", { x: Number($("#drippy-x").value), y: Number($("#drippy-y").value) });
+  persist();
 });
 
-document.querySelector("#show-drippy").addEventListener("change", () => {
-  applyDrippyLayout();
-  persistProject();
-});function projectData() {
+function projectData() {
   return {
-    version: 1,
-    canvas: { width: WIDTH, height: HEIGHT },
-    strokes,
-    baseState,
-    brush: { color: brushColor.value, size: Number(brushSize.value) },
+    version: 1, canvas: { width: WIDTH, height: HEIGHT }, actions, tool,
+    brush: { color: $("#brush-color").value, size: Number($("#brush-size").value) },
+    background: $("#background").value, zoom, baseState,
     drippy: {
-      size: Number(document.querySelector("#drippy-size").value),
-      x: Number(document.querySelector("#drippy-x").value),
-      y: Number(document.querySelector("#drippy-y").value),
-      visible: document.querySelector("#show-drippy").checked,
-      reactions: document.querySelector("#react-drawing").checked,
-      recordCursor: document.querySelector("#record-cursor").checked,
+      x: Number($("#drippy-x").value), y: Number($("#drippy-y").value), size: Number($("#drippy-size").value),
+      visible: $("#show-drippy").checked, follow: $("#follow-brush").checked,
+      reactions: $("#react-drawing").checked, blink: $("#blink").checked,
+      locked: $("#lock-drippy").checked, pressure: $("#use-pressure").checked,
     },
+    timeline: { ...timeline, duration: Math.round((performance.now() - timelineOrigin) / 10) / 100 },
   };
 }
 
-function persistProject() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projectData()));
-    saveStatus.textContent = "salvo";
-  } catch {
-    saveStatus.textContent = "não salvo";
-  }
-}function applyProject(data) {
-  if (!data || data.version !== 1) throw new Error("Projeto incompatível");
-  strokes = Array.isArray(data.strokes) ? data.strokes : [];
-  redoStack = [];
-  baseState = STATE_CATALOG.some((state) => state.id === data.baseState) ? data.baseState : "idle";
-  baseStateSelect.value = baseState;
-  brushColor.value = data.brush?.color || "#fec832";
-  brushSize.value = String(data.brush?.size || 8);
-  brushSizeValue.textContent = `${brushSize.value} px`;
-
-  const drippy = data.drippy || {};
-  document.querySelector("#drippy-size").value = String(drippy.size || 250);
-  document.querySelector("#drippy-x").value = String(drippy.x ?? 70);
-  document.querySelector("#drippy-y").value = String(drippy.y ?? 58);
-  document.querySelector("#show-drippy").checked = drippy.visible !== false;
-  document.querySelector("#react-drawing").checked = drippy.reactions !== false;
-  document.querySelector("#record-cursor").checked = drippy.recordCursor !== false;
-
-  applyDrippyLayout();
-  setRuntimeState(baseState, true);
-  redraw();
+function applyProject(raw) {
+  const data = parseProject(raw);
+  actions = data.actions;
+  redo = [];
+  draft = null;
+  timeline = data.timeline;
+  timelineOrigin = performance.now() - timeline.duration * 1000;
+  tool = data.tool;
+  baseState = states.has(data.baseState) ? data.baseState : "idle";
+  $("#base-state").value = baseState;
+  $("#brush-color").value = data.brush.color;
+  $("#brush-size").value = String(data.brush.size);
+  $("#brush-size-value").textContent = `${data.brush.size} px`;
+  $("#background").value = data.background;
+  stage.classList.toggle("is-transparent", data.background === "transparent");
+  zoom = data.zoom;
+  pan = { x: 0, y: 0 };
+  for (const [id, key] of [["drippy-x", "x"], ["drippy-y", "y"], ["drippy-size", "size"]]) $("#" + id).value = String(data.drippy[key]);
+  for (const [id, key] of [["show-drippy", "visible"], ["follow-brush", "follow"], ["react-drawing", "reactions"], ["blink", "blink"], ["lock-drippy", "locked"], ["use-pressure", "pressure"]]) $("#" + id).checked = data.drippy[key];
+  applyView();
+  applyBotLayout();
+  selectTool(tool);
+  setRuntimeState(baseState);
+  rebuild();
 }
 
-function loadStoredProject() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return;
-  try { applyProject(JSON.parse(raw)); } catch { localStorage.removeItem(STORAGE_KEY); }
-}function downloadBlob(blob, filename) {
+function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
   anchor.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
-
-document.querySelector("#export-project").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(projectData(), null, 2)], { type: "application/json" });
-  downloadBlob(blob, `drippy-paint-${Date.now()}.json`);
-});
-
-document.querySelector("#import-project").addEventListener("change", async (event) => {
+$("#export-project").addEventListener("click", () => downloadBlob(new Blob([JSON.stringify(projectData(), null, 2)], { type: "application/json" }), `drippy-paint-${Date.now()}.drippypaint.json`));
+$("#import-project").addEventListener("change", async event => {
   const file = event.target.files?.[0];
   if (!file) return;
   try {
-    applyProject(JSON.parse(await file.text()));
-    persistProject();
-    react("happy", 900);
-  } catch (error) {
-    alert(`Não foi possível importar: ${error.message}`);
-  } finally {
-    event.target.value = "";
-  }
-});const embeddedSvgCss = `
+    if (file.size > 8_000_000) throw new Error("Arquivo maior que 8 MB");
+    const data = JSON.parse(await file.text());
+    parseProject(data);
+    applyProject(data);
+    persist();
+  } catch (error) { $("#record-message").textContent = `Não foi possível abrir o projeto: ${error.message}`; }
+  finally { event.target.value = ""; }
+});
+
+const embeddedSvgCss = `
   .grok-bot-mark__head,.morph-part{fill:var(--fg,#f3f3f3)}
   .grok-bot-mark__eye,.drippy-eye,.drippy-mouth-open{fill:var(--bg,#111)}
-  .eye-path{display:none}
-  .drippy-ear{fill:none;stroke:var(--bg,#111);stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}
+  .eye-path{display:none}.drippy-ear{fill:none;stroke:var(--bg,#111);stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}
   .drippy-mouth{fill:none;stroke:var(--bg,#111);stroke-width:4;stroke-linecap:round}
-  .morph-ring{fill:none;stroke:var(--fg,#f3f3f3)}
-  .morph-glyph{fill:var(--fg,#f3f3f3)}
-  [hidden]{display:none}
-`;
+  .morph-ring{fill:none;stroke:var(--fg,#f3f3f3)}.morph-glyph{fill:var(--fg,#f3f3f3)}
+  [hidden]{display:none!important}`;
 
-function refreshDrippySnapshot() {
-  if (snapshotBusy || svg.hidden) return;
-  snapshotBusy = true;
+function refreshSnapshot(force = false) {
+  if (position.hidden) return Promise.resolve(null);
+  if (snapshotPromise) return snapshotPromise;
+  if (!force && performance.now() - lastSnapshotAt < 35) return Promise.resolve(snapshotImage);
+  lastSnapshotAt = performance.now();
   const clone = svg.cloneNode(true);
   clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   clone.setAttribute("width", "259");
   clone.setAttribute("height", "259");
-  clone.style.cssText = svg.style.cssText;
+  clone.setAttribute("style", "--fg:#fec832;--bg:#111");
   const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
   style.textContent = embeddedSvgCss;
   clone.querySelector("defs")?.append(style);
-  const xml = new XMLSerializer().serializeToString(clone);
-  const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml" }));
-  const image = new Image();  image.onload = () => {
-    drippySnapshot = image;
-    snapshotBusy = false;
-    URL.revokeObjectURL(url);
-  };
-  image.onerror = () => {
-    snapshotBusy = false;
-    URL.revokeObjectURL(url);
-  };
-  image.src = url;
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml" }));
+  snapshotPromise = new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => { snapshotImage = image; URL.revokeObjectURL(url); resolve(image); };
+    image.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    image.src = url;
+  }).finally(() => { snapshotPromise = null; });
+  return snapshotPromise;
 }
 
-function renderComposite(now = performance.now()) {
-  captureCtx.globalCompositeOperation = "source-over";
-  captureCtx.fillStyle = "#111111";
-  captureCtx.fillRect(0, 0, WIDTH, HEIGHT);
-  captureCtx.drawImage(canvas, 0, 0, WIDTH, HEIGHT);
-
-  if (!svg.hidden && drippySnapshot?.complete) {
-    const stageRect = stage.getBoundingClientRect();
-    const botRect = svg.getBoundingClientRect();
-    const x = (botRect.left - stageRect.left) * WIDTH / stageRect.width;
-    const y = (botRect.top - stageRect.top) * HEIGHT / stageRect.height;
-    const width = botRect.width * WIDTH / stageRect.width;
-    const height = botRect.height * HEIGHT / stageRect.height;
-    captureCtx.drawImage(drippySnapshot, x, y, width, height);
+function renderComposite({ video = false, withDrippy = true } = {}) {
+  captureCtx.clearRect(0, 0, WIDTH, HEIGHT);
+  if ($("#background").value === "white" || video) {
+    captureCtx.fillStyle = $("#background").value === "white" ? "#fff" : "#121212";
+    captureCtx.fillRect(0, 0, WIDTH, HEIGHT);
   }
-
-  if (pointerInside && document.querySelector("#record-cursor").checked) {
-    const radius = Math.max(7, Number(brushSize.value) / 2 + 3);    captureCtx.beginPath();
-    captureCtx.arc(lastPointer.x, lastPointer.y, radius, 0, Math.PI * 2);
-    captureCtx.strokeStyle = "#fec832";
-    captureCtx.lineWidth = 3;
-    captureCtx.stroke();
-  }
-
-  if (now - lastSnapshotAt > 40) {
-    lastSnapshotAt = now;
-    refreshDrippySnapshot();
+  captureCtx.drawImage(canvas, 0, 0);
+  if (withDrippy && !position.hidden && snapshotImage?.complete) {
+    const size = Number($("#drippy-size").value);
+    const x = Number($("#drippy-x").value) * WIDTH / 100 - size / 2;
+    const y = Number($("#drippy-y").value) * HEIGHT / 100 - size / 2;
+    captureCtx.drawImage(snapshotImage, x, y, size, size);
   }
 }
 
-function compositeLoop(now) {
-  renderComposite(now);
-  requestAnimationFrame(compositeLoop);
-}
-requestAnimationFrame(compositeLoop);
-
-document.querySelector("#export-png").addEventListener("click", () => {
-  renderComposite(performance.now());
-  captureCanvas.toBlob((blob) => {
-    if (blob) downloadBlob(blob, `drippy-paint-${Date.now()}.png`);
-  }, "image/png");
+$("#export-png").addEventListener("click", async () => {
+  const withDrippy = $("#png-content").value === "combined";
+  if (withDrippy) await refreshSnapshot(true);
+  renderComposite({ withDrippy });
+  captureCanvas.toBlob(blob => { if (blob) downloadBlob(blob, `drippy-paint-${Date.now()}.png`); }, "image/png");
 });
 
-function bestRecordingMime() {
-  const types = [
-    "video/webm;codecs=vp9",
-    "video/webm;codecs=vp8",
-    "video/webm",
-    "video/mp4",
-  ];
-  return types.find((type) => MediaRecorder.isTypeSupported(type)) || "";
-}function formatDuration(milliseconds) {
-  const totalSeconds = Math.floor(milliseconds / 1000);
-  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-  const seconds = String(totalSeconds % 60).padStart(2, "0");
-  return `${minutes}:${seconds}`;
-}
-
-async function startRecording() {
-  if (!window.MediaRecorder || !captureCanvas.captureStream) {
-    alert("Este navegador não suporta gravação do canvas.");
-    return;
-  }
-
-  renderComposite(performance.now());
-  recordingStream = captureCanvas.captureStream(30);
-
-  if (document.querySelector("#record-mic").checked) {
-    try {
-      microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      for (const track of microphoneStream.getAudioTracks()) recordingStream.addTrack(track);
-    } catch {
-      document.querySelector("#record-mic").checked = false;
-    }
-  }
-
-  const mimeType = bestRecordingMime();
-  recorder = new MediaRecorder(recordingStream, mimeType ? { mimeType } : undefined);
-  recordChunks = [];
-  recorder.addEventListener("dataavailable", (event) => {
-    if (event.data.size) recordChunks.push(event.data);
-  });  recorder.addEventListener("stop", () => {
-    const type = recorder.mimeType || mimeType || "video/webm";
-    const blob = new Blob(recordChunks, { type });
-    const url = URL.createObjectURL(blob);
-    const preview = document.querySelector("#recording-preview");
-    const download = document.querySelector("#download-recording");
-    if (preview.dataset.objectUrl) URL.revokeObjectURL(preview.dataset.objectUrl);
-    preview.dataset.objectUrl = url;
-    preview.src = url;
-    preview.hidden = false;
-    download.href = url;
-    download.download = `drippy-paint-${Date.now()}.${type.includes("mp4") ? "mp4" : "webm"}`;
-    download.hidden = false;
-  });
-
-  recorder.start(250);
-  recordStartedAt = performance.now();
-  document.querySelector("#record-button").classList.add("is-recording");
-  document.querySelector("#record-button").lastChild.textContent = " Parar";
-  recordTimerId = setInterval(() => {
-    document.querySelector("#record-timer").textContent = formatDuration(performance.now() - recordStartedAt);
-  }, 250);
-  react("excited", 650);
-}
-
-function stopRecording() {
-  if (!recorder || recorder.state === "inactive") return;
-  recorder.stop();
-  clearInterval(recordTimerId);
-  document.querySelector("#record-button").classList.remove("is-recording");
-  document.querySelector("#record-button").lastChild.textContent = " Gravar";
-  recordingStream?.getTracks().forEach((track) => track.stop());
-  microphoneStream?.getTracks().forEach((track) => track.stop());
-  microphoneStream = null;
-  react("happy", 900);
-}document.querySelector("#record-button").addEventListener("click", async () => {
-  if (recorder?.state === "recording") stopRecording();
-  else await startRecording();
+const preview = $("#recording-preview");
+const download = $("#download-recording");
+const recorder = createRecorder(captureCanvas, (state, seconds) => {
+  const total = Math.floor(seconds);
+  $("#record-timer").textContent = `${String(Math.floor(total / 3600)).padStart(2, "0")}:${String(Math.floor(total / 60) % 60).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+  $("#record-button").hidden = state !== "inactive";
+  $("#pause-button").hidden = state === "inactive";
+  $("#pause-button").textContent = state === "paused" ? "Continuar" : "Pausar";
+  $("#stop-button").hidden = state === "inactive";
+  $("#discard-button").hidden = state === "inactive";
+  $("#record-message").textContent = state === "recording" ? "Gravando desenho e Drippy" : state === "paused" ? "Gravação pausada" : "Pronto para gravar";
+}, url => {
+  preview.hidden = !url;
+  download.hidden = !url;
+  if (url) { preview.src = url; download.href = url; }
+  else { preview.removeAttribute("src"); preview.load(); download.removeAttribute("href"); }
+  download.download = `drippy-paint-${Date.now()}.webm`;
 });
 
-["react-drawing", "record-cursor"].forEach((id) => {
-  document.querySelector(`#${id}`).addEventListener("change", () => {
-    if (id === "record-cursor" && !document.querySelector("#record-cursor").checked) pointerDot.hidden = true;
-    persistProject();
-  });
+$("#record-button").addEventListener("click", async () => {
+  try {
+    await refreshSnapshot(true);
+    renderComposite({ video: true });
+    await recorder.start($("#record-mic").checked);
+  } catch (error) { $("#record-message").textContent = error.message; }
 });
+$("#pause-button").addEventListener("click", () => recorder.state === "paused" ? recorder.resume() : recorder.pause());
+$("#stop-button").addEventListener("click", () => recorder.stop());
+$("#discard-button").addEventListener("click", () => recorder.discard());
 
-baseStateSelect.value = baseState;
-loadStoredProject();
-applyDrippyLayout();
-setRuntimeState(baseState, true);
-redraw();
+function frame() {
+  engine.pointer.active = $("#follow-brush").checked && Boolean(lastClient);
+  if (lastClient) { engine.pointer.clientX = lastClient.x; engine.pointer.clientY = lastClient.y; }
+  if (recorder.state === "recording") { renderComposite({ video: true }); refreshSnapshot(); }
+  animationFrame = requestAnimationFrame(frame);
+}
+
+try {
+  const raw = localStorage.getItem(storageKey);
+  if (raw) applyProject(JSON.parse(raw));
+} catch { $("#save-status").textContent = "projeto local incompatível"; }
+$("#base-state").value = baseState;
+applyView();
+applyBotLayout();
+rebuild();
+recordEvent("drippy.state", { state: baseState });
+frame();
 
 window.addEventListener("beforeunload", () => {
-  if (recorder?.state === "recording") recorder.stop();
+  clearTimeout(reactionTimer);
+  cancelAnimationFrame(animationFrame);
+  cancelAnimationFrame(drawingFrame);
+  recorder.destroy();
   engine.destroy();
 });

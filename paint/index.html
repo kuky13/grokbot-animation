@@ -23,20 +23,33 @@
       <aside class="tool-panel" aria-label="Ferramentas de desenho">
         <div class="panel-title"><span>Ferramentas</span><small>PAINT</small></div>
         <div class="tool-grid" role="group" aria-label="Ferramentas">
-          <button class="tool is-active" data-tool="pen" title="Pincel">✎<span>Pincel</span></button>
+          <button class="tool is-active" data-tool="pen" title="Lápis" aria-label="Lápis">✎<span>Lápis</span></button>
+          <button class="tool" data-tool="brush" title="Pincel" aria-label="Pincel">◉<span>Pincel</span></button>
           <button class="tool" data-tool="eraser" title="Borracha">⌫<span>Borracha</span></button>
           <button class="tool" data-tool="line" title="Linha">╱<span>Linha</span></button>
-          <button class="tool" data-tool="rect" title="Retângulo">□<span>Retângulo</span></button>          <button class="tool" data-tool="ellipse" title="Elipse">○<span>Elipse</span></button>
+          <button class="tool" data-tool="rect" title="Retângulo">□<span>Retângulo</span></button>
+          <button class="tool" data-tool="ellipse" title="Elipse">○<span>Elipse</span></button>
+          <button class="tool" data-tool="pan" title="Mover área" aria-label="Mover área">✥<span>Mover</span></button>
         </div>
+
+        <details id="tool-settings" class="tool-settings" open>
+          <summary>Ajustes e histórico</summary>
+          <div class="tool-settings-body">
 
         <label class="field"><span>Cor</span><input id="brush-color" type="color" value="#fec832" /></label>
         <label class="field"><span>Espessura</span><input id="brush-size" type="range" min="1" max="48" value="8" /><output id="brush-size-value">8 px</output></label>
+        <label class="field"><span>Zoom</span><input id="zoom" type="range" min="50" max="300" step="10" value="100" /><output id="zoom-value">100%</output></label>
+        <label class="field"><span>Fundo</span><select id="background"><option value="white">Branco</option><option value="transparent">Transparente</option></select></label>
+        <label class="switch-row"><input id="use-pressure" type="checkbox" /><span>Pressão da caneta</span></label>
 
         <div class="button-stack">
           <button id="undo-button" type="button">↶ Desfazer</button>
           <button id="redo-button" type="button">↷ Refazer</button>
           <button id="clear-button" class="danger" type="button">Limpar canvas</button>
+          <button id="reset-view" type="button">Centralizar vista</button>
         </div>
+          </div>
+        </details>
       </aside>
 
       <section class="workspace-card">
@@ -46,15 +59,19 @@
             <h1>Drippy Paint Studio</h1>
           </div>
           <div class="record-controls">
-            <span id="record-timer" class="record-timer">00:00</span>
+            <span id="record-timer" class="record-timer">00:00:00</span>
             <button id="record-button" class="record-button" type="button"><span></span> Gravar</button>
+            <button id="pause-button" type="button" hidden>Pausar</button>
+            <button id="stop-button" type="button" hidden>Parar</button>
+            <button id="discard-button" type="button" hidden>Descartar</button>
           </div>
         </div>
 
         <div id="paint-stage" class="paint-stage">
+          <div id="stage-content" class="stage-content">
           <div class="stage-grid" aria-hidden="true"></div>
           <canvas id="draw-canvas" width="1280" height="720" aria-label="Canvas de desenho"></canvas>
-
+          <div id="drippy-position" class="drippy-position" role="button" tabindex="0" aria-label="Mover ou ativar Drippy">
           <svg id="drippy-bot" class="drippy-bot" data-state="idle" viewBox="-15 -15 259 259"
             xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Drippy animada">
             <defs><clipPath id="paint-head-clip"><path id="head-clip-path" /></clipPath></defs>
@@ -88,7 +105,9 @@
               <circle id="notify-badge" cx="114.2705" cy="114.2705" r="0" hidden />
             </g>
             <g id="particles-front" aria-hidden="true"></g>
-          </svg>          <div id="pointer-dot" class="pointer-dot" hidden></div>
+          </svg>
+          </div>
+          </div>
           <canvas id="capture-canvas" width="1280" height="720" hidden></canvas>
         </div>
 
@@ -107,24 +126,29 @@
           <label class="field"><span>Posição X</span><input id="drippy-x" type="range" min="8" max="92" value="70" /></label>
           <label class="field"><span>Posição Y</span><input id="drippy-y" type="range" min="10" max="90" value="58" /></label>
           <label class="switch-row"><input id="show-drippy" type="checkbox" checked /><span>Mostrar Drippy</span></label>
+          <label class="switch-row"><input id="follow-brush" type="checkbox" checked /><span>Seguir pincel</span></label>
           <label class="switch-row"><input id="react-drawing" type="checkbox" checked /><span>Reagir ao desenho</span></label>
-          <label class="switch-row"><input id="record-cursor" type="checkbox" checked /><span>Gravar cursor/pincel</span></label>
+          <label class="switch-row"><input id="blink" type="checkbox" checked /><span>Piscar</span></label>
+          <label class="switch-row"><input id="lock-drippy" type="checkbox" /><span>Travar posição</span></label>
+          <button id="reset-drippy" type="button">Reposicionar Drippy</button>
           <label class="switch-row"><input id="record-mic" type="checkbox" /><span>Gravar microfone</span></label>
         </section>
 
         <section>
           <div class="panel-title"><span>Projeto</span><small>JSON</small></div>
+          <label class="field"><span>Imagem PNG</span><select id="png-content"><option value="combined">Desenho + Drippy</option><option value="drawing">Somente desenho</option></select></label>
           <div class="button-stack">
             <button id="export-png" type="button">Exportar PNG</button>
             <button id="export-project" type="button">Exportar projeto</button>
-            <label class="import-label" for="import-project">Importar projeto</label>
-            <input id="import-project" type="file" accept=".json,application/json" />
+            <label class="import-label" for="import-project">Abrir projeto</label>
+            <input id="import-project" type="file" accept=".drippypaint.json,.json,application/json" />
           </div>
-        </section>        <section class="recording-panel">
+        </section>
+        <section class="recording-panel">
           <div class="panel-title"><span>Última gravação</span><small>VIDEO</small></div>
           <video id="recording-preview" controls playsinline hidden></video>
           <a id="download-recording" class="download-button" hidden>Baixar gravação</a>
-          <p class="hint">A gravação combina desenho + animação da Drippy. O formato depende do navegador.</p>
+          <p id="record-message" class="hint" role="status" aria-live="polite">Desenho e Drippy no mesmo vídeo WebM.</p>
         </section>
       </aside>
     </main>
