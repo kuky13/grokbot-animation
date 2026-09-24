@@ -1,6 +1,9 @@
+import { DEFAULT_MATERIAL, GLASS_PRESETS, GRADIENT_PRESETS, MATERIAL_IDS } from "../component/materials.js";
+
 export const WIDTH = 1280;
 export const HEIGHT = 720;
-export const TOOLS = ["pen", "brush", "eraser", "line", "rect", "ellipse", "pan"];
+export const DRAW_TOOLS = ["pen", "brush", "eraser", "line", "rect", "ellipse"];
+export const TOOLS = [...DRAW_TOOLS, "select", "pan"];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
 
@@ -49,19 +52,31 @@ export function renderActions(ctx, actions, draft = null) {
   for (const action of actions) {
     if (action.kind === "clear") ctx.clearRect(0, 0, WIDTH, HEIGHT);
     else if (action.kind === "stroke") drawStroke(ctx, action.stroke);
+    else if (action.kind === "move-region") moveRegion(ctx, action.source, action.destination);
   }
   if (draft) drawStroke(ctx, draft);
 }
 
+export function moveRegion(ctx, source, destination) {
+  const pixels = ctx.getImageData(source.x, source.y, source.w, source.h);
+  ctx.clearRect(source.x, source.y, source.w, source.h);
+  ctx.putImageData(pixels, destination.x, destination.y);
+}
+
 export function parseProject(data) {
-  if (!data || data.version !== 1 || data.canvas?.width !== WIDTH || data.canvas?.height !== HEIGHT) throw new Error("Formato ou dimensões incompatíveis");
+  if (!data || ![1, 2].includes(data.version) || data.canvas?.width !== WIDTH || data.canvas?.height !== HEIGHT) throw new Error("Formato ou dimensões incompatíveis");
   const source = data.actions ?? (Array.isArray(data.strokes) ? data.strokes.map(stroke => ({ kind: "stroke", stroke })) : null);
   if (!Array.isArray(source) || source.length > 5000) throw new Error("Histórico inválido ou muito grande");
   let pointCount = 0;
   const actions = source.map(action => {
     if (action.kind === "clear") return { kind: "clear" };
+    if (action.kind === "move-region") {
+      const { source: s, destination: d } = action;
+      if (![s?.x, s?.y, s?.w, s?.h, d?.x, d?.y].every(Number.isInteger) || s.w < 1 || s.h < 1 || s.x < 0 || s.y < 0 || d.x < 0 || d.y < 0 || s.x + s.w > WIDTH || s.y + s.h > HEIGHT || d.x + s.w > WIDTH || d.y + s.h > HEIGHT) throw new Error("Seleção inválida");
+      return { kind: "move-region", source: { x: s.x, y: s.y, w: s.w, h: s.h }, destination: { x: d.x, y: d.y } };
+    }
     const stroke = action.stroke;
-    if (action.kind !== "stroke" || !stroke || !TOOLS.slice(0, -1).includes(stroke.tool) || !Array.isArray(stroke.points) || !stroke.points.length) throw new Error("Traço inválido");
+    if (action.kind !== "stroke" || !stroke || !DRAW_TOOLS.includes(stroke.tool) || !Array.isArray(stroke.points) || !stroke.points.length) throw new Error("Traço inválido");
     pointCount += stroke.points.length;
     if (pointCount > 150000 || !/^#[0-9a-fA-F]{6}$/.test(stroke.color)) throw new Error("Projeto inválido ou muito grande");
     return { kind: "stroke", stroke: {
@@ -73,6 +88,8 @@ export function parseProject(data) {
     } };
   });
   const timeline = data.timeline;
+  const paint = data.material || {};
+  const hex = (value, fallback) => /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
   return {
     actions,
     tool: TOOLS.includes(data.tool) ? data.tool : "pen",
@@ -80,12 +97,25 @@ export function parseProject(data) {
     background: data.background === "transparent" ? "transparent" : "white",
     zoom: clamp(data.zoom || 1, .5, 3),
     baseState: data.baseState,
+    material: {
+      material: MATERIAL_IDS.includes(paint.material) ? paint.material : "solid",
+      color: hex(paint.color, data.version === 1 ? "#fec832" : DEFAULT_MATERIAL.color),
+      eyeColor: hex(paint.eyeColor, "#111111"), badgeColor: hex(paint.badgeColor, "#fec832"),
+      gradientPreset: paint.gradientPreset === "custom" || GRADIENT_PRESETS.some(preset => preset.id === paint.gradientPreset) ? paint.gradientPreset : DEFAULT_MATERIAL.gradientPreset,
+      gradientStart: hex(paint.gradientStart, DEFAULT_MATERIAL.gradientStart), gradientEnd: hex(paint.gradientEnd, DEFAULT_MATERIAL.gradientEnd),
+      gradientAngle: clamp(paint.gradientAngle ?? DEFAULT_MATERIAL.gradientAngle, 0, 360),
+      glassPreset: GLASS_PRESETS.some(preset => preset.id === paint.glassPreset) ? paint.glassPreset : DEFAULT_MATERIAL.glassPreset,
+    },
     drippy: {
       x: clamp(data.drippy?.x ?? 70, 0, 100), y: clamp(data.drippy?.y ?? 58, 0, 100), size: clamp(data.drippy?.size || 250, 120, 420),
       visible: data.drippy?.visible !== false, follow: data.drippy?.follow !== false,
       reactions: data.drippy?.reactions !== false, blink: data.drippy?.blink !== false,
       locked: Boolean(data.drippy?.locked), pressure: Boolean(data.drippy?.pressure),
+      autoMotion: data.version === 1 ? false : data.drippy?.autoMotion !== false,
+      audioReaction: data.version === 1 ? false : data.drippy?.audioReaction !== false,
+      motionSpeed: clamp(data.drippy?.motionSpeed ?? 1, .5, 2),
     },
+    audio: { name: String(data.audio?.name || "").slice(0, 200), volume: clamp(data.audio?.volume ?? 1, 0, 1), loop: Boolean(data.audio?.loop) },
     timeline: Array.isArray(timeline?.events) ? { version: 1, duration: clamp(timeline.duration, 0, 86400), events: timeline.events.slice(0, 10000).filter(event => Number.isFinite(event.time) && typeof event.type === "string") } : { version: 1, duration: 0, events: [] },
   };
 }

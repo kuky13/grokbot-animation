@@ -56,7 +56,7 @@ button, .import-label, .download-button { cursor: pointer; }
 .field input[type="range"] { width: 100%; accent-color: var(--accent); }
 .field input[type="color"] { width: 100%; height: 38px; padding: 4px; }
 .field select { width: 100%; padding: 9px 10px; }
-.field output { justify-self: end; margin-top: -25px; pointer-events: none; color: var(--text); }
+.field output { justify-self: end; pointer-events: none; color: var(--text); }
 .button-stack { display: grid; gap: 8px; margin-top: 14px; }
 .button-stack button, .import-label, .download-button { padding: 10px 12px; text-align: center; }
 button:hover, .import-label:hover, .download-button:hover { border-color: #555; }
@@ -94,6 +94,9 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 }
 .drippy-position.is-dragging { cursor: grabbing; }
 .drippy-position.is-locked { cursor: default; }
+.selection-box { position: absolute; z-index: 5; border: 2px dashed #288de0; background: rgba(40,141,224,.13); pointer-events: none; }
+.selection-box[hidden], #gradient-options[hidden], #solid-options[hidden] { display: none; }
+#draw-canvas.is-selecting { cursor: move; }
 .drippy-bot {
   --fg: #fec832; --bg: #111; --bot-size: 250px;
   width: 100%; height: 100%; overflow: visible; pointer-events: none;
@@ -114,6 +117,11 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 #notify-badge { opacity: 1; transform: none; transition: none; }
 .import-label { display: block; }
 #import-project { display: none; }
+#audio-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+#audio-file:focus-visible + .hint { outline: 2px solid var(--accent); }
+#audio-name, #record-message { overflow-wrap: anywhere; }
+#audio-preview { width: 100%; height: 40px; margin-top: 10px; }
+#reset-drippy { display: block; width: 100%; padding: 10px; margin-top: 12px; }
 .recording-panel video { width: 100%; border-radius: 10px; background: #000; margin-bottom: 8px; }
 .download-button { display: block; color: var(--text); text-decoration: none; background: rgba(254,200,50,.12); border-color: rgba(254,200,50,.4); }
 .record-controls [hidden], .drippy-position[hidden], .recording-panel [hidden], .pointer-dot[hidden] { display: none !important; }
@@ -121,7 +129,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .hint { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 @media (max-width: 1180px) {
   .studio-layout { grid-template-columns: 160px minmax(0,1fr); }
-  .inspector { grid-column: 1 / -1; position: static; grid-template-columns: repeat(3,minmax(0,1fr)); max-height: none; }
+  .inspector { grid-column: 1 / -1; position: static; grid-template-columns: repeat(2,minmax(0,1fr)); max-height: none; }
   .inspector section + section { border-top: 0; padding-top: 0; border-left: 1px solid var(--line); padding-left: 16px; }
 }
 @media (max-width: 760px) {
@@ -137,7 +145,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .workspace-card { order: 2; }
   .inspector { order: 3; display: grid; grid-template-columns: 1fr; }
   .inspector section + section { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 16px; }
-  .tool-grid { grid-template-columns: repeat(7,minmax(0,1fr)); }
+  .tool-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
   .tool { min-height: 44px; font-size: 18px; }
   .tool span { display: none; }
   .workspace-toolbar { align-items: flex-end; }

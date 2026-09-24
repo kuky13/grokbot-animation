@@ -13,16 +13,16 @@ O canvas guarda apenas o desenho. A Drippy é o SVG do runtime, sobreposto ao wo
 
 ## Desenho e reações
 
-Lápis, pincel, borracha e formas criam comandos concluídos. Desfazer/refazer move comandos entre dois históricos; limpar cria um comando reversível. O zoom e a ferramenta Mover afetam a vista, não as coordenadas salvas. A Drippy pode ser arrastada ou movida com as setas quando tem foco. O engine existente recebe a posição do último ponteiro para o olhar. Reações usam estados reais do catálogo (`working`, `excited`, `surprised`, `curious`, `playful`, `happy`) com prioridade e cooldown; o olhar atualiza sem mudar estado a cada movimento.
+Lápis, pincel, borracha e formas criam comandos concluídos. A ferramenta Seleção recorta pixels de um retângulo e os move dentro do canvas; cada movimento entra no histórico e pode ser desfeito/refeito. Limpar também cria um comando reversível. O zoom e a ferramenta Mover afetam a vista, não as coordenadas salvas. A Drippy pode ser arrastada ou movida com as setas quando tem foco. Ela pode passear automaticamente, seguir o pincel e reagir ao desenho ou ao áudio; são controles independentes. Travar posição desliga arraste e passeio. O engine existente recebe a posição do último ponteiro para o olhar. Reações usam estados reais do catálogo com prioridade e intervalo controlado.
 
 ## Projeto e exportação
 
-`*.drippypaint.json` usa `version: 1`, canvas 1280x720, `actions` (`stroke`/`clear`), ferramenta, pincel, fundo, zoom, estado e controles da Drippy e `timeline` (`version`, `duration`, `events`). Traços têm pontos e pressão normalizada. Projetos antigos da primeira versão com `strokes` são aceitos. Arquivos importados têm limite de 8 MB, 5.000 ações e 150.000 pontos.
+`*.drippypaint.json` usa `version: 2`, canvas 1280x720, `actions` (`stroke`/`clear`/`move-region`), ferramenta, pincel, fundo, zoom, material, estado, controles da Drippy, metadados de áudio e `timeline` (`version`, `duration`, `events`). Traços têm pontos e pressão normalizada. Projetos versão 1, inclusive o formato antigo com `strokes`, continuam aceitos. Arquivos importados têm limite de 8 MB, 5.000 ações e 150.000 pontos. O áudio não entra no JSON: reanexe o arquivo local após abrir um projeto.
 
-O PNG pode conter só o desenho ou também a Drippy. Fundo branco ou transparente é configurável. A gravação exporta WebM com início, pausa, continuação, parada e descarte. Microfone é opcional, mediante permissão do navegador.
+O PNG pode conter só o desenho ou também a Drippy. Materiais sólidos, gradientes e vidro do Character Studio aparecem na prévia, no PNG e no vídeo. Fundo branco ou transparente é configurável. A gravação exporta WebM com início, pausa, continuação, parada e descarte. Um arquivo de áudio local pode ser ouvido antes, ter volume e repetição ajustados e começar do início com a gravação. O microfone é opcional, mediante permissão do navegador; áudio local e microfone são misturados em uma faixa.
 
 ## Limitações
 
-MediaRecorder WebM não está disponível em todos os navegadores; neste caso a interface apresenta a indisponibilidade, sem prometer MP4. A rasterização SVG pode ter taxa efetiva inferior a 60 fps em aparelhos lentos. A câmera de zoom/pan é apenas de edição: PNG e vídeo exportam a composição completa em 1280x720. Não há TTS, nuvem, colisão física ou edição não destrutiva de cada ponto após concluir um traço. A futura física pode consumir os comandos do modelo sem modificar o runtime SVG.
+MediaRecorder WebM não está disponível em todos os navegadores; neste caso a interface apresenta a indisponibilidade, sem prometer MP4. A rasterização SVG pode ter taxa efetiva inferior a 60 fps em aparelhos lentos. A câmera de zoom/pan é apenas de edição: PNG e vídeo exportam a composição completa em 1280x720. A seleção move pixels, não redimensiona objetos; a boca reage à intensidade, não a fonemas. Não há TTS, nuvem nem colisão física.
 
 Execute `npm test` e `npm run build:static` antes de publicar. Não altere o pacote standalone para desenvolver o Paint.

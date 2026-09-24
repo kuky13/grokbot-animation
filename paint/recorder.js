@@ -1,7 +1,6 @@
 export function createRecorder(canvas, onStatus, onVideo) {
   let recorder = null;
   let stream = null;
-  let mic = null;
   let url = null;
   let startedAt = 0;
   let pausedAt = 0;
@@ -13,14 +12,13 @@ export function createRecorder(canvas, onStatus, onVideo) {
   const emit = () => onStatus(recorder?.state || "inactive", elapsed());
   const cleanup = () => {
     clearInterval(timer);
-    stream?.getTracks().forEach(track => track.stop());
-    mic?.getTracks().forEach(track => track.stop());
-    stream = mic = null;
+    stream?.getVideoTracks().forEach(track => track.stop());
+    stream = null;
   };
 
   return {
     get state() { return recorder?.state || "inactive"; },
-    async start(withMic = false) {
+    async start(audioTrack = null) {
       if (recorder?.state !== "inactive" && recorder) return;
       if (!window.MediaRecorder || !canvas.captureStream) throw new Error("Este navegador não suporta gravação de vídeo do canvas.");
       const mimeType = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(type => MediaRecorder.isTypeSupported(type));
@@ -28,10 +26,7 @@ export function createRecorder(canvas, onStatus, onVideo) {
       discard = false;
       try {
         stream = canvas.captureStream(60);
-        if (withMic) {
-          mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mic.getAudioTracks().forEach(track => stream.addTrack(track));
-        }
+        if (audioTrack) stream.addTrack(audioTrack);
         recorder = new MediaRecorder(stream, { mimeType });
         const chunks = [];
         recorder.addEventListener("dataavailable", event => { if (event.data.size) chunks.push(event.data); });
