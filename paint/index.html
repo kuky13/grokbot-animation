@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Drippy Paint Studio — desenhe, anime e grave a Drippy em tempo real." />
+  <title>Drippy Paint Studio</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./paint.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="../"><span class="brand-mark"></span><span>Drippy Studio</span></a>
+      <div class="topbar-copy"><strong>Paint + Recorder</strong><span>desenho reativo com a Drippy</span></div>
+      <div class="topbar-actions">
+        <span id="save-status" class="save-status">salvo</span>
+        <a class="ghost-button" href="../">← Character Studio</a>
+      </div>
+    </header>
+
+    <main class="studio-layout">
+      <aside class="tool-panel" aria-label="Ferramentas de desenho">
+        <div class="panel-title"><span>Ferramentas</span><small>PAINT</small></div>
+        <div class="tool-grid" role="group" aria-label="Ferramentas">
+          <button class="tool is-active" data-tool="pen" title="Pincel">✎<span>Pincel</span></button>
+          <button class="tool" data-tool="eraser" title="Borracha">⌫<span>Borracha</span></button>
+          <button class="tool" data-tool="line" title="Linha">╱<span>Linha</span></button>
+          <button class="tool" data-tool="rect" title="Retângulo">□<span>Retângulo</span></button>          <button class="tool" data-tool="ellipse" title="Elipse">○<span>Elipse</span></button>
+        </div>
+
+        <label class="field"><span>Cor</span><input id="brush-color" type="color" value="#fec832" /></label>
+        <label class="field"><span>Espessura</span><input id="brush-size" type="range" min="1" max="48" value="8" /><output id="brush-size-value">8 px</output></label>
+
+        <div class="button-stack">
+          <button id="undo-button" type="button">↶ Desfazer</button>
+          <button id="redo-button" type="button">↷ Refazer</button>
+          <button id="clear-button" class="danger" type="button">Limpar canvas</button>
+        </div>
+      </aside>
+
+      <section class="workspace-card">
+        <div class="workspace-toolbar">
+          <div>
+            <span class="eyebrow">LIVE CANVAS · 16:9</span>
+            <h1>Drippy Paint Studio</h1>
+          </div>
+          <div class="record-controls">
+            <span id="record-timer" class="record-timer">00:00</span>
+            <button id="record-button" class="record-button" type="button"><span></span> Gravar</button>
+          </div>
+        </div>
+
+        <div id="paint-stage" class="paint-stage">
+          <div class="stage-grid" aria-hidden="true"></div>
+          <canvas id="draw-canvas" width="1280" height="720" aria-label="Canvas de desenho"></canvas>
+
+          <svg id="drippy-bot" class="drippy-bot" data-state="idle" viewBox="-15 -15 259 259"
+            xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Drippy animada">
+            <defs><clipPath id="paint-head-clip"><path id="head-clip-path" /></clipPath></defs>
+            <g id="particles-back" aria-hidden="true"></g>
+            <path class="grok-bot-mark__head morph-head" hidden />
+            <path class="grok-bot-mark__head morph-head" hidden />            <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="morph-ring" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+            <circle class="grok-bot-mark__head morph-part" cx="114.2705" cy="114.2705" r="0" hidden />
+            <path class="morph-glyph" hidden />
+            <path class="morph-glyph" hidden />
+            <path class="morph-glyph" hidden />
+            <g id="bot-transform">
+              <path id="head-path" class="grok-bot-mark__head" />
+              <g clip-path="url(#paint-head-clip)">
+                <path class="drippy-ear drippy-ear--left" d="M 73 78 Q 76 72 78 69 Q 80 72 83 78" />
+                <path class="drippy-ear drippy-ear--right" d="M 145.54 78 Q 148.54 72 150.54 69 Q 152.54 72 155.54 78" />
+                <path class="grok-bot-mark__eye eye-path" />
+                <path class="grok-bot-mark__eye eye-path" />
+                <ellipse class="drippy-eye drippy-eye--left" cx="78" cy="108" rx="7" ry="7" />
+                <ellipse class="drippy-eye drippy-eye--right" cx="150.54" cy="108" rx="7" ry="7" />
+                <path class="drippy-mouth" d="M 96 150 Q 114.27 158 132.5 150" />
+                <ellipse class="drippy-mouth-open" cx="114.27" cy="153" rx="6" ry="3" opacity="0" />
+              </g>
+              <circle id="notify-badge" cx="114.2705" cy="114.2705" r="0" hidden />
+            </g>
+            <g id="particles-front" aria-hidden="true"></g>
+          </svg>          <div id="pointer-dot" class="pointer-dot" hidden></div>
+          <canvas id="capture-canvas" width="1280" height="720" hidden></canvas>
+        </div>
+
+        <div class="canvas-footer">
+          <span id="reaction-status">Drippy: idle</span>
+          <span>1280 × 720</span>
+          <span id="stroke-count">0 traços</span>
+        </div>
+      </section>
+
+      <aside class="inspector" aria-label="Controles da Drippy e exportação">
+        <section>
+          <div class="panel-title"><span>Drippy</span><small>LIVE</small></div>
+          <label class="field"><span>Estado base</span><select id="base-state"></select></label>
+          <label class="field"><span>Tamanho</span><input id="drippy-size" type="range" min="120" max="420" value="250" /><output id="drippy-size-value">250 px</output></label>
+          <label class="field"><span>Posição X</span><input id="drippy-x" type="range" min="8" max="92" value="70" /></label>
+          <label class="field"><span>Posição Y</span><input id="drippy-y" type="range" min="10" max="90" value="58" /></label>
+          <label class="switch-row"><input id="show-drippy" type="checkbox" checked /><span>Mostrar Drippy</span></label>
+          <label class="switch-row"><input id="react-drawing" type="checkbox" checked /><span>Reagir ao desenho</span></label>
+          <label class="switch-row"><input id="record-cursor" type="checkbox" checked /><span>Gravar cursor/pincel</span></label>
+          <label class="switch-row"><input id="record-mic" type="checkbox" /><span>Gravar microfone</span></label>
+        </section>
+
+        <section>
+          <div class="panel-title"><span>Projeto</span><small>JSON</small></div>
+          <div class="button-stack">
+            <button id="export-png" type="button">Exportar PNG</button>
+            <button id="export-project" type="button">Exportar projeto</button>
+            <label class="import-label" for="import-project">Importar projeto</label>
+            <input id="import-project" type="file" accept=".json,application/json" />
+          </div>
+        </section>        <section class="recording-panel">
+          <div class="panel-title"><span>Última gravação</span><small>VIDEO</small></div>
+          <video id="recording-preview" controls playsinline hidden></video>
+          <a id="download-recording" class="download-button" hidden>Baixar gravação</a>
+          <p class="hint">A gravação combina desenho + animação da Drippy. O formato depende do navegador.</p>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="./paint.js"></script>
+</body>
+</html>

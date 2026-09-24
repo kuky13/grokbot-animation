@@ -26,5 +26,6 @@ cp \
   "$output_dir/"
 cp -R "$repo_dir/component" "$output_dir/component"
 cp -R "$repo_dir/aurora-orb" "$output_dir/aurora-orb"
+cp -R "$repo_dir/paint" "$output_dir/paint"
 
 echo "$output_dir"
