@@ -37,6 +37,8 @@ test("v2 selection movement and material survive import; v1 defaults remain", ()
   assert.equal(parsed.material.gradientStart, "#112233");
   assert.equal(parsed.audio.name, "music.ogg");
   assert.equal(parseProject(project).drippy.autoMotion, false);
+  assert.equal(parseProject({ ...project, version: 2, background: "#2a4c6e" }).background, "#2a4c6e");
+  assert.equal(parseProject({ ...project, version: 2, background: "not-a-color" }).background, "white");
   assert.equal(parseProject(project).drippy.hideCursor, false);
   assert.equal(parseProject({ ...project, version: 2, drippy: { hideCursor: true } }).drippy.hideCursor, true);
   assert.throws(() => parseProject({ ...project, version: 2, actions: [{ ...moved, destination: { x: WIDTH, y: 0 } }] }));

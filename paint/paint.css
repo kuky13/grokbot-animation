@@ -52,6 +52,14 @@ button, .import-label, .download-button { cursor: pointer; }
 .tool span { font-size: 11px; color: var(--muted); }
 .tool.is-active { border-color: var(--accent); background: rgba(254,200,50,.10); }
 .tool.is-active span { color: var(--text); }
+#quick-actions-button { width: 100%; margin-top: 10px; padding: 10px; text-align: left; }
+#quick-actions {
+  position: fixed; inset: 120px auto auto 206px; width: min(220px, calc(100vw - 24px));
+  margin: 0; padding: 6px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel-2); color: var(--text); box-shadow: 0 12px 30px #0008; z-index: 30;
+}
+#quick-actions button { display: block; width: 100%; padding: 10px; text-align: left; border: 0; background: transparent; }
+#quick-actions button:hover, #quick-actions button:focus-visible { background: #303030; }
 .field { display: grid; gap: 7px; margin-top: 14px; font-size: 12px; color: var(--muted); }
 .field input[type="range"] { width: 100%; accent-color: var(--accent); }
 .field input[type="color"] { width: 100%; height: 38px; padding: 4px; }
@@ -81,6 +89,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   touch-action: none; user-select: none;
 }
 .paint-stage.is-transparent { background-color: #fff; background-image: linear-gradient(45deg, #d5d5d5 25%, transparent 25%), linear-gradient(-45deg, #d5d5d5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d5d5d5 75%), linear-gradient(-45deg, transparent 75%, #d5d5d5 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0; }
+.paint-stage.is-custom { background: var(--canvas-background); }
 .paint-stage.hide-cursor, .paint-stage.hide-cursor * { cursor: none !important; }
 .stage-content { position: absolute; inset: 0; transform-origin: center; }
 .stage-grid {
@@ -95,7 +104,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 }
 .drippy-position.is-dragging { cursor: grabbing; }
 .drippy-position.is-locked { cursor: default; }
-.selection-box { position: absolute; z-index: 5; border: 2px dashed #288de0; background: rgba(40,141,224,.13); pointer-events: none; }
+.selection-box { position: absolute; z-index: 5; border: 1px dashed #1689db; box-shadow: 0 0 0 1px #fff8; pointer-events: none; }
 .selection-box[hidden], #gradient-options[hidden], #solid-options[hidden] { display: none; }
 #draw-canvas.is-selecting { cursor: move; }
 .drippy-bot {
@@ -121,7 +130,8 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 #audio-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 #audio-file:focus-visible + .hint { outline: 2px solid var(--accent); }
 #audio-name, #record-message { overflow-wrap: anywhere; }
-#audio-preview { width: 100%; height: 40px; margin-top: 10px; }
+#audio-preview { width: 100%; height: 40px; }
+#background-color-field[hidden] { display: none; }
 #reset-drippy { display: block; width: 100%; padding: 10px; margin-top: 12px; }
 .recording-panel video { width: 100%; border-radius: 10px; background: #000; margin-bottom: 8px; }
 .download-button { display: block; color: var(--text); text-decoration: none; background: rgba(254,200,50,.12); border-color: rgba(254,200,50,.4); }
@@ -134,6 +144,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   .inspector section + section { border-top: 0; padding-top: 0; border-left: 1px solid var(--line); padding-left: 16px; }
 }
 @media (max-width: 760px) {
+  #quick-actions { inset: 72px 12px auto 12px; width: auto; }
   .topbar { height: auto; min-height: 62px; padding: 12px; }
   .topbar-copy { display: none; }
   .studio-layout { grid-template-columns: 1fr; padding: 10px; }

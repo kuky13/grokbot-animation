@@ -118,7 +118,7 @@ export function parseProject(data) {
     bitmaps: Object.fromEntries(entries),
     tool: TOOLS.includes(data.tool) ? data.tool : "pen",
     brush: { color: /^#[0-9a-fA-F]{6}$/.test(data.brush?.color) ? data.brush.color : "#fec832", size: clamp(data.brush?.size || 8, 1, 48) },
-    background: data.background === "transparent" ? "transparent" : "white",
+    background: data.background === "transparent" ? "transparent" : hex(data.background, "white"),
     zoom: clamp(data.zoom || 1, .5, 3),
     baseState: data.baseState,
     material: {

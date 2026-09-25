@@ -356,7 +356,19 @@ $("#brush-color").addEventListener("input", () => { recordEvent("color.change", 
 $("#brush-size").addEventListener("input", () => { $("#brush-size-value").textContent = `${$("#brush-size").value} px`; persist(); });
 $("#zoom").addEventListener("input", () => { zoom = Number($("#zoom").value) / 100; applyView(); persist(); });
 $("#reset-view").addEventListener("click", () => { zoom = 1; pan = { x: 0, y: 0 }; applyView(); persist(); });
-$("#background").addEventListener("change", () => { stage.classList.toggle("is-transparent", $("#background").value === "transparent"); persist(); });
+function backgroundValue() {
+  return $("#background").value === "custom" ? $("#background-color").value : $("#background").value;
+}
+
+function syncBackground() {
+  const value = backgroundValue();
+  stage.classList.toggle("is-transparent", value === "transparent");
+  stage.classList.toggle("is-custom", value.startsWith("#"));
+  stage.style.setProperty("--canvas-background", value.startsWith("#") ? value : "#fff");
+  $("#background-color-field").hidden = $("#background").value !== "custom";
+}
+
+for (const id of ["background", "background-color"]) $("#" + id).addEventListener(id === "background" ? "change" : "input", () => { syncBackground(); persist(); });
 $("#use-pressure").addEventListener("change", persist);
 
 $("#undo-button").addEventListener("click", () => { if (actions.length) { redo.push(actions.pop()); selection = null; showSelection(); recordEvent("undo"); rebuild(); persist(); } });
@@ -424,6 +436,25 @@ async function pastePng(src) {
   showSelection();
 }
 
+async function pasteFromClipboard() {
+  if (navigator.clipboard?.read) {
+    try {
+      const items = await navigator.clipboard.read();
+      const item = items.find(entry => entry.types.some(type => type.startsWith("image/")));
+      if (!item) throw new Error("A área de transferência não contém imagem.");
+      const type = item.types.find(value => value.startsWith("image/"));
+      const blob = await item.getType(type);
+      if (blob.size > 12_000_000) throw new Error("Imagem maior que 12 MB");
+      const url = URL.createObjectURL(blob);
+      try { await pastePng(url); } finally { URL.revokeObjectURL(url); }
+      return;
+    } catch (error) {
+      if (error.message === "A área de transferência não contém imagem." || !internalClipboard) throw error;
+    }
+  }
+  if (internalClipboard) await pastePng(internalClipboard);
+}
+
 document.addEventListener("paste", event => {
   if (editing(event)) return;
   const items = [...(event.clipboardData?.items || [])];
@@ -467,6 +498,43 @@ document.addEventListener("keydown", event => {
   else if (["delete", "backspace"].includes(key) && selection) { event.preventDefault(); eraseSelection(); }
   else if (!event.shiftKey && toolKeys[key] && !event.repeat) { event.preventDefault(); selectTool(toolKeys[key]); }
 });
+
+const quickMenu = $("#quick-actions");
+const quickButton = $("#quick-actions-button");
+function openQuickMenu() {
+  if (quickMenu.matches(":popover-open")) return;
+  for (const button of quickMenu.querySelectorAll("button")) {
+    button.disabled = button.dataset.action === "undo" ? !actions.length
+      : button.dataset.action === "redo" ? !redo.length
+      : ["cut", "delete"].includes(button.dataset.action) ? !selection
+      : button.dataset.action === "paste" ? !internalClipboard && !navigator.clipboard?.read
+      : false;
+  }
+  quickMenu.showPopover();
+}
+quickButton.addEventListener("click", () => quickMenu.matches(":popover-open") ? quickMenu.hidePopover() : openQuickMenu());
+quickMenu.addEventListener("toggle", () => quickButton.setAttribute("aria-expanded", String(quickMenu.matches(":popover-open"))));
+quickMenu.addEventListener("click", event => {
+  const action = event.target.closest("button[data-action]")?.dataset.action;
+  if (!action) return;
+  ({
+    undo: () => $("#undo-button").click(),
+    redo: () => $("#redo-button").click(),
+    copy: copyDrawing,
+    cut: () => { if (selection && copyDrawing()) eraseSelection(); },
+    paste: () => pasteFromClipboard().catch(reportClipboardError),
+    delete: eraseSelection,
+    center: () => $("#reset-view").click(),
+  })[action]();
+  quickMenu.hidePopover();
+});
+stage.addEventListener("pointerdown", event => {
+  if (event.pointerType !== "mouse" || event.button !== 3) return;
+  event.preventDefault();
+  event.stopPropagation();
+  openQuickMenu();
+}, true);
+document.addEventListener("auxclick", event => { if (event.button === 3 && quickMenu.matches(":popover-open")) event.preventDefault(); });
 
 $("#base-state").addEventListener("change", () => { baseState = $("#base-state").value; clearTimeout(reactionTimer); setRuntimeState(baseState); persist(); });
 
@@ -538,7 +606,7 @@ function projectData() {
     version: 2, canvas: { width: WIDTH, height: HEIGHT }, actions, tool,
     bitmaps: Object.fromEntries([...used].map(id => [id, bitmapSources.get(id)])),
     brush: { color: $("#brush-color").value, size: Number($("#brush-size").value) },
-    background: $("#background").value, zoom, baseState,
+    background: backgroundValue(), zoom, baseState,
     material: Object.fromEntries(["material", "color", "eyeColor", "badgeColor", "gradientPreset", "gradientStart", "gradientEnd", "gradientAngle", "glassPreset"].map(key => [key, character[key]])),
     audio: { name: audioName, volume: Number($("#audio-volume").value), loop: $("#audio-loop").checked },
     drippy: {
@@ -578,8 +646,9 @@ async function applyProject(raw) {
   $("#brush-color").value = data.brush.color;
   $("#brush-size").value = String(data.brush.size);
   $("#brush-size-value").textContent = `${data.brush.size} px`;
-  $("#background").value = data.background;
-  stage.classList.toggle("is-transparent", data.background === "transparent");
+  $("#background").value = data.background.startsWith("#") ? "custom" : data.background;
+  if (data.background.startsWith("#")) $("#background-color").value = data.background;
+  syncBackground();
   zoom = data.zoom;
   pan = { x: 0, y: 0 };
   for (const [id, key] of [["drippy-x", "x"], ["drippy-y", "y"], ["drippy-size", "size"]]) $("#" + id).value = String(data.drippy[key]);
@@ -658,8 +727,9 @@ function refreshSnapshot(force = false) {
 
 function renderComposite({ video = false, withDrippy = true } = {}) {
   captureCtx.clearRect(0, 0, WIDTH, HEIGHT);
-  if ($("#background").value === "white" || video) {
-    captureCtx.fillStyle = $("#background").value === "white" ? "#fff" : "#121212";
+  const background = backgroundValue();
+  if (background !== "transparent" || video) {
+    captureCtx.fillStyle = background === "transparent" ? "#121212" : background === "white" ? "#fff" : background;
     captureCtx.fillRect(0, 0, WIDTH, HEIGHT);
   }
   captureCtx.drawImage(canvas, 0, 0);

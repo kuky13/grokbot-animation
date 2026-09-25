@@ -33,6 +33,17 @@
           <button class="tool" data-tool="pan" title="Mover área (H)" aria-label="Mover área">✥<span>Mover</span></button>
         </div>
 
+        <button id="quick-actions-button" type="button" aria-expanded="false" aria-controls="quick-actions" title="Ações rápidas">⋯ Ações rápidas</button>
+        <div id="quick-actions" popover="auto" role="group" aria-label="Ações rápidas">
+          <button type="button" data-action="undo">Desfazer</button>
+          <button type="button" data-action="redo">Refazer</button>
+          <button type="button" data-action="copy">Copiar</button>
+          <button type="button" data-action="cut">Recortar</button>
+          <button type="button" data-action="paste">Colar</button>
+          <button type="button" data-action="delete">Apagar seleção</button>
+          <button type="button" data-action="center">Centralizar vista</button>
+        </div>
+
         <details id="tool-settings" class="tool-settings" open>
           <summary>Ajustes e histórico</summary>
           <div class="tool-settings-body">
@@ -40,7 +51,8 @@
         <label class="field"><span>Cor</span><input id="brush-color" type="color" value="#fec832" /></label>
         <label class="field"><span>Espessura</span><input id="brush-size" type="range" min="1" max="48" value="8" /><output id="brush-size-value">8 px</output></label>
         <label class="field"><span>Zoom</span><input id="zoom" type="range" min="50" max="300" step="10" value="100" /><output id="zoom-value">100%</output></label>
-        <label class="field"><span>Fundo</span><select id="background"><option value="white">Branco</option><option value="transparent">Transparente</option></select></label>
+        <label class="field"><span>Fundo</span><select id="background"><option value="white">Branco</option><option value="transparent">Transparente</option><option value="custom">Cor personalizada</option></select></label>
+        <label id="background-color-field" class="field" hidden><span>Cor do fundo</span><input id="background-color" type="color" value="#ffffff" /></label>
         <label class="switch-row"><input id="use-pressure" type="checkbox" /><span>Pressão da caneta</span></label>
 
         <div class="button-stack">
@@ -118,6 +130,7 @@
           <span>1280 × 720</span>
           <span id="stroke-count">0 traços</span>
         </div>
+        <audio id="audio-preview" controls preload="metadata" aria-label="Prévia do áudio de fundo"></audio>
       </section>
 
       <aside class="inspector" aria-label="Controles da Drippy e exportação">
@@ -158,7 +171,6 @@
           <div class="panel-title"><span>Áudio de fundo</span><small>LOCAL</small></div>
           <label class="import-label" for="audio-file">Escolher áudio</label><input id="audio-file" type="file" accept="audio/*" />
           <p id="audio-name" class="hint">Nenhum áudio selecionado</p>
-          <audio id="audio-preview" controls preload="metadata"></audio>
           <label class="field"><span>Volume</span><input id="audio-volume" type="range" min="0" max="1" step="0.05" value="1" /></label>
           <label class="switch-row"><input id="audio-loop" type="checkbox" /><span>Repetir áudio</span></label>
         </section>
