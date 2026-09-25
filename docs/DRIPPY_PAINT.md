@@ -17,7 +17,7 @@ Lápis, pincel, borracha e formas criam comandos concluídos. A ferramenta Sele�
 
 ## Projeto e exportação
 
-`*.drippypaint.json` usa `version: 2`, canvas 1280x720, `actions` (`stroke`/`clear`/`move-region`/`erase-region`/`bitmap`), PNGs colados, ferramenta, pincel, fundo, zoom, material, estado, controles da Drippy, metadados de áudio e `timeline` (`version`, `duration`, `events`). Traços têm pontos e pressão normalizada. Projetos versão 1, inclusive o formato antigo com `strokes`, continuam aceitos. Arquivos importados têm limite de 8 MB, 5.000 ações e 150.000 pontos. O áudio não entra no JSON: reanexe o arquivo local após abrir um projeto.
+`*.drippypaint.json` usa `version: 2`, canvas 1280x720, `actions` (`stroke`/`clear`/`move-region`/`erase-region`/`bitmap`), PNGs colados, ferramenta, pincel, fundo, zoom, material, estado, controles da Drippy, metadados de áudio, marcações de boca opcionais e `timeline` (`version`, `duration`, `events`). Traços têm pontos e pressão normalizada. Projetos versão 1, inclusive o formato antigo com `strokes`, continuam aceitos. Arquivos importados têm limite de 8 MB, 5.000 ações e 150.000 pontos. O áudio não entra no JSON: reanexe o arquivo local após abrir um projeto.
 As imagens PNG embutidas têm limite conjunto de 6 MB; uma imagem externa maior é reduzida ao tamanho do canvas antes de entrar no projeto. Se a gravação local do navegador ficar cheia, o projeto continua em memória e o indicador mostra "não salvo": exporte o JSON antes de fechar a página.
 
 ## Atalhos
@@ -29,11 +29,11 @@ As imagens PNG embutidas têm limite conjunto de 6 MB; uma imagem externa maior 
 - `Ctrl/Cmd+S`: exportar projeto; `Ctrl/Cmd+O`: abrir projeto. Atalhos não atuam enquanto um campo de texto ou controle está em edição.
 
 O PNG pode conter só o desenho ou também a Drippy. Materiais sólidos, gradientes e vidro do Character Studio aparecem na prévia, no PNG e no vídeo. Fundo branco, transparente ou qualquer cor escolhida aparecem na prévia e na exportação; vídeo transparente usa fundo escuro. A gravação exporta WebM com início, pausa, continuação, parada e descarte. O player abaixo do canvas permite voltar no áudio local antes de gravar; durante a gravação, a busca fica bloqueada para preservar o sincronismo. O microfone é opcional, mediante permissão do navegador; áudio local e microfone são misturados em uma faixa.
-A reprodução do áudio também anima a boca e expressões na prévia; pausar congela a reação e fecha a boca, continuar retoma a animação. A articulação acompanha a intensidade com variação visual em notas sustentadas, sem prometer sincronização fonética.
+A reprodução do áudio também anima a boca e expressões na prévia; pausar congela a reação e fecha a boca, continuar retoma a animação. Sem marcações, a articulação acompanha a intensidade do áudio. Para sincronização fonética, gere um JSON de marcações com Rhubarb Lip Sync (`-r phonetic -f json --extendedShapes X` para fala em português), escolha o áudio e carregue as marcações. O projeto salva as marcações, mas continua exigindo que o áudio seja reanexado.
 O menu Ações rápidas na barra esquerda reúne edição e centralização da vista. O botão lateral Voltar do mouse também tenta abri-lo quando o cursor está sobre o canvas; alguns navegadores reservam esse botão para navegação, então o botão visível permanece como alternativa.
 
 ## Limitações
 
-MediaRecorder WebM não está disponível em todos os navegadores; neste caso a interface apresenta a indisponibilidade, sem prometer MP4. A rasterização SVG pode ter taxa efetiva inferior a 60 fps em aparelhos lentos. A câmera de zoom/pan é apenas de edição: PNG e vídeo exportam a composição completa em 1280x720. A seleção move pixels, não redimensiona objetos; a boca reage à intensidade, não a fonemas. Não há TTS, nuvem nem colisão física.
+MediaRecorder WebM não está disponível em todos os navegadores; neste caso a interface apresenta a indisponibilidade, sem prometer MP4. A rasterização SVG pode ter taxa efetiva inferior a 60 fps em aparelhos lentos. A câmera de zoom/pan é apenas de edição: PNG e vídeo exportam a composição completa em 1280x720. A seleção move pixels, não redimensiona objetos; sem marcações, a boca reage à intensidade. Não há TTS, nuvem nem colisão física.
 
 Execute `npm test` e `npm run build:static` antes de publicar. Não altere o pacote standalone para desenvolver o Paint.

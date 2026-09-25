@@ -3,7 +3,7 @@ import { ORIGINAL_STATE_DATA } from "../original-data.js";
 import { MORPH_BY_STATE, STATE_CATALOG } from "../component/catalog.js";
 import { DEFAULT_MATERIAL, SOLID_PRESETS, GRADIENT_PRESETS, GLASS_PRESETS } from "../component/materials.js";
 import { createSpeechMeter } from "../component/runtime/speech-meter.js";
-import { WIDTH, HEIGHT, drawStroke, moveRegion, renderActions, parseProject, speechLevelForAudio } from "./model.js";
+import { WIDTH, HEIGHT, drawStroke, moveRegion, renderActions, parseProject, parseMouthCues, mouthCueForAudio, speechLevelForAudio } from "./model.js";
 import { createRecorder } from "./recorder.js";
 
 const $ = selector => document.querySelector(selector);
@@ -63,6 +63,7 @@ let roamAt = performance.now();
 let roamPausedUntil = 0;
 let audioUrl = null;
 let audioName = "";
+let lipSync = null;
 let audioContext = null;
 let audioSource = null;
 let audioBus = null;
@@ -609,6 +610,7 @@ function projectData() {
     background: backgroundValue(), zoom, baseState,
     material: Object.fromEntries(["material", "color", "eyeColor", "badgeColor", "gradientPreset", "gradientStart", "gradientEnd", "gradientAngle", "glassPreset"].map(key => [key, character[key]])),
     audio: { name: audioName, volume: Number($("#audio-volume").value), loop: $("#audio-loop").checked },
+    ...(lipSync ? { lipSync } : {}),
     drippy: {
       x: Number($("#drippy-x").value), y: Number($("#drippy-y").value), size: Number($("#drippy-size").value),
       visible: $("#show-drippy").checked, hideCursor: $("#hide-cursor").checked, follow: $("#follow-brush").checked,
@@ -659,12 +661,14 @@ async function applyProject(raw) {
   syncMaterialControls();
   if (audioUrl) URL.revokeObjectURL(audioUrl);
   audioUrl = null; audioName = data.audio.name;
+  lipSync = data.lipSync;
   $("#audio-preview").pause(); $("#audio-preview").removeAttribute("src"); $("#audio-preview").load();
   syncAudioPause();
   $("#audio-name").textContent = audioName ? `${audioName} — reanexe o arquivo para gravar` : "Nenhum áudio selecionado";
   $("#audio-volume").value = String(data.audio.volume);
   $("#audio-loop").checked = data.audio.loop;
   $("#audio-preview").loop = data.audio.loop;
+  $("#lip-sync-status").textContent = lipSync ? `${lipSync.mouthCues.length} marcações de boca carregadas` : "Sem marcações: reação automática ao áudio";
   applyView();
   applyBotLayout();
   selectTool(tool);
@@ -761,6 +765,7 @@ function syncAudioPause() {
   const paused = $("#audio-reaction").checked && (recorder.state === "paused" || (audioUrl && audioPreview.paused && audioPreview.currentTime > 0 && recorder.state !== "recording"));
   engine.setPaused(paused);
   if (paused) {
+    engine.speechViseme = null;
     reactionUntil = 0;
     clearTimeout(reactionTimer);
     engine.disconnectAudio();
@@ -797,6 +802,14 @@ function releaseMicrophone() {
 audioPreview.addEventListener("play", () => { syncAudioPause(); ensureAudioGraph().catch(error => { audioPreview.pause(); $("#record-message").textContent = error.message; }); });
 audioPreview.addEventListener("pause", syncAudioPause);
 audioPreview.addEventListener("ended", syncAudioPause);
+audioPreview.addEventListener("loadedmetadata", () => {
+  if (lipSync && Number.isFinite(audioPreview.duration) && Math.abs(audioPreview.duration - lipSync.duration) > 0.5) {
+    lipSync = null;
+    engine.speechViseme = null;
+    $("#lip-sync-status").textContent = "Marcações removidas: duração diferente do áudio";
+    persist();
+  }
+});
 $("#audio-file").addEventListener("change", event => {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -805,11 +818,32 @@ $("#audio-file").addEventListener("change", event => {
   if (audioUrl) URL.revokeObjectURL(audioUrl);
   audioUrl = URL.createObjectURL(file);
   audioName = file.name;
+  if (lipSync && lipSync.audioName !== audioName) {
+    lipSync = null;
+    engine.speechViseme = null;
+    $("#lip-sync-status").textContent = "Sem marcações: reação automática ao áudio";
+  }
   audioPreview.src = audioUrl;
   syncAudioPause();
   audioPreview.loop = $("#audio-loop").checked;
   $("#audio-name").textContent = audioName;
   persist();
+});
+$("#lip-sync-file").addEventListener("change", async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    if (!audioUrl) throw new Error("Escolha o áudio antes das marcações");
+    if (file.size > 1_000_000) throw new Error("Arquivo de marcações maior que 1 MB");
+    const data = JSON.parse(await file.text());
+    const mouthCues = parseMouthCues(data.mouthCues);
+    const duration = Number(data.metadata?.duration ?? mouthCues.at(-1).end);
+    if (!Number.isFinite(duration) || !Number.isFinite(audioPreview.duration) || Math.abs(duration - audioPreview.duration) > 0.5) throw new Error("As marcações não correspondem à duração do áudio");
+    lipSync = { audioName, duration, mouthCues };
+    $("#lip-sync-status").textContent = `${mouthCues.length} marcações de boca carregadas`;
+    persist();
+  } catch (error) { $("#lip-sync-status").textContent = error.message; }
+  finally { event.target.value = ""; }
 });
 $("#audio-volume").addEventListener("input", () => { if (audioGain) audioGain.gain.value = Number($("#audio-volume").value); persist(); });
 const recorder = createRecorder(captureCanvas, (state, seconds) => {
@@ -889,9 +923,12 @@ function frame() {
   const speaking = $("#audio-reaction").checked && audioActive() && !engine.paused;
   const energy = speaking && audioMeter ? audioMeter() : 0;
   if (speaking) {
-    const phase = audioUrl && !audioPreview.paused ? audioPreview.currentTime : now / 1000;
-    engine.setSpeechLevel(speechLevelForAudio(energy, phase));
-  } else if (engine.manualSpeech != null) engine.disconnectAudio();
+    engine.speechViseme = audioUrl && !audioPreview.paused && lipSync ? mouthCueForAudio(lipSync.mouthCues, audioPreview.currentTime, energy) : null;
+    engine.setSpeechLevel(speechLevelForAudio(energy));
+  } else {
+    engine.speechViseme = null;
+    if (engine.manualSpeech != null) engine.disconnectAudio();
+  }
   if (!engine.paused && now >= reactionUntil && runtimeState !== (speaking ? "dictating" : baseState)) setRuntimeState(speaking ? "dictating" : baseState);
   if (speaking && energy > .17 && now - lastAudioGesture > 2200 && now >= reactionUntil) {
     lastAudioGesture = now;

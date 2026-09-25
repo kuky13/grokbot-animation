@@ -168,9 +168,11 @@
         </section>
 
         <section>
-          <div class="panel-title"><span>Áudio de fundo</span><small>LOCAL</small></div>
+          <div class="panel-title"><span>Áudio e boca</span><small>LOCAL</small></div>
           <label class="import-label" for="audio-file">Escolher áudio</label><input id="audio-file" type="file" accept="audio/*" />
           <p id="audio-name" class="hint">Nenhum áudio selecionado</p>
+          <label class="import-label" for="lip-sync-file">Carregar marcações de boca</label><input id="lip-sync-file" type="file" accept=".json,application/json" />
+          <p id="lip-sync-status" class="hint">Sem marcações: reação automática ao áudio</p>
           <label class="field"><span>Volume</span><input id="audio-volume" type="range" min="0" max="1" step="0.05" value="1" /></label>
           <label class="switch-row"><input id="audio-loop" type="checkbox" /><span>Repetir áudio</span></label>
         </section>

@@ -7,10 +7,38 @@ export const TOOLS = [...DRAW_TOOLS, "select", "pan"];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
 
-export function speechLevelForAudio(energy, seconds) {
-  if (!Number.isFinite(energy) || !Number.isFinite(seconds)) return 0;
-  const articulation = 0.18 + 0.82 * Math.abs(Math.sin(seconds * 13.2) * Math.cos(seconds * 3.7));
-  return clamp((energy - 0.015) * 1.65 * articulation, 0, 1);
+export function speechLevelForAudio(energy) {
+  if (!Number.isFinite(energy)) return 0;
+  return clamp((energy - 0.015) * 1.65, 0, 1);
+}
+
+const MOUTH_SHAPES = new Set(["A", "B", "C", "D", "E", "F", "X"]);
+
+export function parseMouthCues(raw) {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 20_000) throw new Error("Marcações de boca inválidas");
+  let previousEnd = 0;
+  return raw.map(cue => {
+    const { start, end, value } = cue || {};
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start < previousEnd - 0.001 || end <= start || end > 86_400 || !MOUTH_SHAPES.has(value)) throw new Error("Marcações de boca inválidas");
+    previousEnd = end;
+    return { start, end, value };
+  });
+}
+
+export function mouthCueAt(cues, seconds) {
+  if (!Number.isFinite(seconds)) return "X";
+  let low = 0, high = cues.length - 1;
+  while (low <= high) {
+    const mid = (low + high) >> 1;
+    if (seconds < cues[mid].start) high = mid - 1;
+    else if (seconds >= cues[mid].end) low = mid + 1;
+    else return cues[mid].value;
+  }
+  return "X";
+}
+
+export function mouthCueForAudio(cues, seconds, energy) {
+  return !Number.isFinite(energy) || energy < 0.08 ? "X" : mouthCueAt(cues, seconds);
 }
 
 export function drawStroke(ctx, stroke) {
@@ -76,6 +104,7 @@ export function moveRegion(ctx, source, destination) {
 
 export function parseProject(data) {
   if (!data || ![1, 2].includes(data.version) || data.canvas?.width !== WIDTH || data.canvas?.height !== HEIGHT) throw new Error("Formato ou dimensões incompatíveis");
+  if (data.lipSync && (typeof data.lipSync.audioName !== "string" || data.lipSync.audioName !== data.audio?.name || !Number.isFinite(data.lipSync.duration) || data.lipSync.duration <= 0 || data.lipSync.duration > 86_400)) throw new Error("Sincronização de áudio inválida");
   const source = data.actions ?? (Array.isArray(data.strokes) ? data.strokes.map(stroke => ({ kind: "stroke", stroke })) : null);
   if (!Array.isArray(source) || source.length > 5000) throw new Error("Histórico inválido ou muito grande");
   const bitmapSources = data.bitmaps && typeof data.bitmaps === "object" && !Array.isArray(data.bitmaps) ? data.bitmaps : {};
@@ -140,6 +169,11 @@ export function parseProject(data) {
       motionSpeed: clamp(data.drippy?.motionSpeed ?? 1, .5, 2),
     },
     audio: { name: String(data.audio?.name || "").slice(0, 200), volume: clamp(data.audio?.volume ?? 1, 0, 1), loop: Boolean(data.audio?.loop) },
+    lipSync: data.lipSync ? {
+      audioName: String(data.lipSync.audioName || "").slice(0, 200),
+      duration: Number(data.lipSync.duration),
+      mouthCues: parseMouthCues(data.lipSync.mouthCues),
+    } : null,
     timeline: Array.isArray(timeline?.events) ? { version: 1, duration: clamp(timeline.duration, 0, 86400), events: timeline.events.slice(0, 10000).filter(event => Number.isFinite(event.time) && typeof event.type === "string") } : { version: 1, duration: 0, events: [] },
   };
 }
