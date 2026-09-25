@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { WIDTH, HEIGHT, moveRegion, parseProject, renderActions, speechLevelForAudio } from "./model.js";
+import { WIDTH, HEIGHT, moveRegion, parseProject, parseMouthCues, mouthCueAt, mouthCueForAudio, renderActions, speechLevelForAudio } from "./model.js";
 
 const stroke = { tool: "pen", color: "#fec832", size: 8, points: [{ x: 4, y: 5, p: 1 }, { x: 10, y: 12, p: 1 }] };
 const project = { version: 1, canvas: { width: WIDTH, height: HEIGHT }, actions: [{ kind: "stroke", stroke }, { kind: "clear" }], timeline: { version: 1, duration: 1, events: [{ time: .1, type: "brush.start" }] } };
@@ -62,9 +62,22 @@ test("pasted pixels and deletion replay after project import", () => {
   assert.throws(() => parseProject({ ...project, version: 2, actions: [erased], bitmaps: { bad: "data:image/svg+xml;base64,AAA" } }));
 });
 
-test("audio articulation follows sound, moves on sustained notes and closes on silence", () => {
-  assert.equal(speechLevelForAudio(0, 0.3), 0);
-  assert.notEqual(speechLevelForAudio(.5, .2), speechLevelForAudio(.5, .35));
-  assert.ok(speechLevelForAudio(.5, .35) > 0);
-  assert.ok(speechLevelForAudio(2, .35) <= 1);
+test("audio articulation follows sound without an artificial time cycle", () => {
+  assert.equal(speechLevelForAudio(0), 0);
+  assert.ok(speechLevelForAudio(.5) > 0);
+  assert.ok(speechLevelForAudio(2) <= 1);
+});
+
+test("lip sync survives project import and follows seek positions", () => {
+  const mouthCues = parseMouthCues([{ start: 0, end: .1, value: "X" }, { start: .1, end: .2, value: "D" }, { start: .2, end: .4, value: "F" }]);
+  const data = parseProject({ ...project, version: 2, audio: { name: "voice.mp3" }, lipSync: { audioName: "voice.mp3", duration: .4, mouthCues } });
+  assert.equal(mouthCueAt(data.lipSync.mouthCues, .05), "X");
+  assert.equal(mouthCueAt(data.lipSync.mouthCues, .15), "D");
+  assert.equal(mouthCueAt(data.lipSync.mouthCues, .3), "F");
+  assert.equal(mouthCueForAudio(data.lipSync.mouthCues, .3, 0), "X");
+  assert.equal(mouthCueForAudio(data.lipSync.mouthCues, .3, .5), "F");
+  assert.equal(mouthCueAt(data.lipSync.mouthCues, 1), "X");
+  assert.equal(parseProject(project).lipSync, null);
+  assert.throws(() => parseMouthCues([{ start: 0, end: .2, value: "D" }, { start: .1, end: .3, value: "F" }]));
+  assert.throws(() => parseProject({ ...project, audio: { name: "other.mp3" }, lipSync: data.lipSync }));
 });

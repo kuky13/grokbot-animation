@@ -241,7 +241,9 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     curve += Math.sin(phase * 1.7 + 0.4) * 0.8;
   }
 
-  if (talking) open = engine.paused ? 0 : friendlySpeech;
+  const viseme = Number(config.speechMouthScale) > 1 ? engine.speechViseme : null;
+  const visemeOpen = { X: 0, A: 0.015, B: 0.13, C: 0.31, D: 0.52, E: 0.22, F: 0.18 };
+  if (talking) open = engine.paused ? 0 : (viseme in visemeOpen ? visemeOpen[viseme] : friendlySpeech);
   y = settle("mouthY", y);
   width = settle("mouthWidth", width);
   curve = settle("mouthCurve", curve);
@@ -254,7 +256,8 @@ export function renderDrippyCharacter(engine, now, reducedMotion = false) {
     const phoneme = engine.speechPhoneme || "";
     const roundPhoneme = /[ouɔʊ]/i.test(phoneme);
     const widePhoneme = /[eiæɛ]/i.test(phoneme);
-    const phonemeWidth = roundPhoneme ? 0.86 : widePhoneme ? 1.07 : 1;
+    const visemeWidth = { X: 1, A: 1, B: 0.94, C: 1.02, D: 1.12, E: 0.72, F: 0.48 };
+    const phonemeWidth = viseme in visemeWidth ? visemeWidth[viseme] : roundPhoneme ? 0.86 : widePhoneme ? 1.07 : 1;
     const half = (expressiveMouth ? 14 + visualOpen * 8 : 14.5 + visualOpen * 4) * phonemeWidth;
     const smile = 3.2 - visualOpen * 2.2;
 
